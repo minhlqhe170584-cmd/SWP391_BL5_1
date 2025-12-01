@@ -1,1 +1,69 @@
 /nbproject/private/
+# ===========================
+# Java
+# ===========================
+*.class
+*.log
+*.ctxt
+*.war
+*.ear
+*.jar
+
+# ===========================
+# NetBeans
+# ===========================
+nb-configuration.xml
+nbproject/private/
+nbproject/private/*
+build/
+dist/
+nbproject/Makefile-*
+nbproject/Makefile-*.mk
+
+# ===========================
+# Maven (nếu dùng)
+# ===========================
+target/
+.mvn/
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# ===========================
+# Tomcat server (local)
+# ===========================
+logs/
+temp/
+work/
+conf/Catalina/
+conf/Catalina/localhost/
+
+# ===========================
+# IntelliJ IDEA
+# ===========================
+*.iws
+*.iml
+*.ipr
+.idea/
+
+# ===========================
+# VS Code
+# ===========================
+.vscode/
+
+# ===========================
+# OS files
+# ===========================
+Thumbs.db
+.DS_Store
+
+# ===========================
+# Misc
+# ===========================
+*.orig
+*.bak
+*.tmp
+*.swp
