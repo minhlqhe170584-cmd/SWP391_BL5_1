@@ -1,5 +1,6 @@
 package dao; // Đổi từ dal -> dao
 
+import dbContext.DBContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
