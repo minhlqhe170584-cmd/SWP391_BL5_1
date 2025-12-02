@@ -248,4 +248,5 @@ nbdist/
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/netbeans,visualstudiocode,intellij,java
+# End of https://www.toptal.com/developers/gitignore/api/netbeans,visualstudiocode,intellij,jav
+src/java/dbContext/
