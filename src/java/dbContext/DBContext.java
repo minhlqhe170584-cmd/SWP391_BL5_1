@@ -20,7 +20,7 @@ public class DBContext {
             String pass = "123";
             
             // 2. Tên Database (Sửa lại tên này nếu DB của bạn tên khác)
-            String dbName = "SWP391_OnlineShop"; 
+            String dbName = "SmartHotelDB"; 
             
             // 3. Cấu hình kết nối
             // encrypt=true;trustServerCertificate=true: Để tránh lỗi bảo mật SSL trên Java mới
