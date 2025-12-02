@@ -67,3 +67,13 @@ Thumbs.db
 *.bak
 *.tmp
 *.swp
+
+# NetBeans private config
+nbproject/private/
+
+# Tomcat or server local paths
+nbproject/project.properties
+
+# Build
+build/
+dist/
