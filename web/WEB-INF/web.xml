@@ -5,15 +5,15 @@
         <servlet-class>controllers.LoginServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>RegisterServlet</servlet-name>
-        <servlet-class>controllers.RegisterServlet</servlet-class>
+        <servlet-name>RoleServlet</servlet-name>
+        <servlet-class>controllers.RoleServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/LoginServlet</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>RegisterServlet</servlet-name>
-        <url-pattern>/RegisterServlet</url-pattern>
+        <servlet-name>RoleServlet</servlet-name>
+        <url-pattern>/RoleServlet</url-pattern>
     </servlet-mapping>
 </web-app>
