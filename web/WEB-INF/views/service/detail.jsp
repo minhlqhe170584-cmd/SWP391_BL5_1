@@ -1,5 +1,5 @@
-<%@page contentType="text/html;charset=UTF-8"%>
-<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@page import="models.Service"%>
+<%@ page contentType="text/html;charset=UTF-8"%>
 
 <h2>${service == null ? "Create Service" : "Update Service"}</h2>
 
@@ -9,30 +9,26 @@
         <input type="hidden" name="serviceId" value="${service.serviceId}" />
     </c:if>
 
-    Name:<br>
-    <input type="text" name="serviceName" value="${service.serviceName}" required /><br><br>
+    Name:
+    <input type="text" name="serviceName" value="${service.serviceName}" required /><br>
 
-    Price:<br>
-    <input type="number" step="0.01" name="price" value="${service.price}" required /><br><br>
+    Price:
+    <input type="number" step="0.01" name="price" value="${service.price}" required /><br>
 
-    Unit:<br>
-    <input type="text" name="unit" value="${service.unit}" /><br><br>
+    Unit:
+    <input type="text" name="unit" value="${service.unit}" /><br>
 
-    Image URL:<br>
-    <input type="text" name="imageUrl" value="${service.imageUrl}" /><br><br>
+    Image URL:
+    <input type="text" name="imageUrl" value="${service.imageUrl}" /><br>
 
     Active:
-    <input type="checkbox" name="isActive"
-           <c:if test="${service != null && service.isActive}">checked</c:if> /><br><br>
+    <input type="checkbox" name="isActive" ${service != null && service.isActive ? "checked" : ""}><br>
 
-    Category:<br>
+    Category:
     <select name="categoryId">
         <c:forEach items="${categories}" var="c">
-            <option value="${c.categoryId}"
-                <c:if test="${service != null && c.categoryId == service.categoryId}">
-                    selected
-                </c:if>
-            >
+            <option value="${c.categoryId}" 
+                ${service != null && c.categoryId == service.categoryId ? "selected" : ""}>
                 ${c.categoryName}
             </option>
         </c:forEach>
