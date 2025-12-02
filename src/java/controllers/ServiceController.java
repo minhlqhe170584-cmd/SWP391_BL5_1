@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
-
 package controllers;
 
 import dao.ServiceCategoryDAO;
@@ -28,10 +23,7 @@ public class ServiceController extends HttpServlet {
             throws ServletException, IOException {
 
         String action = request.getParameter("action");
-
-        if (action == null) {
-            action = "list";
-        }
+        if (action == null) action = "list";
 
         switch (action) {
             case "detail":
@@ -57,7 +49,7 @@ public class ServiceController extends HttpServlet {
         request.setAttribute("list", list);
         request.setAttribute("categories", categories);
 
-        request.getRequestDispatcher("service/list.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/service/list.jsp").forward(request, response);
     }
 
     private void showDetailForm(HttpServletRequest request, HttpServletResponse response)
@@ -65,7 +57,6 @@ public class ServiceController extends HttpServlet {
 
         String idRaw = request.getParameter("id");
         Service service = null;
-
         if (idRaw != null) {
             int id = Integer.parseInt(idRaw);
             service = serviceDAO.getById(id);
@@ -76,14 +67,14 @@ public class ServiceController extends HttpServlet {
         request.setAttribute("service", service);
         request.setAttribute("categories", categories);
 
-        request.getRequestDispatcher("service/detail.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/service/detail.jsp").forward(request, response);
     }
 
     private void deleteService(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         serviceDAO.delete(id);
-        response.sendRedirect("service"); // load lại list
+        response.sendRedirect("service");
     }
 
     @Override

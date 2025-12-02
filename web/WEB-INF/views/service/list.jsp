@@ -1,6 +1,5 @@
-<%@page import="models.Service"%>
-<%@page import="java.util.ArrayList"%>
-<%@ page contentType="text/html;charset=UTF-8"%>
+<%@page contentType="text/html;charset=UTF-8"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 
 <h2>Service List</h2>
 
@@ -17,7 +16,7 @@
 
 <a href="service?action=detail">+ Create New Service</a>
 
-<table border="1">
+<table border="1" cellspacing="0" cellpadding="8">
     <tr>
         <th>ID</th>
         <th>Name</th>
@@ -27,7 +26,7 @@
         <th>Action</th>
     </tr>
 
-    <c:forEach items="${list}" var="s">
+    <c:forEach var="s" items="${list}">
         <tr>
             <td>${s.serviceId}</td>
             <td>${s.serviceName}</td>
@@ -37,9 +36,8 @@
             <td>
                 <a href="service?action=detail&id=${s.serviceId}">Edit</a>
                 <a href="service?action=delete&id=${s.serviceId}"
-                   onclick="return confirm('Delete?')">Delete</a>
+                   onclick="return confirm('Delete this service?')">Delete</a>
             </td>
         </tr>
     </c:forEach>
-
 </table>
