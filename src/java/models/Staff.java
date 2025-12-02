@@ -3,12 +3,15 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package models;
+
 import java.time.LocalDateTime;
+
 /**
  *
  * @author Admin
  */
 public class Staff {
+
     private int staffId;
     private Role role;
     private String fullName;
@@ -16,8 +19,11 @@ public class Staff {
     private String passWordHash;
     private boolean isActive;
     private LocalDateTime createdAt;
-    
-    public Staff(){};
+
+    public Staff() {
+    }
+
+    ;
 
     public Staff(int staffId, Role role, String fullName, String email, String passWordHash, boolean isActive, LocalDateTime createdAt) {
         this.staffId = staffId;
@@ -84,16 +90,16 @@ public class Staff {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    
+
     @Override
-    public String toString(){
-        return "Staff{" +
-               "staffId=" + staffId +
-               ", role=" + (role != null ? role.getRoleName():"N/A")+
-               ", fullName='" + fullName + '\'' +
-               ", email='" + email + '\'' +
-               ", isActive=" + isActive +
-               ", createAt=" + createdAt +
-               '}';
+    public String toString() {
+        return "Staff{"
+                + "staffId=" + staffId
+                + ", role=" + (role != null ? role.getRoleName() : "N/A")
+                + ", fullName='" + fullName + '\''
+                + ", email='" + email + '\''
+                + ", isActive=" + isActive
+                + ", createAt=" + createdAt
+                + '}';
     }
 }
