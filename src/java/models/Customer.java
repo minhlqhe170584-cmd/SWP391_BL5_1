@@ -16,20 +16,30 @@ public class Customer {
     private String email;
     private String password;
     private String Phone;
+    private String identityCard;
     private boolean isActive;
     private LocalDateTime createAt;
 
     public Customer() {
     }
 
-    public Customer(int customerId, String fullName, String email, String password, String Phone, boolean isActive, LocalDateTime createAt) {
+    public Customer(int customerId, String fullName, String email, String password, String Phone, String identityCard, boolean isActive, LocalDateTime createAt) {
         this.customerId = customerId;
         this.fullName = fullName;
         this.email = email;
         this.password = password;
         this.Phone = Phone;
+        this.identityCard = identityCard;
         this.isActive = isActive;
         this.createAt = createAt;
+    }
+
+    public String getIdentityCard() {
+        return identityCard;
+    }
+
+    public void setIdentityCard(String identityCard) {
+        this.identityCard = identityCard;
     }
 
     public int getCustomerId() {

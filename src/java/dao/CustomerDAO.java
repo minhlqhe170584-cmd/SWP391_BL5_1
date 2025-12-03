@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import models.Customer;
 import dbContext.DBContext;
+import java.util.List;
 
 /**
  *
@@ -20,96 +21,105 @@ import dbContext.DBContext;
  */
 public class CustomerDAO extends DBContext{
     
-    public ArrayList<Customer> getAllCustomer() {
-        ArrayList<Customer> list = new ArrayList<>();
-        String sql = "SELECT * FROM Customers";
+    private static final String GET_ALL_CUSTOMER = "SELECT customer_id, full_name, email, password, phone, identity_card, is_active, create_at FROM Customers ORDER BY customer_id";
+    private static final String GET_CUSTOMER_BY_ID = "SELECT customer_id, full_name, email, password, phone, identity_card, is_active, create_at FROM Customers WHERE customer_id = ?";
+    private static final String INSERT_NEW_CUSTOMER = "INSERT INTO Customers(full_name, email, password, phone, identity_card, is_active, create_at) VALUES(?,?,?,?,?,?,?)";
+    private static final String UPDATE_CUSTOMER = "UPDATE Customers SET full_name=?, email=?, password=?, phone=?, identity_card=?, is_active=? WHERE customer_id=?";
+    private static final String DEACTIVE_CUSTOMER = "UPDATE Customers SET is_active=? WHERE customer_id=?";
+    private static final String SEARCH_FILTER ="SELECT * FROM Customers WHERE 1=1";
+    
+    public List<Customer> getAllCustomer() {
+        List<Customer> list = new ArrayList<>();
         
-        try{
-            PreparedStatement st = connection.prepareCall(sql);
-            ResultSet rs = st.executeQuery();
-            
-            while(rs.next()){
+        // Use try-with-resources to ensure PreparedStatement and ResultSet close automatically
+        try (PreparedStatement st = connection.prepareStatement(GET_ALL_CUSTOMER);
+             ResultSet rs = st.executeQuery()) {
+
+            while (rs.next()) {
                 list.add(new Customer(
-                        rs.getInt("customer_id"), 
-                        rs.getString("customer_fullName"), 
-                        rs.getString("customer_email"), 
-                        rs.getString("customer_password"), 
-                        rs.getString("customer_phone"), 
-                        rs.getBoolean("is_active"), 
-                        rs.getObject("create_at", LocalDateTime.class)
+                    rs.getInt("customer_id"),
+                    rs.getString("full_name"),       // Fixed column name to match SQL
+                    rs.getString("email"),           // Fixed column name to match SQL
+                    rs.getString("password"),        // Fixed column name to match SQL
+                    rs.getString("phone"),           // Fixed column name to match SQL
+                    rs.getString("identity_card"),   // Added missing field found in SQL
+                    rs.getBoolean("is_active"),
+                    rs.getObject("create_at", LocalDateTime.class)
                 ));
             }
-            
-        } catch (SQLException ex){
-            System.out.println(ex);
+        } catch (SQLException ex) {
+            System.out.println("Error getAllCustomer: " + ex.getMessage());
         }
         return list;
     }
-    
+
     public Customer getCustomerById(int id) {
-        String sql = "SELECT * FROM Customers WHERE customer_id = ?";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
+        try (PreparedStatement st = connection.prepareStatement(GET_CUSTOMER_BY_ID)) {
             st.setInt(1, id);
-            ResultSet rs = st.executeQuery();
-
-            if (rs.next()) {
-                return new Customer(
-                    rs.getInt("customer_id"),
-                    rs.getString("customer_fullName"),
-                    rs.getString("customer_email"),
-                    rs.getString("customer_password"),
-                    rs.getString("customer_phone"),
-                    rs.getBoolean("is_active"),
-                    // Handling LocalDateTime
-                    rs.getObject("create_at", LocalDateTime.class)
-                );
+            
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return new Customer(
+                        rs.getInt("customer_id"),
+                        rs.getString("full_name"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getString("phone"),
+                        rs.getString("identity_card"),
+                        rs.getBoolean("is_active"),
+                        rs.getObject("create_at", LocalDateTime.class)
+                    );
+                }
             }
-
         } catch (SQLException e) {
-            System.out.println("Error getCustomerById: " + e);
+            System.out.println("Error getCustomerById: " + e.getMessage());
         }
         return null;
     }
 
     public void insertCustomer(Customer c) {
-        // Assuming customer_id is Auto-Increment, so we don't insert it
-        String sql = "INSERT INTO Customers(customer_fullName, customer_email, customer_password, customer_phone, is_active, create_at) "
-                   + "VALUES (?,?,?,?,?,?)";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
+        // SQL requires 7 parameters
+        try (PreparedStatement st = connection.prepareStatement(INSERT_NEW_CUSTOMER)) {
             st.setString(1, c.getFullName());
             st.setString(2, c.getEmail());
             st.setString(3, c.getPassword());
             st.setString(4, c.getPhone());
-            st.setBoolean(5, c.isIsActive());
-            // Use setObject for LocalDateTime
-            st.setObject(6, c.getCreateAt()); 
-            
+            st.setString(5, c.getIdentityCard()); // Added based on SQL string
+            st.setBoolean(6, c.isIsActive());
+            st.setObject(7, c.getCreateAt());
+
             st.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Error insert Customer: " + e);
+            System.out.println("Error insert Customer: " + e.getMessage());
         }
     }
 
     public void updateCustomer(Customer c) {
-        // Usually we do NOT update 'create_at'
-        String sql = "UPDATE Customers SET customer_fullName=?, customer_email=?, customer_password=?, customer_phone=?, is_active=? "
-                   + "WHERE customer_id=?";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
+        // SQL requires 7 parameters (6 setters + 1 ID for Where clause)
+        try (PreparedStatement st = connection.prepareStatement(UPDATE_CUSTOMER)) {
             st.setString(1, c.getFullName());
             st.setString(2, c.getEmail());
             st.setString(3, c.getPassword());
             st.setString(4, c.getPhone());
-            st.setBoolean(5, c.isIsActive());
+            st.setString(5, c.getIdentityCard()); // Added based on SQL string
+            st.setBoolean(6, c.isIsActive());
             // The ID is the last parameter for the WHERE clause
-            st.setInt(6, c.getCustomerId()); 
-            
-            st.executeUpdate();
+            st.setInt(7, c.getCustomerId());
 
+            st.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Error update Customer: " + e);
+            System.out.println("Error update Customer: " + e.getMessage());
+        }
+    }
+    
+    // Added this method since you had the Constant defined for it
+    public void deactivateCustomer(int customerId, boolean isActive) {
+        try (PreparedStatement st = connection.prepareStatement(DEACTIVE_CUSTOMER)) {
+            st.setBoolean(1, isActive);
+            st.setInt(2, customerId);
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error deactivate Customer: " + e.getMessage());
         }
     }
     public Customer checkLogin(String email, String password) {
