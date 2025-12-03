@@ -3,6 +3,7 @@ package controllers;
 import dao.CustomerDAO;
 import models.Customer;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,74 +13,71 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet(name = "RegisterServlet", urlPatterns = {"/register"})
 public class RegisterServlet extends HttpServlet {
 
-    // 1. Nếu người dùng gọi trang này (GET), chuyển sang file JSP để hiện form
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("register.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/users/register.jsp").forward(request, response);
     }
 
-    // 2. Khi người dùng bấm nút "Đăng Ký" (POST), xử lý dữ liệu
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-//        // Cấu hình tiếng Việt
-//        request.setCharacterEncoding("UTF-8");
-//        response.setCharacterEncoding("UTF-8");
-//
-//        // Lấy dữ liệu từ form
-//        String fullName = request.getParameter("fullname");
-//        String email = request.getParameter("email");
-//        String phone = request.getParameter("phone");
-//        String cccd = request.getParameter("cccd"); // Identity Card
-//        String pass = request.getParameter("pass");
-//        String rePass = request.getParameter("repass");
-//
-//        // Gọi DAO
-//        CustomerDAO dao = new CustomerDAO();
-//
-//        // --- VALIDATION (Kiểm tra dữ liệu) ---
-//        
-//        // 1. Kiểm tra mật khẩu nhập lại có khớp không
-//        if (!pass.equals(rePass)) {
-//            request.setAttribute("mess", "Mật khẩu nhập lại không khớp!");
-//            // Giữ lại thông tin người dùng đã nhập để họ đỡ phải gõ lại (trừ pass)
-//            request.setAttribute("fullname", fullName);
-//            request.setAttribute("email", email);
-//            request.setAttribute("phone", phone);
-//            request.setAttribute("cccd", cccd);
-//            
-//            request.getRequestDispatcher("register.jsp").forward(request, response);
-//            return;
-//        }
-//
-//        // 2. Kiểm tra Email đã tồn tại chưa
-//        if (dao.checkEmailExist(email)) {
-//            request.setAttribute("mess", "Email này đã được sử dụng!");
-//            request.setAttribute("fullname", fullName);
-//            request.setAttribute("phone", phone);
-//            request.setAttribute("cccd", cccd);
-//            
-//            request.getRequestDispatcher("register.jsp").forward(request, response);
-//            return;
-//        }
-//
-//        // --- NẾU MỌI THỨ OK ---
-//        
-//        // Tạo đối tượng Customer mới
-//        Customer c = new Customer();
-//        c.setFullName(fullName);
-//        c.setEmail(email);
-//        c.setPhone(phone);
-//        c.setIdentityCard(cccd);
-//        c.setPassword(pass); 
-//
-//        // Lưu vào Database
-//        dao.register(c);
-//
-//        // Chuyển hướng về trang Login và báo thành công
-//        request.setAttribute("mess", "Đăng ký thành công! Mời đăng nhập.");
-//        request.getRequestDispatcher("login.jsp").forward(request, response);
+        request.setCharacterEncoding("UTF-8");
+
+        // 1. Lấy dữ liệu (Bỏ dòng lấy cccd)
+        String fullName = request.getParameter("fullname");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String pass = request.getParameter("pass");
+        String rePass = request.getParameter("repass");
+
+        CustomerDAO dao = new CustomerDAO();
+
+        // 2. Validation
+        if (!pass.equals(rePass)) {
+            request.setAttribute("mess", "Mật khẩu xác nhận không khớp!");
+            saveInputData(request, fullName, email, phone);
+            request.getRequestDispatcher("/WEB-INF/views/users/register.jsp").forward(request, response);
+            return;
+        }
+
+        if (dao.checkEmailExist(email)) {
+            request.setAttribute("mess", "Email này đã được sử dụng!");
+            saveInputData(request, fullName, email, phone);
+            request.getRequestDispatcher("/WEB-INF/views/users/register.jsp").forward(request, response);
+            return;
+        }
+
+        // 3. Lưu vào DB
+        try {
+            Customer c = new Customer();
+            c.setFullName(fullName);
+            c.setEmail(email);
+            c.setPassword(pass);
+            c.setPhone(phone);
+            c.setIsActive(true);
+            c.setCreateAt(LocalDateTime.now());
+            
+            // Không set IdentityCard nữa
+
+            dao.register(c);
+
+            request.setAttribute("mess", "Đăng ký thành công! Vui lòng đăng nhập.");
+            request.setAttribute("user", email);
+            request.getRequestDispatcher("/WEB-INF/views/users/login.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("mess", "Lỗi hệ thống: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/users/register.jsp").forward(request, response);
+        }
+    }
+
+    // Hàm lưu dữ liệu (Đã bỏ cccd)
+    private void saveInputData(HttpServletRequest request, String name, String email, String phone) {
+        request.setAttribute("fullname", name);
+        request.setAttribute("email", email);
+        request.setAttribute("phone", phone);
     }
 }

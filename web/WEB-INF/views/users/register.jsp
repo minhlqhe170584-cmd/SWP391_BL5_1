@@ -1,6 +1,6 @@
 <%-- 
     Document   : register
-    Description: Trang đăng ký tài khoản Customer
+    Description: Trang đăng ký Compact (Đã sửa link quay về Login)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -17,7 +17,6 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         
         <style>
-            /* Copy Style từ trang Login sang để đồng bộ */
             body {
                 background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
                 background-size: cover;
@@ -29,6 +28,7 @@
                 justify-content: center;
                 margin: 0;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                overflow: hidden;
             }
             .overlay {
                 position: absolute;
@@ -39,29 +39,28 @@
             .login-card {
                 position: relative;
                 z-index: 1;
-                width: 500px; /* Rộng hơn trang login một chút vì nhiều ô nhập */
+                width: 700px; 
                 background: rgba(255, 255, 255, 0.95);
                 border-radius: 15px;
                 box-shadow: 0 15px 25px rgba(0,0,0,0.5);
-                padding: 30px;
-                max-height: 90vh; /* Tránh bị tràn màn hình nếu form dài */
-                overflow-y: auto; /* Cho phép cuộn nếu màn hình bé */
+                padding: 25px 40px; 
             }
             .login-header {
                 text-align: center;
-                margin-bottom: 20px;
+                margin-bottom: 15px;
             }
             .login-header h3 {
                 color: #e67e22;
                 font-weight: 700;
                 text-transform: uppercase;
-                margin-top: 10px;
+                margin-top: 5px;
+                font-size: 24px;
             }
             .form-control {
-                border-radius: 25px;
-                height: 45px;
-                padding-left: 20px;
-                font-size: 14px;
+                border-radius: 20px;
+                height: 38px;
+                padding-left: 15px;
+                font-size: 13px;
             }
             .form-control:focus {
                 box-shadow: none;
@@ -72,17 +71,23 @@
                 border: none;
                 border-bottom: 1px solid #ced4da;
                 color: #e67e22;
+                font-size: 13px;
+                padding: 5px 10px;
+            }
+            .form-group {
+                margin-bottom: 15px;
             }
             .btn-login {
-                border-radius: 25px;
-                height: 45px;
+                border-radius: 20px;
+                height: 40px;
                 background: linear-gradient(to right, #e67e22, #d35400);
                 border: none;
                 color: white;
                 font-weight: bold;
                 text-transform: uppercase;
-                margin-top: 20px;
+                margin-top: 10px;
                 transition: 0.3s;
+                font-size: 14px;
             }
             .btn-login:hover {
                 background: linear-gradient(to right, #d35400, #e67e22);
@@ -91,8 +96,8 @@
             }
             .extra-links {
                 text-align: center;
-                margin-top: 20px;
-                font-size: 14px;
+                margin-top: 15px;
+                font-size: 13px;
             }
             .extra-links a {
                 color: #d35400;
@@ -100,9 +105,11 @@
                 font-weight: 600;
             }
             .alert-custom {
-                font-size: 13px;
+                font-size: 12px;
+                padding: 8px;
                 border-radius: 10px;
                 text-align: center;
+                margin-bottom: 10px;
             }
         </style>
     </head>
@@ -111,11 +118,9 @@
         <div class="overlay"></div>
 
         <div class="login-card">
-            
             <div class="login-header">
-                <i class="fas fa-user-plus fa-3x" style="color: #e67e22;"></i>
-                <h3>Đăng Ký Tài Khoản</h3>
-                <p class="text-muted">Trở thành thành viên của Smart Hotel</p>
+                <i class="fas fa-user-plus fa-2x" style="color: #e67e22;"></i>
+                <h3>Đăng Ký</h3>
             </div>
 
             <c:if test="${mess != null}">
@@ -124,71 +129,73 @@
                 </div>
             </c:if>
 
-            <form action="register" method="post">
-                
+            <form action="${pageContext.request.contextPath}/register" method="post">
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input type="text" name="fullname" class="form-control" placeholder="Họ và tên" required value="${fullname}">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        </div>
-                        <input type="email" name="email" class="form-control" placeholder="Địa chỉ Email" required value="${email}">
+                        <input type="text" name="fullname" class="form-control" placeholder="Họ và tên đầy đủ" required value="${fullname}">
                     </div>
                 </div>
 
                 <div class="form-row">
-                    <div class="col">
-                        <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                </div>
+                                <input type="email" name="email" class="form-control" placeholder="Email" required value="${email}">
                             </div>
-                            <input type="text" name="phone" class="form-control" placeholder="Số điện thoại" required value="${phone}">
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                </div>
+                                <input type="text" name="phone" class="form-control" placeholder="Số điện thoại" required value="${phone}">
                             </div>
-                            <input type="text" name="cccd" class="form-control" placeholder="CCCD/CMND" required value="${cccd}">
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                </div>
+                                <input type="password" name="pass" class="form-control" placeholder="Mật khẩu" required>
+                            </div>
                         </div>
-                        <input type="password" name="pass" class="form-control" placeholder="Mật khẩu" required>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-check-circle"></i></span>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-check-circle"></i></span>
+                                </div>
+                                <input type="password" name="repass" class="form-control" placeholder="Xác nhận mật khẩu" required>
+                            </div>
                         </div>
-                        <input type="password" name="repass" class="form-control" placeholder="Xác nhận mật khẩu" required>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-login btn-block">
-                    ĐĂNG KÝ NGAY <i class="fas fa-arrow-right ml-2"></i>
+                    ĐĂNG KÝ NGAY
                 </button>
             </form>
 
             <div class="extra-links">
-                <p>Đã có tài khoản? <a href="login.jsp">Đăng nhập tại đây</a></p>
-                <p><a href="home" style="color: #6c757d;"><i class="fas fa-home"></i> Quay về trang chủ</a></p>
+                <span class="text-muted">Đã có tài khoản?</span> 
+                <a href="${pageContext.request.contextPath}/login" class="ml-1">Đăng nhập ngay</a>
+                
+                <span class="mx-2">|</span>
+                <a href="home" style="color: #6c757d;"><i class="fas fa-home"></i> Trang chủ</a>
             </div>
         </div>
 

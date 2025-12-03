@@ -112,4 +112,69 @@ public class CustomerDAO extends DBContext{
             System.out.println("Error update Customer: " + e);
         }
     }
+    public Customer checkLogin(String email, String password) {
+        // SQL: Tìm khách hàng có email, pass đúng và đang hoạt động (is_active = 1)
+        String sql = "SELECT * FROM Customers WHERE email = ? AND password = ? AND is_active = 1";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, email);
+            st.setString(2, password);
+            ResultSet rs = st.executeQuery();
+            
+            if (rs.next()) {
+                Customer c = new Customer();
+                // Map đúng tên cột trong Database sang Model
+                c.setCustomerId(rs.getInt("customer_id"));
+                c.setFullName(rs.getString("full_name"));
+                c.setEmail(rs.getString("email"));
+                c.setPassword(rs.getString("password"));
+                c.setPhone(rs.getString("phone"));
+                // Các trường khác nếu cần
+                // c.setIsActive(rs.getBoolean("is_active"));
+                
+                return c;
+            }
+        } catch (SQLException e) {
+            System.out.println("Lỗi CustomerDAO: " + e.getMessage());
+        }
+        return null;
+    }
+    /**
+     * Kiểm tra xem Email đã tồn tại trong Database chưa
+     * @param email Email cần kiểm tra
+     * @return true nếu đã có, false nếu chưa có
+     */
+    public boolean checkEmailExist(String email) {
+        String sql = "SELECT email FROM Customers WHERE email = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, email);
+            ResultSet rs = st.executeQuery();
+            
+            // Nếu result set có dữ liệu -> Email đã tồn tại
+            if (rs.next()) {
+                return true; 
+            }
+        } catch (SQLException e) {
+            System.out.println("Error checkEmailExist: " + e.getMessage());
+        }
+        return false; // Chưa tồn tại
+    }
+    
+    public void register(Customer c) {
+        // Bỏ cột identity_card trong câu lệnh INSERT
+        String sql = "INSERT INTO Customers (full_name, email, password, phone, is_active, created_at) VALUES (?, ?, ?, ?, ?, GETDATE())";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, c.getFullName());
+            st.setString(2, c.getEmail());
+            st.setString(3, c.getPassword());
+            st.setString(4, c.getPhone());
+            st.setBoolean(5, true); // is_active
+            
+            st.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Error register: " + e.getMessage());
+        }
+    }
 }
