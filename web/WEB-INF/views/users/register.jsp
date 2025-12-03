@@ -1,6 +1,6 @@
 <%-- 
     Document   : register
-    Description: Trang đăng ký Compact (Đã sửa link quay về Login)
+    Description: Trang đăng ký HOÀN CHỈNH (Compact, có CCCD, giới hạn 9 số)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -17,100 +17,45 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         
         <style>
+            /* --- CSS STYLE (Căn giữa, Cấm cuộn) --- */
             body {
                 background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
-                height: 100vh;
+                height: 100vh; 
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                overflow: hidden; 
                 margin: 0;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                overflow: hidden;
             }
-            .overlay {
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 0;
-            }
+            .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 0; }
             .login-card {
-                position: relative;
-                z-index: 1;
-                width: 700px; 
+                position: relative; z-index: 1; width: 700px; 
                 background: rgba(255, 255, 255, 0.95);
-                border-radius: 15px;
-                box-shadow: 0 15px 25px rgba(0,0,0,0.5);
+                border-radius: 15px; box-shadow: 0 15px 25px rgba(0,0,0,0.5);
                 padding: 25px 40px; 
             }
             .login-header {
-                text-align: center;
+                text-align: center; /* CĂN CHỮ ĐĂNG KÝ RA GIỮA */
                 margin-bottom: 15px;
             }
-            .login-header h3 {
-                color: #e67e22;
-                font-weight: 700;
-                text-transform: uppercase;
-                margin-top: 5px;
-                font-size: 24px;
-            }
-            .form-control {
-                border-radius: 20px;
-                height: 38px;
-                padding-left: 15px;
-                font-size: 13px;
-            }
-            .form-control:focus {
-                box-shadow: none;
-                border-color: #e67e22;
-            }
-            .input-group-text {
-                background: transparent;
-                border: none;
-                border-bottom: 1px solid #ced4da;
-                color: #e67e22;
-                font-size: 13px;
-                padding: 5px 10px;
-            }
-            .form-group {
-                margin-bottom: 15px;
-            }
+            .login-header h3 { color: #e67e22; font-weight: 700; text-transform: uppercase; margin-top: 5px; font-size: 24px; }
+            .form-control { border-radius: 20px; height: 38px; padding-left: 15px; font-size: 13px; }
             .btn-login {
-                border-radius: 20px;
-                height: 40px;
+                border-radius: 20px; height: 40px;
                 background: linear-gradient(to right, #e67e22, #d35400);
-                border: none;
-                color: white;
-                font-weight: bold;
-                text-transform: uppercase;
-                margin-top: 10px;
-                transition: 0.3s;
-                font-size: 14px;
-            }
-            .btn-login:hover {
-                background: linear-gradient(to right, #d35400, #e67e22);
-                box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4);
-                color: white;
+                border: none; color: white; font-weight: bold;
+                text-transform: uppercase; margin-top: 10px; font-size: 14px;
             }
             .extra-links {
-                text-align: center;
+                text-align: center; /* CĂN CHỮ ĐĂNG NHẬP, TRANG CHỦ RA GIỮA */
                 margin-top: 15px;
                 font-size: 13px;
             }
-            .extra-links a {
-                color: #d35400;
-                text-decoration: none;
-                font-weight: 600;
-            }
-            .alert-custom {
-                font-size: 12px;
-                padding: 8px;
-                border-radius: 10px;
-                text-align: center;
-                margin-bottom: 10px;
-            }
+            .alert-custom { font-size: 12px; padding: 8px; border-radius: 10px; text-align: center; margin-bottom: 10px; }
         </style>
     </head>
     <body>
@@ -118,10 +63,10 @@
         <div class="overlay"></div>
 
         <div class="login-card">
+            
             <div class="login-header">
                 <i class="fas fa-user-plus fa-2x" style="color: #e67e22;"></i>
-                <h3>Đăng Ký</h3>
-            </div>
+                <h3>Đăng Ký</h3> </div>
 
             <c:if test="${mess != null}">
                 <div class="alert alert-danger alert-custom">
@@ -130,6 +75,7 @@
             </c:if>
 
             <form action="${pageContext.request.contextPath}/register" method="post">
+                
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -182,6 +128,15 @@
                                 <input type="password" name="repass" class="form-control" placeholder="Xác nhận mật khẩu" required>
                             </div>
                         </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                        </div>
+                        <input type="text" name="cccd" class="form-control" placeholder="CCCD/CMND (9 số)" maxlength="9" inputmode="numeric" value="${cccd}">
                     </div>
                 </div>
 
