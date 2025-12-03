@@ -60,7 +60,7 @@ public class RegisterServlet extends HttpServlet {
             errorMsg = "Email này đã được sử dụng!";
         }
 
-        // 3. XỬ LÝ KHI CÓ LỖI
+        // 3. XỬ LÝ CÓ LỖI
         if (errorMsg != null) {
             request.setAttribute("mess", errorMsg);
             request.getRequestDispatcher(targetUrl).forward(request, response);
