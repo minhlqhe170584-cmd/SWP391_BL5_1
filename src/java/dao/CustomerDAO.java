@@ -168,7 +168,7 @@ public class CustomerDAO extends DBContext{
         } catch (SQLException e) {
             System.out.println("Error checkEmailExist: " + e.getMessage());
         }
-        return false; // Chưa tồn tại
+        return false; 
     }
     
        public void register(Customer c) {
