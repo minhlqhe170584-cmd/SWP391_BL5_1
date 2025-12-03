@@ -164,12 +164,13 @@ public class CustomerDAO extends DBContext{
         } catch (SQLException e) {
             System.out.println("Error checkEmailExist: " + e.getMessage());
         }
-        return false; // Chưa tồn tại
+        return false; 
     }
     
-       public void register(Customer c) {
-        // SQL: Thêm identity_card (CCCD) vào câu lệnh INSERT
-        String sql = "INSERT INTO Customers (full_name, email, password, phone, identity_card, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+    public void register(Customer c) {
+        // SQL: Xóa cột identity_card khỏi câu lệnh INSERT
+        String sql = "INSERT INTO Customers (full_name, email, password, phone, is_active, created_at) "
+                   + "VALUES (?, ?, ?, ?, ?, GETDATE())";
                    
         try {
             PreparedStatement st = connection.prepareStatement(sql);
@@ -177,11 +178,12 @@ public class CustomerDAO extends DBContext{
             st.setString(2, c.getEmail());
             st.setString(3, c.getPassword());
             st.setString(4, c.getPhone());
-            st.setString(5, c.getIdentityCard()); // Tham số CCCD/CMND
-            st.setBoolean(6, true); // is_active
+            // Bỏ dòng setString cho CCCD
+            st.setBoolean(5, true); // is_active bây giờ là tham số thứ 5
             
             st.executeUpdate();
-        } catch (Exception e) {
+            
+        } catch (SQLException e) {
             System.out.println("Error register: " + e.getMessage());
         }
     }
