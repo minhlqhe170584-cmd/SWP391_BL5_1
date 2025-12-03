@@ -21,10 +21,10 @@ import java.util.List;
  */
 public class CustomerDAO extends DBContext{
     
-    private static final String GET_ALL_CUSTOMER = "SELECT customer_id, full_name, email, password, phone, identity_card, is_active, create_at FROM Customers ORDER BY customer_id";
-    private static final String GET_CUSTOMER_BY_ID = "SELECT customer_id, full_name, email, password, phone, identity_card, is_active, create_at FROM Customers WHERE customer_id = ?";
-    private static final String INSERT_NEW_CUSTOMER = "INSERT INTO Customers(full_name, email, password, phone, identity_card, is_active, create_at) VALUES(?,?,?,?,?,?,?)";
-    private static final String UPDATE_CUSTOMER = "UPDATE Customers SET full_name=?, email=?, password=?, phone=?, identity_card=?, is_active=? WHERE customer_id=?";
+    private static final String GET_ALL_CUSTOMER = "SELECT customer_id, full_name, email, password, phone, is_active, create_at FROM Customers ORDER BY customer_id";
+    private static final String GET_CUSTOMER_BY_ID = "SELECT customer_id, full_name, email, password, phone, is_active, create_at FROM Customers WHERE customer_id = ?";
+    private static final String INSERT_NEW_CUSTOMER = "INSERT INTO Customers(full_name, email, password, phone, is_active, create_at) VALUES(?,?,?,?,?,?,?)";
+    private static final String UPDATE_CUSTOMER = "UPDATE Customers SET full_name=?, email=?, password=?, phone=?, is_active=? WHERE customer_id=?";
     private static final String DEACTIVE_CUSTOMER = "UPDATE Customers SET is_active=? WHERE customer_id=?";
     private static final String SEARCH_FILTER ="SELECT * FROM Customers WHERE 1=1";
     
@@ -41,8 +41,7 @@ public class CustomerDAO extends DBContext{
                     rs.getString("full_name"),       // Fixed column name to match SQL
                     rs.getString("email"),           // Fixed column name to match SQL
                     rs.getString("password"),        // Fixed column name to match SQL
-                    rs.getString("phone"),           // Fixed column name to match SQL
-                    rs.getString("identity_card"),   // Added missing field found in SQL
+                    rs.getString("phone"),           // Fixed column name to match SQL  
                     rs.getBoolean("is_active"),
                     rs.getObject("create_at", LocalDateTime.class)
                 ));
@@ -65,7 +64,6 @@ public class CustomerDAO extends DBContext{
                         rs.getString("email"),
                         rs.getString("password"),
                         rs.getString("phone"),
-                        rs.getString("identity_card"),
                         rs.getBoolean("is_active"),
                         rs.getObject("create_at", LocalDateTime.class)
                     );
@@ -84,7 +82,6 @@ public class CustomerDAO extends DBContext{
             st.setString(2, c.getEmail());
             st.setString(3, c.getPassword());
             st.setString(4, c.getPhone());
-            st.setString(5, c.getIdentityCard()); // Added based on SQL string
             st.setBoolean(6, c.isIsActive());
             st.setObject(7, c.getCreateAt());
 
@@ -101,7 +98,6 @@ public class CustomerDAO extends DBContext{
             st.setString(2, c.getEmail());
             st.setString(3, c.getPassword());
             st.setString(4, c.getPhone());
-            st.setString(5, c.getIdentityCard()); // Added based on SQL string
             st.setBoolean(6, c.isIsActive());
             // The ID is the last parameter for the WHERE clause
             st.setInt(7, c.getCustomerId());
