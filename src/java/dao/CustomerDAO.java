@@ -167,18 +167,16 @@ public class CustomerDAO extends DBContext{
         return false; // Chưa tồn tại
     }
     
-       public void register(Customer c) {
-        // SQL: Thêm identity_card (CCCD) vào câu lệnh INSERT
-        String sql = "INSERT INTO Customers (full_name, email, password, phone, identity_card, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-                   
+    public void register(Customer c) {
+        // Bỏ cột identity_card trong câu lệnh INSERT
+        String sql = "INSERT INTO Customers (full_name, email, password, phone, is_active, created_at) VALUES (?, ?, ?, ?, ?, GETDATE())";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, c.getFullName());
             st.setString(2, c.getEmail());
             st.setString(3, c.getPassword());
             st.setString(4, c.getPhone());
-            st.setString(5, c.getIdentityCard()); // Tham số CCCD/CMND
-            st.setBoolean(6, true); // is_active
+            st.setBoolean(5, true); // is_active
             
             st.executeUpdate();
         } catch (Exception e) {
