@@ -1,6 +1,6 @@
 <%-- 
     Document   : register
-    Description: Trang đăng ký HOÀN CHỈNH (Compact, có CCCD, giới hạn 9 số)
+    Description: Trang đăng ký Compact - Bỏ CCCD, Căn giữa chuẩn
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         
         <style>
-            /* --- CSS STYLE (Căn giữa, Cấm cuộn) --- */
+            /* --- CSS COMPACT STYLE --- */
             body {
                 background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
                 background-size: cover;
@@ -38,22 +38,34 @@
                 border-radius: 15px; box-shadow: 0 15px 25px rgba(0,0,0,0.5);
                 padding: 25px 40px; 
             }
+            
+            /* --- CĂN GIỮA TIÊU ĐỀ --- */
             .login-header {
-                text-align: center; /* CĂN CHỮ ĐĂNG KÝ RA GIỮA */
-                margin-bottom: 15px;
+                text-align: center; 
+                margin-bottom: 20px;
             }
             .login-header h3 { color: #e67e22; font-weight: 700; text-transform: uppercase; margin-top: 5px; font-size: 24px; }
+            
             .form-control { border-radius: 20px; height: 38px; padding-left: 15px; font-size: 13px; }
+            .form-group { margin-bottom: 15px; }
+            
             .btn-login {
                 border-radius: 20px; height: 40px;
                 background: linear-gradient(to right, #e67e22, #d35400);
                 border: none; color: white; font-weight: bold;
                 text-transform: uppercase; margin-top: 10px; font-size: 14px;
             }
+            
+            /* --- CĂN GIỮA FOOTER LINKS --- */
             .extra-links {
-                text-align: center; /* CĂN CHỮ ĐĂNG NHẬP, TRANG CHỦ RA GIỮA */
-                margin-top: 15px;
+                text-align: center;
+                margin-top: 20px;
                 font-size: 13px;
+            }
+            .extra-links a {
+                color: #d35400;
+                text-decoration: none;
+                font-weight: 600;
             }
             .alert-custom { font-size: 12px; padding: 8px; border-radius: 10px; text-align: center; margin-bottom: 10px; }
         </style>
@@ -66,7 +78,8 @@
             
             <div class="login-header">
                 <i class="fas fa-user-plus fa-2x" style="color: #e67e22;"></i>
-                <h3>Đăng Ký</h3> </div>
+                <h3>Đăng Ký</h3>
+            </div>
 
             <c:if test="${mess != null}">
                 <div class="alert alert-danger alert-custom">
@@ -131,15 +144,6 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                        </div>
-                        <input type="text" name="cccd" class="form-control" placeholder="CCCD/CMND (9 số)" maxlength="9" inputmode="numeric" value="${cccd}">
-                    </div>
-                </div>
-
                 <button type="submit" class="btn btn-login btn-block">
                     ĐĂNG KÝ NGAY
                 </button>

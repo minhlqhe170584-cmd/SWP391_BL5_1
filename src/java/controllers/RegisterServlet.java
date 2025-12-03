@@ -27,11 +27,10 @@ public class RegisterServlet extends HttpServlet {
         
         request.setCharacterEncoding("UTF-8");
 
-        // 1. Lấy dữ liệu
+        // 1. Lấy dữ liệu (Không lấy cccd nữa)
         String fullName = request.getParameter("fullname");
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
-        String cccd = request.getParameter("cccd"); // CCCD/CMND
         String pass = request.getParameter("pass");
         String rePass = request.getParameter("repass");
         
@@ -43,7 +42,6 @@ public class RegisterServlet extends HttpServlet {
         request.setAttribute("fullname", fullName);
         request.setAttribute("email", email);
         request.setAttribute("phone", phone);
-        request.setAttribute("cccd", cccd); // Giữ lại CCCD
         
         // 2. VALIDATION LOGIC
         
@@ -51,11 +49,7 @@ public class RegisterServlet extends HttpServlet {
         if (!pass.equals(rePass)) {
             errorMsg = "Mật khẩu xác nhận không khớp!";
         } 
-        // B2. Kiểm tra CCCD (Phải là 9 số và toàn chữ số)
-        else if (cccd != null && !cccd.isEmpty() && !cccd.matches("\\d{9}")) {
-            errorMsg = "CCCD/CMND phải có đúng 9 chữ số.";
-        }
-        // B3. Kiểm tra Email đã tồn tại chưa
+        // B2. Kiểm tra Email đã tồn tại chưa
         else if (dao.checkEmailExist(email)) {
             errorMsg = "Email này đã được sử dụng!";
         }
@@ -74,7 +68,7 @@ public class RegisterServlet extends HttpServlet {
             c.setEmail(email);
             c.setPassword(pass);
             c.setPhone(phone);
-            c.setIdentityCard(cccd); 
+            // Không set IdentityCard
             c.setIsActive(true); 
             c.setCreateAt(LocalDateTime.now());
             
