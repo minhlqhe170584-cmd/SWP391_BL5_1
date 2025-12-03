@@ -1,56 +1,39 @@
 <%@page contentType="text/html;charset=UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 
-<h2>Service List</h2>
+<h2>Service Category List</h2>
 
-<form method="get" action="service">
+<form method="get" action="service-category">
     <input type="text" name="search" placeholder="Search name..." value="${search}" />
-    <select name="categoryId">
-        <option value="">All Categories</option>
-        <c:forEach items="${categories}" var="c">
-            <option value="${c.categoryId}"
-                <c:if test="${categoryId == c.categoryId}">selected="selected"</c:if>>
-                ${c.categoryName}
-            </option>
-        </c:forEach>
-    </select>
-
     <select name="sort">
         <option value="">Sort by</option>
         <option value="nameAsc"  <c:if test="${sort == 'nameAsc'}">selected="selected"</c:if>>Name ASC</option>
         <option value="nameDesc" <c:if test="${sort == 'nameDesc'}">selected="selected"</c:if>>Name DESC</option>
-        <option value="priceAsc" <c:if test="${sort == 'priceAsc'}">selected="selected"</c:if>>Price ASC</option>
-        <option value="priceDesc"<c:if test="${sort == 'priceDesc'}">selected="selected"</c:if>>Price DESC</option>
         <option value="idAsc"    <c:if test="${sort == 'idAsc'}">selected="selected"</c:if>>ID ASC</option>
         <option value="idDesc"   <c:if test="${sort == 'idDesc'}">selected="selected"</c:if>>ID DESC</option>
     </select>
-
     <button type="submit">Filter</button>
 </form>
 
-<a href="service?action=detail">Create New Service</a>
+<a href="service-category?action=detail">Create New Category</a>
 
 <table border="1" cellspacing="0" cellpadding="8">
     <tr>
         <th>ID</th>
         <th>Name</th>
-        <th>Price</th>
-        <th>Unit</th>
-        <th>Active</th>
+        <th>Description</th>
         <th>Action</th>
     </tr>
 
-    <c:forEach var="s" items="${list}">
+    <c:forEach var="c" items="${categories}">
         <tr>
-            <td>${s.serviceId}</td>
-            <td>${s.serviceName}</td>
-            <td>${s.price}</td>
-            <td>${s.unit}</td>
-            <td>${s.isActive}</td>
+            <td>${c.categoryId}</td>
+            <td>${c.categoryName}</td>
+            <td>${c.description}</td>
             <td>
-                <a href="service?action=detail&id=${s.serviceId}">Edit</a>
-                <a href="service?action=delete&id=${s.serviceId}"
-                   onclick="return confirm('Delete this service?')">Delete</a>
+                <a href="service-category?action=detail&id=${c.categoryId}">Edit</a>
+                <a href="service-category?action=delete&id=${c.categoryId}"
+                   onclick="return confirm('Delete this category?')">Delete</a>
             </td>
         </tr>
     </c:forEach>
@@ -64,7 +47,7 @@
                     <span>[${p}]</span>
                 </c:when>
                 <c:otherwise>
-                    <a href="service?page=${p}&search=${search}&categoryId=${categoryId}&sort=${sort}">${p}</a>
+                    <a href="service-category?page=${p}&search=${search}&sort=${sort}">${p}</a>
                 </c:otherwise>
             </c:choose>
         </c:forEach>
