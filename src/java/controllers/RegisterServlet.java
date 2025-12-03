@@ -74,7 +74,7 @@ public class RegisterServlet extends HttpServlet {
             c.setEmail(email);
             c.setPassword(pass);
             c.setPhone(phone);
-            c.setIdentityCard(cccd); // Set CCCD
+            c.setIdentityCard(cccd); 
             c.setIsActive(true); 
             c.setCreateAt(LocalDateTime.now());
             
