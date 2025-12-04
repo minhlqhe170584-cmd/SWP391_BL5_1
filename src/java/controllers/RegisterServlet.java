@@ -68,6 +68,7 @@ public class RegisterServlet extends HttpServlet {
             c.setEmail(email);
             c.setPassword(pass);
             c.setPhone(phone);
+            // Không set IdentityCard
             c.setIsActive(true); 
             c.setCreateAt(LocalDateTime.now());
             
