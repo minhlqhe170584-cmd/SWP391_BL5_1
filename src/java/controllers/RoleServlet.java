@@ -74,7 +74,7 @@ public class RoleServlet extends HttpServlet {
         try {
             List<Role> roles = roleDAO.getAllRoles();
             request.setAttribute("rolesList", roles);
-            request.getRequestDispatcher("/views/staff/roleList.jsp").forward(request, response);
+            request.getRequestDispatcher("roleList.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
