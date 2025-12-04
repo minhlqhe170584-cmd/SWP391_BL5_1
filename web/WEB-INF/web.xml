@@ -8,12 +8,20 @@
         <servlet-name>RoleServlet</servlet-name>
         <servlet-class>controllers.RoleServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>StaffServlet</servlet-name>
+        <servlet-class>controllers.StaffServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/LoginServlet</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>RoleServlet</servlet-name>
-        <url-pattern>/RoleServlet</url-pattern>
+        <url-pattern>/staffRoles</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffServlet</servlet-name>
+        <url-pattern>/StaffServlet</url-pattern>
     </servlet-mapping>
 </web-app>

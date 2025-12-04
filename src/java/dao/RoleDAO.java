@@ -20,7 +20,7 @@ public class RoleDAO extends DBContext {
 
     private static final String GET_ALL_ROLES = "SELECT role_id, role_name FROM StaffRoles ORDER BY role_id";
     private static final String GET_ROLE_BY_ID = "SELECT role_id, role_name FROM StaffRoles WHERE role_id = ? ";
-    private static final String INSERT_ROLE = "INSERT INTO StaffRoles (role_name) VALUE (?)";
+    private static final String INSERT_ROLE = "INSERT INTO StaffRoles (role_name) VALUES (?)";
     private static final String UPDATE_ROLE = "UPDATE StaffRoles SET role_name = ? WHERE role_id = ?";
     private static final String DELETE_ROLE = "DELETE FROM StaffRoles WHERE role_id = ? ";
 
