@@ -9,11 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import models.Room;
-import models.RoomType;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
-import java.math.BigDecimal; // Đảm bảo import BigDecimal
 
 /**
  *
@@ -58,43 +53,5 @@ public class RoomDAO extends DBContext {
         return null;
     }
     
-        public List<Room> getAllRooms() {
-        List<Room> roomList = new ArrayList<>();
-        
-        // Câu SQL này vẫn JOIN bảng RoomTypes để lấy dữ liệu, 
-        // nhưng nếu model Room chưa có chỗ chứa RoomType thì ta tạm thời chỉ lấy thông tin cơ bản.
-        String sql = "SELECT R.room_id, R.room_number, R.status, R.room_password, R.is_active_login, R.type_id " +
-                     "FROM Rooms R " +
-                     "ORDER BY R.room_number ASC";
-        
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
-
-            while (rs.next()) {
-                Room room = new Room();
-                
-                // Ánh xạ thuộc tính Room cơ bản
-                room.setRoomId(rs.getInt("room_id"));
-                room.setRoomNumber(rs.getString("room_number"));
-                room.setTypeId(rs.getInt("type_id"));
-                room.setRoomPassword(rs.getString("room_password"));
-                room.setActiveLogin(rs.getBoolean("is_active_login"));
-                
-                // SỬA: Lấy trực tiếp String status (không dùng Enum)
-                room.setStatus(rs.getString("status"));
-                
-                // LƯU Ý: Vì file Room.java của bạn không có biến 'roomTypeDetail'
-                // nên mình đã bỏ phần setRoomTypeDetail đi để tránh lỗi biên dịch.
-                
-                roomList.add(room);
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi truy vấn SQL getAllRooms: " + e.getMessage());
-        } 
-        return roomList;
-    }
-        
+    // (Sau này bạn có thể viết thêm các hàm getListRoom, updateStatus... ở đây)
 }
-    
-
