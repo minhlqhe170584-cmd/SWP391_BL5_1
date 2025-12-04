@@ -23,6 +23,7 @@ public class RoomDAO extends DBContext {
 
     /**
      * Hàm kiểm tra đăng nhập cho Room Account
+     *
      * @param roomNumber Số phòng (User nhập vào)
      * @param password Mật khẩu phòng (User nhập vào)
      * @return Object Room nếu đúng, null nếu sai
@@ -33,14 +34,14 @@ public class RoomDAO extends DBContext {
         // 2. Đúng mật khẩu (room_password)
         // 3. Phòng đang được kích hoạt cho phép đăng nhập (is_active_login = 1)
         String sql = "SELECT * FROM Rooms WHERE room_number = ? AND room_password = ? AND is_active_login = 1";
-        
+
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, roomNumber);
             st.setString(2, password);
-            
+
             ResultSet rs = st.executeQuery();
-            
+
             if (rs.next()) {
                 Room r = new Room();
                 r.setRoomId(rs.getInt("room_id"));
@@ -49,7 +50,7 @@ public class RoomDAO extends DBContext {
                 r.setStatus(rs.getString("status"));
                 r.setRoomPassword(rs.getString("room_password"));
                 r.setActiveLogin(rs.getBoolean("is_active_login"));
-                
+
                 return r;
             }
         } catch (SQLException e) {
@@ -57,44 +58,106 @@ public class RoomDAO extends DBContext {
         }
         return null;
     }
-    
-        public List<Room> getAllRooms() {
+
+    public List<Room> getAllRooms() {
         List<Room> roomList = new ArrayList<>();
-        
-        // Câu SQL này vẫn JOIN bảng RoomTypes để lấy dữ liệu, 
-        // nhưng nếu model Room chưa có chỗ chứa RoomType thì ta tạm thời chỉ lấy thông tin cơ bản.
-        String sql = "SELECT R.room_id, R.room_number, R.status, R.room_password, R.is_active_login, R.type_id " +
-                     "FROM Rooms R " +
-                     "ORDER BY R.room_number ASC";
-        
+
+        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, "
+                + "t.type_name "
+                + // Lấy thêm cột tên loại phòng
+                "FROM Rooms r "
+                + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                + // Kết nối 2 bảng qua type_id
+                "ORDER BY r.room_number ASC";
+
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
                 Room room = new Room();
-                
-                // Ánh xạ thuộc tính Room cơ bản
+
+                // Set các thuộc tính cơ bản của Room
                 room.setRoomId(rs.getInt("room_id"));
                 room.setRoomNumber(rs.getString("room_number"));
-                room.setTypeId(rs.getInt("type_id"));
+                room.setStatus(rs.getString("status"));
                 room.setRoomPassword(rs.getString("room_password"));
                 room.setActiveLogin(rs.getBoolean("is_active_login"));
-                
-                // SỬA: Lấy trực tiếp String status (không dùng Enum)
-                room.setStatus(rs.getString("status"));
-                
-                // LƯU Ý: Vì file Room.java của bạn không có biến 'roomTypeDetail'
-                // nên mình đã bỏ phần setRoomTypeDetail đi để tránh lỗi biên dịch.
-                
+                room.setTypeId(rs.getInt("type_id"));
+
+                // --- PHẦN MỚI THÊM ---
+                // Tạo đối tượng RoomType và set tên lấy từ DB
+                RoomType rt = new RoomType();
+                rt.setTypeId(rs.getInt("type_id"));
+                rt.setTypeName(rs.getString("type_name")); // Lấy type_name từ kết quả join
+
+                // Gán RoomType vào Room
+                room.setRoomType(rt);
+                // ---------------------
+
                 roomList.add(room);
             }
         } catch (SQLException e) {
             System.err.println("Lỗi truy vấn SQL getAllRooms: " + e.getMessage());
-        } 
+        }
         return roomList;
     }
-        
-}
     
+    //Phần xử lý phân trang màn hình List Room
+    // 1. Hàm đếm tổng số lượng phòng
+    public int getTotalRooms() {
+        String sql = "SELECT COUNT(*) FROM Rooms";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getTotalRooms: " + e.getMessage());
+        }
+        return 0;
+    }
 
+    // 2. Hàm lấy danh sách phòng theo trang (Mỗi trang 5 phòng)
+    public List<Room> pagingRooms(int index) {
+        List<Room> list = new ArrayList<>();
+        // SQL Server: Dùng OFFSET và FETCH NEXT để phân trang
+        // index: số trang hiện tại (1, 2, 3...)
+        // (index - 1) * 5: Số dòng cần bỏ qua
+        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name " +
+                     "FROM Rooms r " +
+                     "INNER JOIN RoomTypes t ON r.type_id = t.type_id " +
+                     "ORDER BY r.room_number ASC " +
+                     "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
+        
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            // Tính toán vị trí bắt đầu lấy
+            st.setInt(1, (index - 1) * 5); 
+            ResultSet rs = st.executeQuery();
+            
+            while (rs.next()) {
+                Room room = new Room();
+                room.setRoomId(rs.getInt("room_id"));
+                room.setRoomNumber(rs.getString("room_number"));
+                room.setStatus(rs.getString("status"));
+                room.setActiveLogin(rs.getBoolean("is_active_login"));
+                room.setTypeId(rs.getInt("type_id"));
+                
+                // Set Room Type Name
+                RoomType rt = new RoomType();
+                rt.setTypeId(rs.getInt("type_id"));
+                rt.setTypeName(rs.getString("type_name"));
+                room.setRoomType(rt);
+                
+                list.add(room);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error pagingRooms: " + e.getMessage());
+        }
+        return list;
+    }
+    //Kết thúc phần xử lý phân trang
+
+}

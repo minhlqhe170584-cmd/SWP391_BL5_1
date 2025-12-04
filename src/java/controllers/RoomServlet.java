@@ -84,14 +84,33 @@ public class RoomServlet extends HttpServlet {
                 //     deleteRoom(request, response); 
                 //     break;
                 case "LIST":
-                default:
-                    // Đặt logic LISTROOMS trực tiếp vào đây
-                    List<Room> roomList = roomDAO.getAllRooms();
-                    request.setAttribute("roomsList", roomList);
-                    
-                    // Chuyển tiếp đến trang JSP
-                    request.getRequestDispatcher("/WEB-INF/views/room/room-list.jsp").forward(request, response);
-                    break;
+            default:
+                // 1. Xác định trang hiện tại (Mặc định là trang 1 nếu không truyền vào)
+                String indexPage = request.getParameter("index");
+                if (indexPage == null) {
+                    indexPage = "1";
+                }
+                int index = Integer.parseInt(indexPage);
+
+                // 2. Tính toán tổng số trang (để hiển thị dãy số 1 2 3...)
+                // Ta cần biết tổng có bao nhiêu phòng để chia cho 5
+                int count = roomDAO.getTotalRooms(); 
+                int endPage = count / 5;
+                if (count % 5 != 0) {
+                    endPage++; // Nếu còn lẻ (ví dụ 12 phòng chia 5 = 2 dư 2) thì cần thêm 1 trang nữa
+                }
+
+                // 3. Lấy dữ liệu CHỈ CỦA TRANG ĐÓ (Thay thế getAllRooms bằng pagingRooms)
+                List<Room> list = roomDAO.pagingRooms(index);
+
+                // 4. Đẩy dữ liệu sang JSP
+                request.setAttribute("roomsList", list); // Danh sách 5 phòng
+                request.setAttribute("endPage", endPage); // Tổng số trang (để vẽ nút)
+                request.setAttribute("tag", index);       // Trang hiện tại (để tô màu nút active)
+                
+                // Chuyển tiếp đến trang JSP
+                request.getRequestDispatcher("/WEB-INF/views/room/room-list.jsp").forward(request, response);
+                break;
             }
         } catch (Exception ex) {
             // === PHẦN XỬ LÝ LỖI ĐÃ ĐƯỢC CẬP NHẬT ===
