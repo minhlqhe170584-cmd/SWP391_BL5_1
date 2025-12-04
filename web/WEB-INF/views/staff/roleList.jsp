@@ -4,79 +4,71 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý Vai Trò Nhân sự</title>
+    <title>Quản lý Vai trò</title>
     <style>
-        .message.success { color: green; font-weight: bold; }
-        .message.error { color: red; font-weight: bold; }
-        .form-inline input { margin-right: 5px; }
+        body { font-family: sans-serif; margin: 20px; }
+        .message { padding: 10px; margin-bottom: 15px; border-radius: 5px; }
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        table { border-collapse: collapse; width: 50%; margin-top: 20px; } /* Giảm chiều rộng bảng */
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        
+        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
+        .btn-add { background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <h2>Quản lý Vai trò (Staff Roles)</h2>
-    <hr>
+    <h2>Quản lý Vai trò (Roles)</h2>
 
     <% 
-        // Lấy thông báo từ Session Scope và hiển thị
         String message = (String) request.getSession().getAttribute("message");
         if (message != null) {
             String cssClass = message.toLowerCase().contains("lỗi") ? "error" : "success";
     %>
-            <p class="message <%= cssClass %>"><%= message %></p>
+            <div class="message <%= cssClass %>"><%= message %></div>
     <%
-            // Xóa thông báo khỏi Session sau khi hiển thị để tránh lặp lại
             request.getSession().removeAttribute("message");
         }
     %>
 
-    <h3>📝 Thêm Vai trò mới</h3>
-    <form method="POST" action="staffRoles" class="form-inline">
-        <input type="hidden" name="action" value="create"/>
-        <input type="text" name="roleName" required placeholder="Tên Vai trò (ví dụ: Lễ tân)" style="width: 250px;"/>
-        <button type="submit">Thêm Vai trò</button>
-    </form>
-    
-    <hr>
-    
-    <h3>Danh sách Vai trò hiện tại</h3>
-    
-    <c:choose>
-        <c:when test="${empty rolesList}">
-            <p>Không có vai trò nào được tìm thấy.</p>
-        </c:when>
-        <c:otherwise>
-            <table border="1" cellpadding="5">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên Vai trò</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:forEach var="role" items="${rolesList}">
-                        <tr>
-                            <td><c:out value="${role.roleId}"/></td>
-                            
-                            <form method="POST" action="staffRoles" onsubmit="return validateRoleForm(this);">
-                                <td>
-                                    <input type="text" name="roleName" value="<c:out value="${role.roleName}"/>" required/>
-                                </td>
-                                <td>
-                                    <input type="hidden" name="roleId" value="<c:out value="${role.roleId}"/>"/>
-                                    
-                                    <button type="submit" name="action" value="update">Cập nhật</button>
-                                    
-                                    <button type="submit" name="action" value="delete" 
-                                            onclick="return confirm('Cảnh báo: Xóa vai trò sẽ thất bại nếu có nhân viên đang sử dụng. Bạn có chắc chắn muốn XÓA ID ${role.roleId}?');">Xóa</button>
-                                </td>
-                            </form>
-                        </tr>
-                    </c:forEach>
-                </tbody>
-            </table>
-        </c:otherwise>
-    </c:choose>
+    <div style="border: 1px solid #ddd; padding: 15px; width: 48%; background: #f9f9f9;">
+        <strong>Thêm Vai trò mới:</strong>
+        <form method="POST" action="staffRoles" style="display: inline-block; margin-left: 10px;">
+            <input type="hidden" name="action" value="create"/>
+            <input type="text" name="roleName" required placeholder="Nhập tên vai trò..." style="padding: 5px;">
+            <button type="submit" class="btn-add">Thêm</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%">ID</th>
+                <th style="width: 60%">Tên Vai trò</th>
+                <th style="width: 30%">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <c:forEach var="role" items="${rolesList}">
+                <tr>
+                    <td>${role.roleId}</td>
+                    <td>${role.roleName}</td> <td>
+                        <form method="POST" action="staffRoles">
+                            <input type="hidden" name="action" value="delete"/>
+                            <input type="hidden" name="roleId" value="${role.roleId}"/>
+                            <button type="submit" class="btn-delete" 
+                                    onclick="return confirm('Bạn có chắc chắn muốn xóa vai trò [${role.roleName}]?');">
+                                Xóa
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            </c:forEach>
+        </tbody>
+    </table>
 
 </body>
 </html>

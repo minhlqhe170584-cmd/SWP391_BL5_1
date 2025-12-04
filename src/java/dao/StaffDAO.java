@@ -24,7 +24,7 @@ public class StaffDAO extends DBContext {
     private static final String INSERT_STAFF = "INSERT INTO Staff (role_id, full_name, email, password, is_active) VALUES (?, ?, ?, ?, 1)";
     private static final String UPDATE_STAFF = "UPDATE Staff SET role_id = ?, full_name = ?, email = ?, password = ? WHERE staff_id = ?";
     private static final String DEACTIVATE_STAFF = "UPDATE Staff SET is_active = 0 WHERE staff_id = ?";
-
+    private static final String ACTIVATE_STAFF = "UPDATE Staff SET is_active = 1 WHERE staff_id = ?";
     public StaffDAO() {
         super();
     }
@@ -152,6 +152,16 @@ public class StaffDAO extends DBContext {
             }
         }
     }
+    public boolean activateStaff(int staffId) throws SQLException {
+    PreparedStatement ps = null;
+    try {
+        ps = connection.prepareStatement(ACTIVATE_STAFF);
+        ps.setInt(1, staffId);
+        return ps.executeUpdate() > 0;
+    } finally {
+        if (ps != null) ps.close();
+    }
+}
     public Staff checkLogin(String email, String password) {
         // SQL: Phải JOIN bảng StaffRoles để biết ông nhân viên này giữ chức vụ gì
         String sql = "SELECT s.*, r.role_name " +
