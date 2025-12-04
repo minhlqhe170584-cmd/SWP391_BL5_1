@@ -301,5 +301,137 @@ public class RoomDAO extends DBContext {
         }
         return list;
     }
+    
+    //Phần xử lý Room Details
+    public Room getRoomById(int id) {
+        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, " +
+                     "t.type_name, t.capacity, t.base_price_weekday, t.base_price_weekend, t.description " +
+                     "FROM Rooms r " +
+                     "INNER JOIN RoomTypes t ON r.type_id = t.type_id " +
+                     "WHERE r.room_id = ?";
+        
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, id);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    Room room = new Room();
+                    room.setRoomId(rs.getInt("room_id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setStatus(rs.getString("status"));
+                    room.setRoomPassword(rs.getString("room_password"));
+                    room.setActiveLogin(rs.getBoolean("is_active_login"));
+                    room.setTypeId(rs.getInt("type_id"));
+
+                    // Tạo đối tượng RoomType để chứa thông tin chi tiết
+                    models.RoomType rt = new models.RoomType();
+                    rt.setTypeId(rs.getInt("type_id"));
+                    rt.setTypeName(rs.getString("type_name"));
+                    rt.setCapacity(rs.getInt("capacity"));
+                    rt.setDescription(rs.getString("description"));
+                    rt.setBasePriceWeekday(rs.getBigDecimal("base_price_weekday"));
+                    rt.setBasePriceWeekend(rs.getBigDecimal("base_price_weekend"));
+                    
+                    // Gán RoomType vào Room
+                    room.setRoomType(rt);
+                    
+                    return room;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getRoomById: " + e.getMessage());
+        }
+        return null;
+    }
+    
+    //Kết thúc phần xử Room Details
+    
+    //Phần xử lý Update Room
+    public void updateRoom(Room room) {
+        String sql = "UPDATE Rooms SET room_number = ?, type_id = ?, status = ?, room_password = ?, is_active_login = ? WHERE room_id = ?";
+        
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, room.getRoomNumber());
+            st.setInt(2, room.getTypeId());
+            st.setString(3, room.getStatus());
+            st.setString(4, room.getRoomPassword());
+            st.setBoolean(5, room.isActiveLogin());
+            st.setInt(6, room.getRoomId()); // Điều kiện WHERE room_id = ?
+            
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error updateRoom: " + e.getMessage());
+        }
+    }
+    
+    
+    //Kiểm tra số phòng đã tồn tại chưa
+    public boolean checkRoomNumberExists(String roomNumber, int currentId) {
+        // Logic: Tìm xem có phòng nào KHÁC phòng hiện tại mà trùng số phòng không
+        String sql = "SELECT COUNT(*) FROM Rooms WHERE room_number = ? AND room_id != ?";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, roomNumber);
+            st.setInt(2, currentId); // Nếu là Create thì truyền id = 0 hoặc -1
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checkRoomNumberExists: " + e.getMessage());
+        }
+        return false;
+    }
+    
+    
+    // Kết thúc phần xử lý Update Room
+    
+    
+    //Phần Ban Room cấm phòng
+    public void updateRoomStatus(int roomId, String newStatus) {
+        String sql = "UPDATE Rooms SET status = ? WHERE room_id = ?";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, newStatus);
+            st.setInt(2, roomId);
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error updateRoomStatus: " + e.getMessage());
+        }
+    }
+    
+    //Kết thúc phần cấm phòng
+    
+    
+    //Phần xử lý Insert phòng(Thêm phòng mới)
+    public void insertRoom(Room room) {
+        String sql = "INSERT INTO Rooms (room_number, type_id, status, room_password, is_active_login) VALUES (?, ?, ?, ?, ?)";
+        
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, room.getRoomNumber());
+            st.setInt(2, room.getTypeId());
+            st.setString(3, room.getStatus());
+            st.setString(4, room.getRoomPassword());
+            st.setBoolean(5, room.isActiveLogin());
+            
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error insertRoom: " + e.getMessage());
+        }
+    }
+    
+    //Kết thúc phần xử lý Insert phòng
+    
+    
+    //Phần xử lý delete phòng
+    public void deleteRoom(int roomId) {
+        String sql = "DELETE FROM Rooms WHERE room_id = ?";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, roomId);
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error deleteRoom: " + e.getMessage());
+        }
+    }
+    
+    // Kết thúc phần xử lý delete phòng
 
 }
