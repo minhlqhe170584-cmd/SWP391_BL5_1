@@ -249,7 +249,13 @@
         </c:if>
 
         <c:forEach begin="1" end="${endPage}" var="i">
-            <a href="rooms?action=LIST&index=${i}" class="${tag == i ? 'active' : ''}">${i}</a>
+            <c:choose>
+                <c:when test="${i == 1 || i == endPage || (i >= tag - 2 && i <= tag + 2)}">
+                    <a href="rooms?action=LIST&index=${i}" class="${tag == i ? 'active' : ''}">${i}</a>
+                </c:when>
+                
+                <%-- Tùy chọn: Thêm dấu ... nếu khoảng cách quá xa (Logic này hơi phức tạp với JSTL thuần nên ta có thể bỏ qua hoặc chỉ hiện khoảng trắng) --%>
+            </c:choose>
         </c:forEach>
 
         <c:if test="${tag < endPage}">
