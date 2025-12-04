@@ -159,5 +159,43 @@ public class RoomDAO extends DBContext {
         return list;
     }
     //Kết thúc phần xử lý phân trang
+    
+    
+    //Phần xử lý tìm kiếm phòng theo roomNumber
+    // Hàm tìm kiếm theo số phòng (Search by Room Number)
+    public List<Room> searchRoomsByNumber(String keyword) {
+        List<Room> list = new ArrayList<>();
+        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name " +
+                     "FROM Rooms r " +
+                     "INNER JOIN RoomTypes t ON r.type_id = t.type_id " +
+                     "WHERE r.room_number LIKE ? " +  // Điều kiện tìm kiếm
+                     "ORDER BY r.room_number ASC";
+        
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            // Thêm dấu % để tìm gần đúng (VD: nhập "10" tìm ra "101", "102", "210"...)
+            st.setString(1, "%" + keyword + "%"); 
+            ResultSet rs = st.executeQuery();
+            
+            while (rs.next()) {
+                Room room = new Room();
+                room.setRoomId(rs.getInt("room_id"));
+                room.setRoomNumber(rs.getString("room_number"));
+                room.setStatus(rs.getString("status"));
+                room.setActiveLogin(rs.getBoolean("is_active_login"));
+                room.setTypeId(rs.getInt("type_id"));
+                
+                RoomType rt = new RoomType();
+                rt.setTypeId(rs.getInt("type_id"));
+                rt.setTypeName(rs.getString("type_name"));
+                room.setRoomType(rt);
+                
+                list.add(room);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error searchRoomsByNumber: " + e.getMessage());
+        }
+        return list;
+    }
 
 }

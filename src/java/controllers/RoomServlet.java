@@ -85,6 +85,17 @@ public class RoomServlet extends HttpServlet {
                 //     break;
                 case "LIST":
             default:
+                String keyword = request.getParameter("keyword");
+                
+                // KIỂM TRA: Nếu có từ khóa tìm kiếm -> Gọi hàm Search
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                    List<Room> list = roomDAO.searchRoomsByNumber(keyword.trim());
+                    request.setAttribute("roomsList", list);
+                    request.setAttribute("keyword", keyword); // Gửi lại keyword để hiện ở ô input
+                    // Khi search thì không cần tính phân trang (hoặc logic phân trang tìm kiếm phức tạp hơn)
+                }
+                // NẾU KHÔNG tìm kiếm -> Gọi hàm Phân trang cũ
+                else {
                 // 1. Xác định trang hiện tại (Mặc định là trang 1 nếu không truyền vào)
                 String indexPage = request.getParameter("index");
                 if (indexPage == null) {
@@ -107,7 +118,7 @@ public class RoomServlet extends HttpServlet {
                 request.setAttribute("roomsList", list); // Danh sách 5 phòng
                 request.setAttribute("endPage", endPage); // Tổng số trang (để vẽ nút)
                 request.setAttribute("tag", index);       // Trang hiện tại (để tô màu nút active)
-                
+                }
                 // Chuyển tiếp đến trang JSP
                 request.getRequestDispatcher("/WEB-INF/views/room/room-list.jsp").forward(request, response);
                 break;
