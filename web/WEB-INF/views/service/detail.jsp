@@ -1,42 +1,53 @@
 <%@page contentType="text/html;charset=UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 
-<h2>${service == null ? "Create Service" : "Update Service"}</h2>
+<h2>Service Detail</h2>
+
+<c:if test="${not empty errorMessage}">
+    <div style="color:red">${errorMessage}</div>
+</c:if>
 
 <form method="post" action="service">
+    <input type="hidden" name="serviceId" value="${service.serviceId}" />
 
-    <c:if test="${service != null}">
-        <input type="hidden" name="serviceId" value="${service.serviceId}" />
-    </c:if>
+    <div>
+        <label>Name:</label>
+        <input type="text" name="serviceName" value="${service.serviceName}" />
+    </div>
 
-    Name:<br>
-    <input type="text" name="serviceName" value="${service.serviceName}" required /><br><br>
+    <div>
+        <label>Price:</label>
+        <input type="text" name="price" value="${service.price}" />
+    </div>
 
-    Price:<br>
-    <input type="number" step="0.01" name="price" value="${service.price}" required /><br><br>
+    <div>
+        <label>Unit:</label>
+        <input type="text" name="unit" value="${service.unit}" />
+    </div>
 
-    Unit:<br>
-    <input type="text" name="unit" value="${service.unit}" /><br><br>
+    <div>
+        <label>Image URL:</label>
+        <input type="text" name="imageUrl" value="${service.imageUrl}" />
+    </div>
 
-    Image URL:<br>
-    <input type="text" name="imageUrl" value="${service.imageUrl}" /><br><br>
+    <div>
+        <label>Active:</label>
+        <input type="checkbox" name="isActive"
+               <c:if test="${service.isActive}">checked="checked"</c:if> />
+    </div>
 
-    Active:
-    <input type="checkbox" name="isActive"
-           <c:if test="${service != null && service.isActive}">checked</c:if> /><br><br>
-
-    Category:<br>
-    <select name="categoryId">
-        <c:forEach items="${categories}" var="c">
-            <option value="${c.categoryId}"
-                <c:if test="${service != null && c.categoryId == service.categoryId}">
-                    selected
-                </c:if>
-            >
-                ${c.categoryName}
-            </option>
-        </c:forEach>
-    </select><br><br>
+    <div>
+        <label>Category:</label>
+        <select name="categoryId">
+            <c:forEach items="${categories}" var="c">
+                <option value="${c.categoryId}"
+                    <c:if test="${service.categoryId == c.categoryId}">selected="selected"</c:if>>
+                    ${c.categoryName}
+                </option>
+            </c:forEach>
+        </select>
+    </div>
 
     <button type="submit">Save</button>
+    <a href="service">Back to list</a>
 </form>

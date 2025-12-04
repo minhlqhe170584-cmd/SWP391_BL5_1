@@ -3,6 +3,7 @@ package controllers;
 import dao.CustomerDAO;
 import models.Customer;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,74 +13,77 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet(name = "RegisterServlet", urlPatterns = {"/register"})
 public class RegisterServlet extends HttpServlet {
 
-    // 1. Nếu người dùng gọi trang này (GET), chuyển sang file JSP để hiện form
+    // GET: Hiển thị form đăng ký
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("register.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/users/register.jsp").forward(request, response);
     }
 
-    // 2. Khi người dùng bấm nút "Đăng Ký" (POST), xử lý dữ liệu
+    // POST: Xử lý dữ liệu khi bấm nút Đăng Ký
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Cấu hình tiếng Việt
         request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
 
-        // Lấy dữ liệu từ form
+        // 1. Lấy dữ liệu (Không lấy cccd nữa)
         String fullName = request.getParameter("fullname");
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
-        String cccd = request.getParameter("cccd"); // Identity Card
         String pass = request.getParameter("pass");
         String rePass = request.getParameter("repass");
-
-        // Gọi DAO
+        
         CustomerDAO dao = new CustomerDAO();
-
-        // --- VALIDATION (Kiểm tra dữ liệu) ---
+        String targetUrl = "/WEB-INF/views/users/register.jsp";
+        String errorMsg = null;
         
-        // 1. Kiểm tra mật khẩu nhập lại có khớp không
+        // --- Chuẩn bị dữ liệu Input để giữ lại trên form khi lỗi ---
+        request.setAttribute("fullname", fullName);
+        request.setAttribute("email", email);
+        request.setAttribute("phone", phone);
+        
+        // 2. VALIDATION LOGIC
+        
+        // B1. Kiểm tra mật khẩu xác nhận
         if (!pass.equals(rePass)) {
-            request.setAttribute("mess", "Mật khẩu nhập lại không khớp!");
-            // Giữ lại thông tin người dùng đã nhập để họ đỡ phải gõ lại (trừ pass)
-            request.setAttribute("fullname", fullName);
-            request.setAttribute("email", email);
-            request.setAttribute("phone", phone);
-            request.setAttribute("cccd", cccd);
-            
-            request.getRequestDispatcher("register.jsp").forward(request, response);
+            errorMsg = "Mật khẩu xác nhận không khớp!";
+        } 
+        // B2. Kiểm tra Email đã tồn tại chưa
+        else if (dao.checkEmailExist(email)) {
+            errorMsg = "Email này đã được sử dụng!";
+        }
+
+        // 3. XỬ LÝ CÓ LỖI
+        if (errorMsg != null) {
+            request.setAttribute("mess", errorMsg);
+            request.getRequestDispatcher(targetUrl).forward(request, response);
             return;
         }
 
-        // 2. Kiểm tra Email đã tồn tại chưa
-        if (dao.checkEmailExist(email)) {
-            request.setAttribute("mess", "Email này đã được sử dụng!");
-            request.setAttribute("fullname", fullName);
-            request.setAttribute("phone", phone);
-            request.setAttribute("cccd", cccd);
+        // 4. LƯU VÀO DATABASE
+        try {
+            Customer c = new Customer();
+            c.setFullName(fullName);
+            c.setEmail(email);
+            c.setPassword(pass);
+            c.setPhone(phone);
+            // Không set IdentityCard
+            c.setIsActive(true); 
+            c.setCreateAt(LocalDateTime.now());
             
-            request.getRequestDispatcher("register.jsp").forward(request, response);
-            return;
+            dao.register(c); 
+
+            // 5. THÀNH CÔNG -> Chuyển sang trang Login
+            request.setAttribute("mess", "Đăng ký thành công! Vui lòng đăng nhập.");
+            request.setAttribute("user", email); // Điền sẵn email vào form login
+            
+            request.getRequestDispatcher("/WEB-INF/views/users/login.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("mess", "Lỗi hệ thống: Không thể hoàn tất đăng ký. Vui lòng thử lại.");
+            request.getRequestDispatcher(targetUrl).forward(request, response);
         }
-
-        // --- NẾU MỌI THỨ OK ---
-        
-        // Tạo đối tượng Customer mới
-        Customer c = new Customer();
-        c.setFullName(fullName);
-        c.setEmail(email);
-        c.setPhone(phone);
-        c.setIdentityCard(cccd);
-        c.setPassword(pass); 
-
-        // Lưu vào Database
-        dao.register(c);
-
-        // Chuyển hướng về trang Login và báo thành công
-        request.setAttribute("mess", "Đăng ký thành công! Mời đăng nhập.");
-        request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 }
