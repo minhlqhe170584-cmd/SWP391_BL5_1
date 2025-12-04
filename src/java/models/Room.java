@@ -12,7 +12,6 @@ public class Room {
     private int roomId;
     private String roomNumber;
     private int typeId;
-    private RoomType roomType;
     private String status;       // Available, Occupied, Dirty...
     private String roomPassword; // Mật khẩu đăng nhập tạm thời
     private boolean isActiveLogin; // true: Đang cho phép đăng nhập
@@ -20,18 +19,14 @@ public class Room {
     public Room() {
     }
 
-    public Room(int roomId, String roomNumber, int typeId, RoomType roomType, String status, String roomPassword, boolean isActiveLogin) {
+    public Room(int roomId, String roomNumber, int typeId, String status, String roomPassword, boolean isActiveLogin) {
         this.roomId = roomId;
         this.roomNumber = roomNumber;
         this.typeId = typeId;
-        this.roomType = roomType;
         this.status = status;
         this.roomPassword = roomPassword;
         this.isActiveLogin = isActiveLogin;
     }
-    
-    
-
 
     public int getRoomId() {
         return roomId;
@@ -79,14 +74,6 @@ public class Room {
 
     public void setActiveLogin(boolean activeLogin) {
         isActiveLogin = activeLogin;
-    }
-    
-    public RoomType getRoomType() {
-        return roomType;
-    }
-
-    public void setRoomType(RoomType roomType) {
-        this.roomType = roomType;
     }
 
     @Override
