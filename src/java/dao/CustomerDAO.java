@@ -13,7 +13,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import models.Customer;
 import dbContext.DBContext;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -118,6 +120,92 @@ public class CustomerDAO extends DBContext{
             System.out.println("Error deactivate Customer: " + e.getMessage());
         }
     }
+    
+    public int countCustomers(String keyword) {
+        String sql = "SELECT COUNT(*) FROM Customers WHERE 1=1 ";
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql += " AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ";
+        }
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchPattern = "%" + keyword + "%";
+                st.setString(1, searchPattern);
+                st.setString(2, searchPattern);
+                st.setString(3, searchPattern);
+            }
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error countCustomers: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    
+    public List<Customer> searchCustomers(String keyword, String sortBy, String sortOrder, int page, int pageSize) {
+        List<Customer> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM Customers WHERE 1=1 ");
+
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ");
+        }
+
+
+        Map<String, String> allowedColumns = new HashMap<>();
+        allowedColumns.put("full_name", "full_name");
+        allowedColumns.put("email", "email");
+        allowedColumns.put("create_at", "create_at");
+        allowedColumns.put("customer_id", "customer_id");
+        
+        String sortCol = allowedColumns.getOrDefault(sortBy, "customer_id");
+        String order = "DESC".equalsIgnoreCase(sortOrder) ? "DESC" : "ASC";
+        
+        sql.append(" ORDER BY ").append(sortCol).append(" ").append(order);
+
+        
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
+            int paramIndex = 1;
+
+            
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchPattern = "%" + keyword + "%";
+                st.setString(paramIndex++, searchPattern);
+                st.setString(paramIndex++, searchPattern);
+                st.setString(paramIndex++, searchPattern);
+            }
+
+            
+            int offset = (page - 1) * pageSize;
+            st.setInt(paramIndex++, offset);
+            st.setInt(paramIndex++, pageSize);
+
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Customer(
+                        rs.getInt("customer_id"),
+                        rs.getString("full_name"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getString("phone"),
+                        rs.getBoolean("is_active"),
+                        rs.getObject("create_at", LocalDateTime.class)
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error searchCustomers: " + e.getMessage());
+        }
+        return list;
+    }
+    
+    
     public Customer checkLogin(String email, String password) {
         // SQL: Tìm khách hàng có email, pass đúng và đang hoạt động (is_active = 1)
         String sql = "SELECT * FROM Customers WHERE email = ? AND password = ? AND is_active = 1";
