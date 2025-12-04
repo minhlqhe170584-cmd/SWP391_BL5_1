@@ -9,7 +9,6 @@ import dao.RoleDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,7 +20,6 @@ import java.sql.SQLException;
  *
  * @author Admin
  */
-@WebServlet(name = "RoleServlet", urlPatterns = {"/staffRoles"})
 public class RoleServlet extends HttpServlet {
 
     private RoleDAO roleDAO;
@@ -74,7 +72,7 @@ public class RoleServlet extends HttpServlet {
         try {
             List<Role> roles = roleDAO.getAllRoles();
             request.setAttribute("rolesList", roles);
-            request.getRequestDispatcher("roleList.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/staff/roleList.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
