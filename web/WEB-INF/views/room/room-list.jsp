@@ -240,6 +240,26 @@
                 background-color: #7f8c8d;
             }
         </style>
+
+        <!--        thẻ style css cho bọ lọc filter-->
+
+        <style>
+            /* CSS cho các ô Filter Select */
+            .filter-select {
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                outline: none;
+                background-color: #fff;
+                color: #444;
+                cursor: pointer;
+                height: 40px; /* Chiều cao bằng với nút Search */
+            }
+
+            .filter-select:focus {
+                border-color: #3498db;
+            }
+        </style>
     </head>
     <body>
 
@@ -248,20 +268,59 @@
 
             <a href="rooms?action=NEW" class="btn-add">➕ Add New Room</a>
 
-           
+
 
             <!--    Thanh tìm kiếm theo Room Number-->
-            <div class="toolbar">
+<!--            <div class="toolbar">
 
                 <form action="rooms" method="GET" class="search-form">
                     <input type="hidden" name="action" value="LIST">
                     <input type="text" name="keyword" value="${keyword}" placeholder="Search room number..." class="search-input">
                     <button type="submit" class="btn-search">Search</button>
                 </form>
-            </div>
+            </div>-->
 
             <!--    Thanh tìm kiếm theo Room Number-->
 
+            <div class="toolbar">
+            <!--            Bộ lọc filter-->
+            <form action="rooms" method="GET" class="search-form">
+                <input type="hidden" name="action" value="LIST">
+
+                <input type="text" name="keyword" value="${keyword}" placeholder="Search room number..." class="search-input">
+
+                <select name="floor" class="filter-select">
+                    <option value="">All Floors</option>
+                    <c:forEach begin="1" end="5" var="f">
+                        <option value="${f}" ${currentFloor == f ? 'selected' : ''}>Floor ${f}</option>
+                    </c:forEach>
+                </select>
+
+                <select name="typeId" class="filter-select">
+                    <option value="">All Types</option>
+                    <c:forEach var="t" items="${listType}">
+                        <option value="${t.typeId}" ${currentType == t.typeId ? 'selected' : ''}>
+                            ${t.typeName}
+                        </option>
+                    </c:forEach>
+                </select>
+
+                <select name="status" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="Available" ${currentStatus == 'Available' ? 'selected' : ''}>Available</option>
+                    <option value="Occupied" ${currentStatus == 'Occupied' ? 'selected' : ''}>Occupied</option>
+                    <option value="Dirty" ${currentStatus == 'Dirty' ? 'selected' : ''}>Dirty</option>
+                </select>
+
+                <select name="active" class="filter-select">
+                    <option value="">All Active</option>
+                    <option value="true" ${currentActive == 'true' ? 'selected' : ''}>Active (Yes)</option>
+                    <option value="false" ${currentActive == 'false' ? 'selected' : ''}>Inactive (No)</option>
+                </select>
+
+                <button type="submit" class="btn-search">Search & Filter</button>
+            </form>
+            </div>
 
             <c:if test="${not empty errorMessage}">
                 <div class="error-msg">
@@ -332,28 +391,29 @@
                 </tbody>
             </table>
 
-            <c:if test="${not empty keyword}">
-                <div style="text-align: center;">
+           <c:if test="${isFiltering}">
+                <div style="text-align: center; margin-top: 20px;">
                     <a href="rooms?action=LIST" class="btn-back">&larr; Back to Full List</a>
                 </div>
             </c:if>
 
-            <c:if test="${empty keyword}">
+            <c:if test="${endPage > 1}">
                 <div class="pagination">
                     <c:if test="${tag > 1}">
-                        <a href="rooms?action=LIST&index=${tag-1}">&laquo; Previous</a>
+                        <a href="rooms?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">&laquo; Previous</a>
                     </c:if>
 
                     <c:forEach begin="1" end="${endPage}" var="i">
                         <c:choose>
                             <c:when test="${i == 1 || i == endPage || (i >= tag - 2 && i <= tag + 2)}">
-                                <a href="rooms?action=LIST&index=${i}" class="${tag == i ? 'active' : ''}">${i}</a>
+                                <a href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}" 
+                                   class="${tag == i ? 'active' : ''}">${i}</a>
                             </c:when>
                         </c:choose>
                     </c:forEach>
 
                     <c:if test="${tag < endPage}">
-                        <a href="rooms?action=LIST&index=${tag+1}">Next &raquo;</a>
+                        <a href="rooms?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">Next &raquo;</a>
                     </c:if>
                 </div>
             </c:if>
