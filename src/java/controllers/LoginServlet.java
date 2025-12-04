@@ -70,7 +70,7 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("USER", customer);
                 session.setMaxInactiveInterval(1800);
                 
-                response.sendRedirect("home"); // Chuyển về trang chủ
+                response.sendRedirect("HomeServlet"); // Chuyển về trang chủ
                 return;
             }
 
