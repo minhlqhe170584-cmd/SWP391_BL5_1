@@ -1,15 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
-
 package controllers;
+
 import java.sql.SQLException;
 import dao.RoleDAO;
 import dao.StaffDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,10 +15,12 @@ import models.Role;
 import models.Staff;
 
 /**
- *
  * @author Admin
  */
+// SỬA: Thêm chữ 's' vào urlPatterns để khớp với redirect
+@WebServlet(name = "StaffServlet", urlPatterns = {"/staffs"}) 
 public class StaffServlet extends HttpServlet {
+
     private StaffDAO staffDAO;
     private RoleDAO roleDAO; 
 
@@ -30,48 +29,34 @@ public class StaffServlet extends HttpServlet {
         staffDAO = new StaffDAO(); 
         roleDAO = new RoleDAO(); 
     }
-    /** 
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
             out.println("<title>Servlet StaffServlet</title>");  
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet StaffServlet at " + request.getContextPath () + "</h1>");
+            // SỬA: Xóa dấu cách thừa
+            out.println("<h1>Servlet StaffServlet at " + request.getContextPath() + "</h1>"); 
             out.println("</body>");
             out.println("</html>");
         }
     } 
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /** 
-     * Handles the HTTP <code>GET</code> method.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
         try {
             List<Staff> staffs = staffDAO.getAllStaffs();
-            List<Role> roles = roleDAO.getAllRoles(); // Dùng cho dropdown Role
+            List<Role> roles = roleDAO.getAllRoles(); 
             
             request.setAttribute("staffsList", staffs);
             request.setAttribute("rolesList", roles);        
-            request.getRequestDispatcher("/views/staff/staffList.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/staff/staffList.jsp").forward(request, response);
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -79,17 +64,10 @@ public class StaffServlet extends HttpServlet {
         }
     } 
 
-    /** 
-     * Handles the HTTP <code>POST</code> method.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8"); // Xử lý tiếng Việt
+        request.setCharacterEncoding("UTF-8"); 
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -106,6 +84,9 @@ public class StaffServlet extends HttpServlet {
                 case "deactivate":
                     deactivateStaff(request, response);
                     break;
+                case "activate": // Case Mở khóa
+                    activateStaff(request, response);
+                    break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/staffs");
                     break;
@@ -116,6 +97,7 @@ public class StaffServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/staffs");
         }
     }
+
     private void insertStaff(HttpServletRequest request, HttpServletResponse response) 
             throws SQLException, IOException, ServletException {
         
@@ -155,13 +137,14 @@ public class StaffServlet extends HttpServlet {
         }        
         response.sendRedirect(request.getContextPath() + "/staffs");
     }
+
     private void updateStaff(HttpServletRequest request, HttpServletResponse response) 
             throws SQLException, IOException, ServletException {
         int staffId = Integer.parseInt(request.getParameter("staffId"));
         int roleId = Integer.parseInt(request.getParameter("roleId"));
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
-        String password = request.getParameter("password"); // Nếu form để trống, password sẽ là chuỗi rỗng
+        String password = request.getParameter("password"); 
         
         Role role = new Role();
         role.setRoleId(roleId);
@@ -173,7 +156,7 @@ public class StaffServlet extends HttpServlet {
         updatedStaff.setEmail(email.trim());
         updatedStaff.setPassWordHash(password); 
 
-        try {           
+        try {            
             boolean success = staffDAO.updateStaff(updatedStaff); 
 
             if (success) {
@@ -192,6 +175,7 @@ public class StaffServlet extends HttpServlet {
 
         response.sendRedirect(request.getContextPath() + "/staffs");
     }
+
     private void deactivateStaff(HttpServletRequest request, HttpServletResponse response) 
             throws SQLException, IOException, ServletException {
         
@@ -214,14 +198,30 @@ public class StaffServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/staffs");
     }
 
+    private void activateStaff(HttpServletRequest request, HttpServletResponse response) 
+        throws SQLException, IOException, ServletException {
+    
+        String staffIdStr = request.getParameter("staffId");
+        
+        try {
+            int staffId = Integer.parseInt(staffIdStr); 
+            boolean success = staffDAO.activateStaff(staffId); 
+            
+            if (success) {
+                 request.getSession().setAttribute("message", "Đã MỞ KHÓA nhân viên ID=" + staffId + " thành công!");
+            } else {
+                 request.getSession().setAttribute("message", "LỖI: Không tìm thấy nhân viên để mở khóa.");
+            }
 
-    /** 
-     * Returns a short description of the servlet.
-     * @return a String containing servlet description
-     */
+        } catch (NumberFormatException e) {
+            request.getSession().setAttribute("message", "LỖI ĐẦU VÀO: ID nhân viên không hợp lệ.");
+        }
+        
+        response.sendRedirect(request.getContextPath() + "/staffs");
+    }
+
     @Override
     public String getServletInfo() {
         return "Short description";
-    }// </editor-fold>
-
+    }
 }
