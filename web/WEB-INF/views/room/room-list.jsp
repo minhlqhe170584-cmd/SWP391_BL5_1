@@ -310,7 +310,6 @@
                     <option value="Available" ${currentStatus == 'Available' ? 'selected' : ''}>Available</option>
                     <option value="Occupied" ${currentStatus == 'Occupied' ? 'selected' : ''}>Occupied</option>
                     <option value="Dirty" ${currentStatus == 'Dirty' ? 'selected' : ''}>Dirty</option>
-                    <option value="Maintenance" ${currentStatus == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
                 </select>
 
                 <select name="active" class="filter-select">
@@ -379,29 +378,10 @@
                                     <a href="rooms?action=VIEW&id=${room.roomId}" class="btn-action btn-view">View</a>
 
                                     <a href="rooms?action=EDIT&id=${room.roomId}" class="btn-action btn-edit">Edit</a>
-                                    
-                                    <c:choose>
-                                        <c:when test="${room.status == 'Maintenance'}">
-                                            <a href="rooms?action=BAN&id=${room.roomId}" 
-                                               class="btn-action" 
-                                               style="background-color: #27ae60;"
-                                               onclick="confirmBan(event, '${room.roomNumber}', 'unban')">
-                                                Unban
-                                            </a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a href="rooms?action=BAN&id=${room.roomId}" 
-                                               class="btn-action" 
-                                               style="background-color: #34495e;"
-                                               onclick="confirmBan(event, '${room.roomNumber}', 'ban')">
-                                                Ban
-                                            </a>
-                                        </c:otherwise>
-                                    </c:choose>
 
                                     <a href="rooms?action=DELETE&id=${room.roomId}"
                                        class="btn-action btn-delete"
-                                       onclick="confirmDelete(event, '${room.roomNumber}')">
+                                       onclick="return confirm('Are you sure you want to delete Room ${room.roomNumber}?')">
                                         Delete
                                     </a>
                                 </div>
@@ -438,97 +418,6 @@
                 </div>
             </c:if>
         </div>
-                
-<%-- Thông báo Success --%>
-            <c:if test="${not empty sessionScope.successMessage}">
-                <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 5px; position: relative;">
-                    ✅ ${sessionScope.successMessage}
-                    
-                    <span onclick="this.parentElement.style.display='none'" 
-                          style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-weight: bold; font-size: 20px; line-height: 1;">
-                        &times;
-                    </span>
-                </div>
-                <c:remove var="successMessage" scope="session" />
-            </c:if>
-
-            <%-- Thông báo Error --%>
-            <c:if test="${not empty errorMessage}">
-                <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; margin-bottom: 20px; border: 1px solid #f5c6cb; border-radius: 5px; position: relative;">
-                    ⚠ ${errorMessage}
-                    
-                    <span onclick="this.parentElement.style.display='none'" 
-                          style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-weight: bold; font-size: 20px; line-height: 1;">
-                        &times;
-                    </span>
-                </div>
-            </c:if>
 
     </body>
-    
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script>
-    function confirmBan(event, roomNumber, action) {
-        event.preventDefault(); // 1. Ngăn không cho thẻ <a> chạy ngay lập tức
-        const link = event.currentTarget.href; // Lấy đường dẫn từ thẻ <a>
-
-        // Cấu hình nội dung popup tùy theo hành động Ban hay Unban
-        let titleInfo = "";
-        let textInfo = "";
-        let iconType = "";
-        let confirmColor = "";
-
-        if (action === 'ban') {
-            titleInfo = "Ban Room " + roomNumber + "?";
-            textInfo = "The status will be changed to Maintenance!";
-            iconType = "warning"; // Icon tam giác vàng cảnh báo
-            confirmColor = "#d33"; // Nút màu đỏ
-        } else {
-            titleInfo = "Unban Room " + roomNumber + "?";
-            textInfo = "The room will become Available again!";
-            iconType = "question"; // Icon dấu hỏi xanh
-            confirmColor = "#27ae60"; // Nút màu xanh lá
-        }
-
-        // 2. Hiển thị SweetAlert
-        Swal.fire({
-            title: titleInfo,
-            text: textInfo,
-            icon: iconType,
-            showCancelButton: true,
-            confirmButtonColor: confirmColor,
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'No'
-        }).then((result) => {
-            // 3. Nếu người dùng bấm Yes -> Chuyển trang
-            if (result.isConfirmed) {
-                window.location.href = link;
-            }
-        });
-    }
-</script>
-
-<script>
-    // Hàm xác nhận xóa phòng
-    function confirmDelete(event, roomNumber) {
-        event.preventDefault(); // Chặn chuyển trang ngay
-        const link = event.currentTarget.href;
-
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "Delete Room " + roomNumber + "? You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33', // Màu đỏ cho nút xóa
-            cancelButtonColor: '#3085d6', // Màu xanh cho nút hủy
-            confirmButtonText: 'Yes'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = link; // Chuyển trang để xóa thật
-            }
-        });
-    }
-</script>
 </html>

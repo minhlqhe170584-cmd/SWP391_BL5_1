@@ -77,128 +77,25 @@ public class RoomServlet extends HttpServlet {
 
         try {
             switch (action.toUpperCase()) {
+                // case "NEW": ...
+                // case "DELETE": ...
                 
-                // === 1. CHỨC NĂNG BAN / UNBAN (ĐỔI TRẠNG THÁI NHANH) ===
-                case "BAN":
-                    String idBanStr = request.getParameter("id");
-                    if (idBanStr != null) {
-                        try {
-                            int id = Integer.parseInt(idBanStr);
-                            Room room = roomDAO.getRoomById(id);
-                            if (room != null) {
-                                String newStatus;
-                                String msg;
-                                if ("Maintenance".equals(room.getStatus())) {
-                                    newStatus = "Available"; 
-                                    msg = "Unbanned room " + room.getRoomNumber() + ". Status set to Available.";
-                                } else {
-                                    newStatus = "Maintenance"; 
-                                    msg = "Banned room " + room.getRoomNumber() + ". Status set to Maintenance.";
-                                }
-                                roomDAO.updateRoomStatus(id, newStatus);
-                                request.getSession().setAttribute("successMessage", msg);
-                            }
-                        } catch (NumberFormatException e) {
-                            // Id lỗi thì bỏ qua
-                        }
-                    }
-                    response.sendRedirect("rooms?action=LIST");
-                    break;
-
-                // === 2. CHỨC NĂNG HIỂN THỊ FORM UPDATE ===
-                case "EDIT":
-                    String idEdit = request.getParameter("id");
-                    if (idEdit != null) {
-                        try {
-                            int id = Integer.parseInt(idEdit);
-                            Room room = roomDAO.getRoomById(id);
-                            List<models.RoomType> listType = roomDAO.getAllRoomTypes();
-                            
-                            request.setAttribute("room", room); 
-                            request.setAttribute("listType", listType); 
-                            request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
-                        } catch (NumberFormatException e) {
-                            response.sendRedirect("rooms?action=LIST");
-                        }
-                    } else {
-                        response.sendRedirect("rooms?action=LIST");
-                    }
-                    break;
-
-                // === 3. CHỨC NĂNG HIỂN THỊ FORM TẠO MỚI ===
-                case "NEW":
-                    List<models.RoomType> listTypeNew = roomDAO.getAllRoomTypes();
-                    request.setAttribute("listType", listTypeNew);
-                    // Chuyển sang form rỗng
-                    request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
-                    break;    
-
-                // === 4. CHỨC NĂNG XEM CHI TIẾT ===
-                case "VIEW":
-                    String idView = request.getParameter("id");
-                    if (idView != null) {
-                        try {
-                            int id = Integer.parseInt(idView);
-                            Room room = roomDAO.getRoomById(id);
-                            if (room != null) {
-                                request.setAttribute("room", room);
-                                request.getRequestDispatcher("/WEB-INF/views/room/room-detail.jsp").forward(request, response);
-                            } else {
-                                request.setAttribute("errorMessage", "Room not found with ID: " + id);
-                                request.getRequestDispatcher("/rooms?action=LIST").forward(request, response);
-                            }
-                        } catch (NumberFormatException e) {
-                            response.sendRedirect("rooms?action=LIST");
-                        }
-                    } else {
-                        response.sendRedirect("rooms?action=LIST");
-                    }
-                    break;
-                
-                // === 5. CHỨC NĂNG XÓA (DELETE) - BỔ SUNG ===
-                case "DELETE":
-                    String idDel = request.getParameter("id");
-                    if (idDel != null) {
-                        try {
-                            int id = Integer.parseInt(idDel);
-                            
-                            // 1. Lấy thông tin phòng TRƯỚC khi xóa để lấy số phòng
-                            Room roomToDelete = roomDAO.getRoomById(id);
-                            
-                            if (roomToDelete != null) {
-                                String roomNum = roomToDelete.getRoomNumber(); // Lưu số phòng vào biến tạm
-                                
-                                // 2. Gọi hàm xóa bên DAO
-                                roomDAO.deleteRoom(id);
-                                
-                                // 3. Thông báo thành công (Có thêm dấu cách để không bị dính chữ)
-                                request.getSession().setAttribute("successMessage", "Deleted room " + roomNum + " successfully!");
-                            } else {
-                                request.getSession().setAttribute("errorMessage", "Room not found to delete!");
-                            }
-                            
-                        } catch (Exception e) {
-                            System.err.println("Error Delete Servlet: " + e.getMessage());
-                        }
-                    }
-                    response.sendRedirect("rooms?action=LIST");
-                    break;
-
-                // === 6. CHỨC NĂNG LIỆT KÊ (LIST & FILTER & PAGINATION) ===
                 case "LIST":
                 default:
-                    // 1. Chuẩn bị dữ liệu Dropdown
+                    // --- BƯỚC 1: Chuẩn bị dữ liệu cho Dropdown (Loại phòng) ---
+                    // Cần import models.RoomType ở đầu file
                     List<models.RoomType> listType = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listType);
 
-                    // 2. Lấy tham số Filter
+                    // --- BƯỚC 2: Lấy tất cả tham số từ Form tìm kiếm ---
                     String keyword = request.getParameter("keyword");
                     String typeId = request.getParameter("typeId");
                     String status = request.getParameter("status");
                     String active = request.getParameter("active");
                     String floor = request.getParameter("floor");
 
-                    // 3. Kiểm tra xem có đang lọc không
+                    // --- BƯỚC 3: Kiểm tra xem có đang Lọc/Tìm kiếm không ---
+                    // Chỉ cần 1 trong 5 ô có dữ liệu thì coi là đang lọc
                     boolean isFiltering = (keyword != null && !keyword.trim().isEmpty()) ||
                                           (typeId != null && !typeId.isEmpty()) ||
                                           (status != null && !status.isEmpty()) ||
@@ -208,17 +105,24 @@ public class RoomServlet extends HttpServlet {
                     request.setAttribute("isFiltering", isFiltering);
 
                     if (isFiltering) {
-                        // --- TRƯỜNG HỢP CÓ LỌC ---
+                        // === TRƯỜNG HỢP 1: CÓ LỌC (VÀ CÓ PHÂN TRANG) ===
+                        
+                        // 1. Lấy TOÀN BỘ kết quả tìm kiếm từ DB
                         List<Room> fullList = roomDAO.findRooms(keyword, typeId, status, active, floor);
                         
-                        int count = fullList.size();
+                        // 2. Tính toán phân trang trên danh sách kết quả này (In-Memory Pagination)
+                        int count = fullList.size(); // Tổng số kết quả tìm được (ví dụ: 8)
                         int endPage = count / 5;
-                        if (count % 5 != 0) endPage++;
+                        if (count % 5 != 0) {
+                            endPage++;
+                        }
                         
+                        // Xác định trang hiện tại
                         String indexPage = request.getParameter("index");
                         if (indexPage == null) indexPage = "1";
                         int index = Integer.parseInt(indexPage);
                         
+                        // Cắt danh sách (SubList) để lấy 5 phần tử cho trang hiện tại
                         int start = (index - 1) * 5;
                         int end = Math.min(start + 5, count);
                         
@@ -227,42 +131,56 @@ public class RoomServlet extends HttpServlet {
                             pagedList = fullList.subList(start, end);
                         }
                         
-                        request.setAttribute("roomsList", pagedList);
+                        // 3. Gửi dữ liệu sang JSP
+                        request.setAttribute("roomsList", pagedList); // Chỉ gửi 5 phòng của trang này
                         request.setAttribute("endPage", endPage);
                         request.setAttribute("tag", index);
+                        request.setAttribute("isFiltering", true); 
                         
-                        // Gửi lại tham số
+                        // Gửi lại các tham số filter để JSP giữ trạng thái và tạo link phân trang
                         request.setAttribute("keyword", keyword);
                         request.setAttribute("currentType", typeId);
                         request.setAttribute("currentStatus", status);
                         request.setAttribute("currentActive", active);
                         request.setAttribute("currentFloor", floor);
                         
-                    } else {
-                        // --- TRƯỜNG HỢP KHÔNG LỌC ---
+                    }   else {
+                        // === TRƯỜNG HỢP 2: KHÔNG LỌC (CHẠY PHÂN TRANG MẶC ĐỊNH) ===
+                        // 1. Xác định trang hiện tại
                         String indexPage = request.getParameter("index");
-                        if (indexPage == null) indexPage = "1";
+                        if (indexPage == null) {
+                            indexPage = "1";
+                        }
                         int index = Integer.parseInt(indexPage);
 
-                        int count = roomDAO.getTotalRooms();
+                        // 2. Tính toán tổng số trang
+                        int count = roomDAO.getTotalRooms(); 
                         int endPage = count / 5;
-                        if (count % 5 != 0) endPage++;
+                        if (count % 5 != 0) {
+                            endPage++; 
+                        }
 
+                        // 3. Lấy dữ liệu trang hiện tại
                         List<Room> list = roomDAO.pagingRooms(index);
+
+                        // 4. Đẩy dữ liệu sang JSP
                         request.setAttribute("roomsList", list);
                         request.setAttribute("endPage", endPage);
                         request.setAttribute("tag", index);
                     }
                     
+                    // Chuyển tiếp đến trang JSP
                     request.getRequestDispatcher("/WEB-INF/views/room/room-list.jsp").forward(request, response);
                     break;
             }
         } catch (Exception ex) {
+            // === XỬ LÝ LỖI ===
             response.setContentType("text/html;charset=UTF-8");
             try (PrintWriter out = response.getWriter()) {
-                out.println("<h1>ERROR</h1>");
-                out.println("<p>" + ex.getMessage() + "</p>");
-                ex.printStackTrace();
+                out.println("<h1>LỖI XỬ LÝ YÊU CẦU</h1>");
+                out.println("<p>Chi tiết lỗi:</p>");
+                out.println("<pre>" + ex.getMessage() + "</pre>");
+                ex.printStackTrace(); // In lỗi ra console server để debug
             }
         }
     }
@@ -286,117 +204,12 @@ public class RoomServlet extends HttpServlet {
 
         try {
             switch (action.toUpperCase()) {
-                case "UPDATE":
-                    // 1. Nhận dữ liệu
-                    String roomIdStr = request.getParameter("roomId");
-                    int roomId = Integer.parseInt(roomIdStr);
-                    String roomNumber = request.getParameter("roomNumber");
-                    int typeId = Integer.parseInt(request.getParameter("typeId"));
-                    String status = request.getParameter("status");
-                    String password = request.getParameter("roomPassword");
-                    boolean isActive = request.getParameter("activeLogin") != null;
-
-                    // --- 2. VALIDATE DỮ LIỆU ---
-                    String error = null;
-
-                    // Check 1: Định dạng số (Regex: chỉ chứa ký tự số 0-9)
-                    if (!roomNumber.matches("\\d+")) {
-                        error = "Room Number must contain only digits (0-9)!";
-                    } 
-                    // Check 2: Trùng lặp
-                    else if (roomDAO.checkRoomNumberExists(roomNumber, roomId)) {
-                        error = "Room Number " + roomNumber + " already exists!";
-                    }
-
-                    // Nếu có lỗi -> Quay lại trang Form và báo lỗi
-                    if (error != null) {
-                        Room room = new Room();
-                        room.setRoomId(roomId);
-                        room.setRoomNumber(roomNumber);
-                        room.setTypeId(typeId);
-                        room.setStatus(status);
-                        room.setRoomPassword(password);
-                        room.setActiveLogin(isActive);
-                        
-                        request.setAttribute("error", error);
-                        request.setAttribute("room", room); // Gửi lại dữ liệu vừa nhập để user không phải nhập lại
-                        request.setAttribute("listType", roomDAO.getAllRoomTypes()); // Gửi lại dropdown
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
-                        return; // Dừng xử lý, không chạy code update bên dưới
-                    }
-                    // ----------------------------
-
-                    // 3. Nếu không có lỗi -> Update
-                    Room updateRoom = new Room();
-                    updateRoom.setRoomId(roomId);
-                    updateRoom.setRoomNumber(roomNumber);
-                    updateRoom.setTypeId(typeId);
-                    updateRoom.setStatus(status);
-                    updateRoom.setRoomPassword(password);
-                    updateRoom.setActiveLogin(isActive);
-
-                    // 4. Gọi DAO update
-                    roomDAO.updateRoom(updateRoom);
-
-                    // 5. Thêm thông báo thành công vào Session
-                    request.getSession().setAttribute("successMessage", "Update room " + roomNumber + " successfully!");
-
-                    // 6. Quay về trang danh sách
-                    response.sendRedirect("rooms?action=LIST");
-                    break;
-                    
-                case "CREATE":
-                    // 1. Nhận dữ liệu từ form
-                    String newRoomNumber = request.getParameter("roomNumber");
-                    int newTypeId = Integer.parseInt(request.getParameter("typeId"));
-                    String newStatus = request.getParameter("status");
-                    String newPassword = request.getParameter("roomPassword");
-                    boolean newIsActive = request.getParameter("activeLogin") != null;
-
-                    // --- 2. VALIDATE DỮ LIỆU ---
-                    String errorCreate = null;
-
-                    // Check 1: Định dạng số
-                    if (!newRoomNumber.matches("\\d+")) {
-                        errorCreate = "Room Number must contain only digits (0-9)!";
-                    } 
-                    // Check 2: Trùng lặp (Truyền ID = 0 vì đang tạo mới)
-                    else if (roomDAO.checkRoomNumberExists(newRoomNumber, 0)) {
-                        errorCreate = "Room Number " + newRoomNumber + " already exists!";
-                    }
-
-                    // Nếu có lỗi -> Quay lại trang Form
-                    if (errorCreate != null) {
-                        Room roomError = new Room();
-                        roomError.setRoomNumber(newRoomNumber);
-                        roomError.setTypeId(newTypeId);
-                        roomError.setStatus(newStatus);
-                        roomError.setRoomPassword(newPassword);
-                        roomError.setActiveLogin(newIsActive);
-                        
-                        request.setAttribute("error", errorCreate);
-                        request.setAttribute("room", roomError); // Giữ lại dữ liệu đã nhập
-                        request.setAttribute("listType", roomDAO.getAllRoomTypes()); // Gửi lại dropdown
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
-                        return;
-                    }
-                    // ----------------------------
-
-                    // 3. Nếu không lỗi -> Insert
-                    Room newRoom = new Room();
-                    newRoom.setRoomNumber(newRoomNumber);
-                    newRoom.setTypeId(newTypeId);
-                    newRoom.setStatus(newStatus);
-                    newRoom.setRoomPassword(newPassword);
-                    newRoom.setActiveLogin(newIsActive);
-
-                    roomDAO.insertRoom(newRoom);
-
-                    // 4. Thông báo và chuyển trang
-                    request.getSession().setAttribute("successMessage", "Create new room " + newRoomNumber + " successfully!");
-                    response.sendRedirect("rooms?action=LIST");
-                    break;
-                
+                // case "CREATE": // Bổ sung sau: xử lý thêm mới
+                //     insertRoom(request, response);
+                //     break;
+                // case "UPDATE": // Bổ sung sau: xử lý cập nhật
+                //     updateRoom(request, response);
+                //     break;
                 case "LIST": // Xử lý POST không có action rõ ràng
                 default:
                     // Thường chuyển hướng về GET LIST sau khi xử lý POST
