@@ -5,7 +5,8 @@
 package models;
 
 import java.time.LocalDateTime;
-
+import java.time.ZoneId;
+import java.util.Date;
 /**
  *
  * @author Admin
@@ -90,7 +91,12 @@ public class Staff {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
+    public Date getCreatedAtAsDate() {
+        if (createdAt == null) {
+            return null;
+        }
+        return Date.from(createdAt.atZone(ZoneId.systemDefault()).toInstant());
+    }
     @Override
     public String toString() {
         return "Staff{"

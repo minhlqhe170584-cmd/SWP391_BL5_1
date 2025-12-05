@@ -50,18 +50,53 @@ public class StaffServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
+        String action = request.getParameter("action");
+        if (action == null) action = "list";
+
         try {
-            List<Staff> staffs = staffDAO.getAllStaffs();
-            List<Role> roles = roleDAO.getAllRoles(); 
-            
-            request.setAttribute("staffsList", staffs);
-            request.setAttribute("rolesList", roles);        
-            request.getRequestDispatcher("/WEB-INF/views/staff/staffList.jsp").forward(request, response);
-            
-        } catch (Exception e) {
+            switch (action) {
+                case "add": // Mở form thêm mới
+                    showAddForm(request, response);
+                    break;
+                case "edit": // Mở form sửa (kèm dữ liệu cũ)
+                    showEditForm(request, response);
+                    break;
+                default: // Mặc định: Xem danh sách
+                    listStaffs(request, response);
+                    break;
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi truy vấn dữ liệu Staff.");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi Database");
         }
+    }
+
+    // 1. Xem danh sách -> staffList.jsp
+    private void listStaffs(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        List<Staff> staffs = staffDAO.getAllStaffs();
+        request.setAttribute("staffsList", staffs);
+        request.getRequestDispatcher("/WEB-INF/views/staff/staffList.jsp").forward(request, response);
+    }
+
+    // 2. Form Thêm mới -> staffDetail.jsp (Trống)
+    private void showAddForm(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        List<Role> roles = roleDAO.getAllRoles();
+        request.setAttribute("rolesList", roles);
+        request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
+    }
+
+    // 3. Form Sửa -> staffDetail.jsp (Có dữ liệu)
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) 
+            throws SQLException, ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("staffId"));
+        Staff existingStaff = staffDAO.getStaffById(id);
+        List<Role> roles = roleDAO.getAllRoles();
+        
+        request.setAttribute("staff", existingStaff); // Gửi nhân viên cần sửa sang JSP
+        request.setAttribute("rolesList", roles);
+        request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
     } 
 
     @Override
