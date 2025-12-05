@@ -1,84 +1,67 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
-
 package controllers;
 
 import dao.RoleDAO;
-import java.io.IOException;
-import java.io.PrintWriter;
+import models.Role;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
-import models.Role;
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
-/**
- *
- * @author Admin
- */
 @WebServlet(name = "RoleServlet", urlPatterns = {"/staffRoles"})
 public class RoleServlet extends HttpServlet {
-
+    
     private RoleDAO roleDAO;
 
     @Override
     public void init() throws ServletException {
-        // Khởi tạo DAO khi Servlet được tạo
-        // (Sử dụng hàm tạo không tham số của RoleDAO mà gọi super() để lấy kết nối)
-        roleDAO = new RoleDAO();
+        roleDAO = new RoleDAO(); 
     }
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet RoleServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet RoleServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }   
+    // --- XỬ LÝ ĐIỀU HƯỚNG (GET) ---
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        
+        String action = request.getParameter("action");
+        if (action == null) action = "list";
+        
         try {
-            List<Role> roles = roleDAO.getAllRoles();
-            request.setAttribute("rolesList", roles);
-            request.getRequestDispatcher("/WEB-INF/views/staff/roleList.jsp").forward(request, response);
-
+            switch (action) {
+                case "add":
+                    // Chuyển sang màn hình thêm mới
+                    request.getRequestDispatcher("/WEB-INF/views/staff/roleDetail.jsp").forward(request, response);
+                    break;
+                default:
+                    // Mặc định: Hiển thị danh sách
+                    listRoles(request, response);
+                    break;
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi truy vấn dữ liệu vai trò.");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi Server");
         }
     }
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+
+    private void listRoles(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        List<Role> roles = roleDAO.getAllRoles();
+        request.setAttribute("rolesList", roles);
+        request.getRequestDispatcher("/WEB-INF/views/staff/roleList.jsp").forward(request, response);
+    }
+
+    // --- XỬ LÝ HÀNH ĐỘNG (POST) ---
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "list";
-        }
-//case
+        if (action == null) action = "list";
+        
         try {
             switch (action) {
                 case "create":
@@ -93,73 +76,50 @@ public class RoleServlet extends HttpServlet {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi SQL: " + e.getMessage());
+            request.getSession().setAttribute("message", "LỖI SQL: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/staffRoles");
         }
     }
 
-    private void insertRole(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException, ServletException {
-        request.setCharacterEncoding("UTF-8");
+    private void insertRole(HttpServletRequest request, HttpServletResponse response) 
+            throws SQLException, IOException {
         String roleName = request.getParameter("roleName");
+        
         if (roleName == null || roleName.trim().isEmpty()) {
-            request.getSession().setAttribute("message", "LỖI THÊM MỚI: Tên vai trò không được để trống.");
+            request.getSession().setAttribute("message", "LỖI: Tên vai trò không được để trống.");
         } else {
             try {
                 boolean success = roleDAO.createRole(roleName.trim());
                 if (success) {
-                    request.getSession().setAttribute("message", "Đã thêm vai trò [" + roleName.trim() + "] thành công!");
-                } else {
-                    request.getSession().setAttribute("message", "LỖI THÊM MỚI: Không thể thêm vai trò (Lỗi thao tác DB).");
+                    request.getSession().setAttribute("message", "Thêm vai trò thành công!");
                 }
-
             } catch (SQLException e) {
-                String errorMessage = e.getMessage();
-                if (errorMessage != null && errorMessage.contains("UNIQUE")) {
-                    request.getSession().setAttribute("message", "LỖI THÊM MỚI: Tên vai trò [" + roleName + "] đã tồn tại.");
+                if (e.getMessage().contains("UNIQUE")) {
+                    request.getSession().setAttribute("message", "LỖI: Tên vai trò đã tồn tại.");
                 } else {
-                    request.getSession().setAttribute("message", "LỖI SQL: " + errorMessage);
+                    throw e;
                 }
             }
         }
+        // Sau khi thêm xong, quay về trang danh sách
         response.sendRedirect(request.getContextPath() + "/staffRoles");
     }
 
-    private void deleteRole(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException, ServletException {
-
-        String roleIdStr = request.getParameter("roleId");
-
-        if (roleIdStr == null || roleIdStr.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/staffRoles");
-            return;
-        }
-
+    private void deleteRole(HttpServletRequest request, HttpServletResponse response) 
+            throws SQLException, IOException {
         try {
-            int roleId = Integer.parseInt(roleIdStr);
+            int roleId = Integer.parseInt(request.getParameter("roleId"));
             roleDAO.deleteRole(roleId);
-            request.getSession().setAttribute("message", "Vai trò ID=" + roleId + " đã được xóa thành công.");
-
+            request.getSession().setAttribute("message", "Xóa vai trò thành công!");
         } catch (NumberFormatException e) {
-            request.getSession().setAttribute("message", "LỖI XÓA: ID vai trò không hợp lệ.");
+            request.getSession().setAttribute("message", "LỖI: ID không hợp lệ.");
         } catch (SQLException e) {
-            if (e.getMessage() != null && e.getMessage().contains("FOREIGN KEY")) {
-                request.getSession().setAttribute("message", "LỖI XÓA: Không thể xóa vì vai trò này đang được sử dụng bởi các nhân viên khác.");
+            if (e.getMessage().contains("REFERENCE") || e.getMessage().contains("FOREIGN KEY")) {
+                request.getSession().setAttribute("message", "LỖI: Không thể xóa vai trò này vì đang có nhân viên nắm giữ.");
             } else {
-                request.getSession().setAttribute("message", "LỖI SQL: " + e.getMessage());
+                throw e;
             }
         }
-
         response.sendRedirect(request.getContextPath() + "/staffRoles");
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
 }
