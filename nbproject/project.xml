@@ -18,6 +18,7 @@
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
                 <library dirs="200">
+<<<<<<< Updated upstream
                     <file>${&lt;&lt;&lt;&lt;&lt;&lt;&lt; Updated upstream}</file>
                 </library>
                 <library dirs="200">
@@ -26,10 +27,12 @@
                 </library>
                 <library dirs="200">
                     <file>${file.reference.sqljdbc42.jar-1}</file>
+=======
                     <file>${file.reference.sqljdbc4__1_.jar}</file>
                 </library>
                 <library dirs="200">
                     <file>${file.reference.jaxb-api-2.1.jar}</file>
+>>>>>>> Stashed changes
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
             </web-module-libraries>
