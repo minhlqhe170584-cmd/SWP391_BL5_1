@@ -171,7 +171,7 @@
             <div class="extra-links">
                 <p>Chưa có tài khoản? <a href="register">Đăng ký ngay</a></p>
 
-                <p><a href="home" style="color: #6c757d;"><i class="fas fa-home"></i> Quay về trang chủ</a></p>
+                <p><a href="HomeServlet" style="color: #6c757d;"><i class="fas fa-home"></i> Quay về trang chủ</a></p>
             </div>
 
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
