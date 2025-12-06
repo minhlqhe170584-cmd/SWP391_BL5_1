@@ -1,479 +1,268 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
+<jsp:include page="/WEB-INF/views/common/header.jsp" />
+
+<jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
         <title>Room Management</title>
-        <style>
-            /* --- 1. Cấu trúc chung & Layout --- */
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #f0f2f5;
-                margin: 0;
-                padding: 40px 20px;
-                color: #444;
-            }
-
-            .container {
-                max-width: 1100px;
-                margin: 0 auto;
-                background: #fff;
-                padding: 30px;
-                border-radius: 12px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            }
-
-            h1 {
-                text-align: center;
-                color: #2c3e50;
-                margin-bottom: 30px;
-                font-size: 28px;
-                border-bottom: 2px solid #eee;
-                padding-bottom: 15px;
-            }
-
-            /* --- 2. Nút Thêm mới (Add New) --- */
-            .btn-add {
-                display: inline-flex;
-                align-items: center;
-                background-color: #27ae60;
-                color: white;
-                padding: 12px 24px;
-                text-decoration: none;
-                border-radius: 6px;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                box-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
-                margin-bottom: 25px;
-            }
-
-            .btn-add:hover {
-                background-color: #219150;
-                transform: translateY(-2px);
-            }
-
-            /* --- 3. Bảng dữ liệu (Table) --- */
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                background-color: #fff;
-                border-radius: 8px;
-                overflow: hidden;
-                box-shadow: 0 0 0 1px #eee;
-            }
-
-            th, td {
-                padding: 16px 20px;
-                text-align: left;
-                border-bottom: 1px solid #f1f1f1;
-            }
-
-            th {
-                background-color: #34495e;
-                color: white;
-                text-transform: uppercase;
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: 0.5px;
-            }
-
-            tr:last-child td {
-                border-bottom: none;
-            }
-
-            tr:hover {
-                background-color: #f8f9fa;
-            }
-
-            /* --- 4. Trạng thái & Login Active --- */
-            .status-badge {
-                display: inline-block;
-                padding: 5px 10px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: bold;
-            }
-
-            .status-available {
-                background-color: #e8f5e9;
-                color: #2e7d32;
-            }
-            .status-occupied {
-                background-color: #ffebee;
-                color: #c62828;
-            }
-            .status-other {
-                background-color: #fff3e0;
-                color: #ef6c00;
-            }
-
-            /* --- 5. Nhóm các nút Action (View - Edit - Delete) --- */
-            .action-links {
-                display: flex;
-                gap: 8px; /* Khoảng cách giữa các nút */
-            }
-
-            .btn-action {
-                padding: 6px 12px;
-                border-radius: 4px;
-                text-decoration: none;
-                font-size: 13px;
-                font-weight: 600;
-                transition: opacity 0.2s;
-                color: white;
-                text-align: center;
-                min-width: 50px;
-            }
-
-            .btn-action:hover {
-                opacity: 0.85;
-            }
-
-            /* Màu sắc từng nút */
-            .btn-view {
-                background-color: #3498db;
-            } /* Xanh dương */
-            .btn-edit {
-                background-color: #f39c12;
-            } /* Cam */
-            .btn-delete {
-                background-color: #e74c3c;
-            } /* Đỏ */
-
-            /* --- 6. Thông báo lỗi --- */
-            .error-msg {
-                background-color: #fde8e8;
-                color: #c53030;
-                padding: 15px;
-                border: 1px solid #fbd5d5;
-                border-radius: 6px;
-                margin-bottom: 20px;
-            }
-        </style>
-
-        <!--    css phân trang-->
-        <style>
-            .pagination {
-                display: flex;
-                justify-content: center;
-                margin-top: 20px;
-            }
-
-            .pagination a {
-                color: black;
-                float: left;
-                padding: 8px 16px;
-                text-decoration: none;
-                transition: background-color .3s;
-                border: 1px solid #ddd;
-                margin: 0 4px;
-                border-radius: 5px;
-            }
-
-            /* Hiệu ứng khi di chuột */
-            .pagination a:hover:not(.active) {
-                background-color: #ddd;
-            }
-
-            /* Trang hiện tại (Active) */
-            .pagination a.active {
-                background-color: #27ae60; /* Màu xanh lá cùng tông */
-                color: white;
-                border: 1px solid #27ae60;
-            }
-        </style>
-
-        <!--    Thẻ style css cho thanh tìm kiếm-->
-        <style>
-            /* --- 7. CSS Cho Thanh Tìm Kiếm (Toolbar) --- */
-            .toolbar {
-                display: flex;
-                justify-content: space-between; /* Đẩy nút Add sang trái, Search sang phải */
-                align-items: center;
-                margin-bottom: 25px;
-            }
-
-            /* Chỉnh lại nút Add New để không bị margin thừa */
-            .btn-add {
-                margin-bottom: 0;
-            }
-
-            .search-form {
-                display: flex;
-                gap: 8px;
-            }
-
-            .search-input {
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                width: 220px;
-                outline: none;
-            }
-
-            .btn-search {
-                padding: 10px 15px;
-                background-color: #34495e;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-weight: bold;
-            }
-            .btn-search:hover {
-                background-color: #2c3e50;
-            }
-
-            /* Nút quay lại danh sách đầy đủ */
-            .btn-back {
-                display: inline-block;
-                margin-top: 20px;
-                padding: 10px 20px;
-                background-color: #95a5a6;
-                color: white;
-                text-decoration: none;
-                border-radius: 5px;
-                font-weight: bold;
-            }
-            .btn-back:hover {
-                background-color: #7f8c8d;
-            }
-        </style>
-
-        <!--        thẻ style css cho bọ lọc filter-->
-
-        <style>
-            /* CSS cho các ô Filter Select */
-            .filter-select {
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                outline: none;
-                background-color: #fff;
-                color: #444;
-                cursor: pointer;
-                height: 40px; /* Chiều cao bằng với nút Search */
-            }
-
-            .filter-select:focus {
-                border-color: #3498db;
-            }
-        </style>
     </head>
     <body>
 
-        <div class="container">
-            <h1>🏨 Room List Management</h1>
-
-            <a href="rooms?action=NEW" class="btn-add">➕ Add New Room</a>
 
 
-
-            <!--    Thanh tìm kiếm theo Room Number-->
-<!--            <div class="toolbar">
-
-                <form action="rooms" method="GET" class="search-form">
-                    <input type="hidden" name="action" value="LIST">
-                    <input type="text" name="keyword" value="${keyword}" placeholder="Search room number..." class="search-input">
-                    <button type="submit" class="btn-search">Search</button>
-                </form>
-            </div>-->
-
-            <!--    Thanh tìm kiếm theo Room Number-->
-
-            <div class="toolbar">
-            <!--            Bộ lọc filter-->
-            <form action="rooms" method="GET" class="search-form">
-                <input type="hidden" name="action" value="LIST">
-
-                <input type="text" name="keyword" value="${keyword}" placeholder="Search room number..." class="search-input">
-
-                <select name="floor" class="filter-select">
-                    <option value="">All Floors</option>
-                    <c:forEach begin="1" end="5" var="f">
-                        <option value="${f}" ${currentFloor == f ? 'selected' : ''}>Floor ${f}</option>
-                    </c:forEach>
-                </select>
-
-                <select name="typeId" class="filter-select">
-                    <option value="">All Types</option>
-                    <c:forEach var="t" items="${listType}">
-                        <option value="${t.typeId}" ${currentType == t.typeId ? 'selected' : ''}>
-                            ${t.typeName}
-                        </option>
-                    </c:forEach>
-                </select>
-
-                <select name="status" class="filter-select">
-                    <option value="">All Status</option>
-                    <option value="Available" ${currentStatus == 'Available' ? 'selected' : ''}>Available</option>
-                    <option value="Occupied" ${currentStatus == 'Occupied' ? 'selected' : ''}>Occupied</option>
-                    <option value="Dirty" ${currentStatus == 'Dirty' ? 'selected' : ''}>Dirty</option>
-                    <option value="Maintenance" ${currentStatus == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
-                </select>
-
-                <select name="active" class="filter-select">
-                    <option value="">All Active</option>
-                    <option value="true" ${currentActive == 'true' ? 'selected' : ''}>Active (Yes)</option>
-                    <option value="false" ${currentActive == 'false' ? 'selected' : ''}>Inactive (No)</option>
-                </select>
-
-                <button type="submit" class="btn-search">Search & Filter</button>
-            </form>
-            </div>
-
-            <c:if test="${not empty errorMessage}">
-                <div class="error-msg">
-                    Error: ${errorMessage}
-                </div>
-            </c:if>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th hidden="">ID</th>
-                        <th width="15%">Room No.</th>
-                        <th width="20%">Room Type</th>
-                        <th width="15%">Status</th>
-                        <th width="15%" style="text-align: center;">Active</th>
-                        <th width="35%">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:forEach var="room" items="${roomsList}">
-                        <tr>
-                            <td hidden="">${room.roomId}</td>
-
-                            <td><strong>${room.roomNumber}</strong></td>
-
-                            <td>${room.roomType.typeName}</td>
-
-                            <td>
-                                <c:choose>
-                                    <c:when test="${room.status == 'Available'}">
-                                        <span class="status-badge status-available">${room.status}</span>
-                                    </c:when>
-                                    <c:when test="${room.status == 'Occupied'}">
-                                        <span class="status-badge status-occupied">${room.status}</span>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="status-badge status-other">${room.status}</span>
-                                    </c:otherwise>
-                                </c:choose>
-                            </td>
-
-                            <td style="text-align: center;">
-                                <c:choose>
-                                    <c:when test="${room.activeLogin}">
-                                        <span style="color: #27ae60; font-weight: bold; font-size: 1.2em;">✅</span>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">❌</span>
-                                    </c:otherwise>
-                                </c:choose>
-                            </td>
-
-                            <td>
-                                <div class="action-links">
-                                    <a href="rooms?action=VIEW&id=${room.roomId}" class="btn-action btn-view">View</a>
-
-                                    <a href="rooms?action=EDIT&id=${room.roomId}" class="btn-action btn-edit">Edit</a>
-                                    
-                                    <c:choose>
-                                        <c:when test="${room.status == 'Maintenance'}">
-                                            <a href="rooms?action=BAN&id=${room.roomId}" 
-                                               class="btn-action" 
-                                               style="background-color: #27ae60;"
-                                               onclick="confirmBan(event, '${room.roomNumber}', 'unban')">
-                                                Unban
-                                            </a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a href="rooms?action=BAN&id=${room.roomId}" 
-                                               class="btn-action" 
-                                               style="background-color: #34495e;"
-                                               onclick="confirmBan(event, '${room.roomNumber}', 'ban')">
-                                                Ban
-                                            </a>
-                                        </c:otherwise>
-                                    </c:choose>
-
-                                    <a href="rooms?action=DELETE&id=${room.roomId}"
-                                       class="btn-action btn-delete"
-                                       onclick="confirmDelete(event, '${room.roomNumber}')">
-                                        Delete
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                </tbody>
-            </table>
-
-           <c:if test="${isFiltering}">
-                <div style="text-align: center; margin-top: 20px;">
-                    <a href="rooms?action=LIST" class="btn-back">&larr; Back to Full List</a>
-                </div>
-            </c:if>
-
-            <c:if test="${endPage > 1}">
-                <div class="pagination">
-                    <c:if test="${tag > 1}">
-                        <a href="rooms?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">&laquo; Previous</a>
-                    </c:if>
-
-                    <c:forEach begin="1" end="${endPage}" var="i">
-                        <c:choose>
-                            <c:when test="${i == 1 || i == endPage || (i >= tag - 2 && i <= tag + 2)}">
-                                <a href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}" 
-                                   class="${tag == i ? 'active' : ''}">${i}</a>
-                            </c:when>
-                        </c:choose>
-                    </c:forEach>
-
-                    <c:if test="${tag < endPage}">
-                        <a href="rooms?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">Next &raquo;</a>
-                    </c:if>
-                </div>
-            </c:if>
+<div class="main-content">
+    <section class="section">
+        <div class="section-header">
+            <h1>Room Management</h1>
         </div>
-                
-<%-- Thông báo Success --%>
-            <c:if test="${not empty sessionScope.successMessage}">
-                <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; margin-bottom: 20px; border: 1px solid #c3e6cb; border-radius: 5px; position: relative;">
-                    ✅ ${sessionScope.successMessage}
-                    
-                    <span onclick="this.parentElement.style.display='none'" 
-                          style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-weight: bold; font-size: 20px; line-height: 1;">
-                        &times;
-                    </span>
+
+        <div class="section-body">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Room List</h4>
+                    <div class="card-header-action">
+                        <a href="rooms?action=NEW" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add New Room
+                        </a>
+                    </div>
                 </div>
-                <c:remove var="successMessage" scope="session" />
-            </c:if>
 
-            <%-- Thông báo Error --%>
-            <c:if test="${not empty errorMessage}">
-                <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; margin-bottom: 20px; border: 1px solid #f5c6cb; border-radius: 5px; position: relative;">
-                    ⚠ ${errorMessage}
+                <div class="card-body">
                     
-                    <span onclick="this.parentElement.style.display='none'" 
-                          style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-weight: bold; font-size: 20px; line-height: 1;">
-                        &times;
-                    </span>
+                    <c:if test="${not empty sessionScope.successMessage}">
+                        <div class="alert alert-success alert-dismissible show fade">
+                            <div class="alert-body">
+                                <button class="close" data-dismiss="alert">
+                                    <span>&times;</span>
+                                </button>
+                                <i class="fas fa-check-circle"></i> ${sessionScope.successMessage}
+                            </div>
+                        </div>
+                        <c:remove var="successMessage" scope="session" />
+                    </c:if>
+
+                    <c:if test="${not empty errorMessage}">
+                        <div class="alert alert-danger alert-dismissible show fade">
+                            <div class="alert-body">
+                                <button class="close" data-dismiss="alert">
+                                    <span>&times;</span>
+                                </button>
+                                <i class="fas fa-exclamation-triangle"></i> ${errorMessage}
+                            </div>
+                        </div>
+                    </c:if>
+
+                    <form action="rooms" method="GET" class="mb-4">
+                        <input type="hidden" name="action" value="LIST">
+                        <div class="form-row align-items-end">
+                            <div class="form-group col-md-3">
+                                <label>Search Keyword</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text"><i class="fas fa-search"></i></div>
+                                    </div>
+                                    <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="Room number...">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group col-md-2">
+                                <label>Floor</label>
+                                <select name="floor" class="form-control">
+                                    <option value="">All Floors</option>
+                                    <c:forEach begin="1" end="5" var="f">
+                                        <option value="${f}" ${currentFloor == f ? 'selected' : ''}>Floor ${f}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group col-md-2">
+                                <label>Type</label>
+                                <select name="typeId" class="form-control">
+                                    <option value="">All Types</option>
+                                    <c:forEach var="t" items="${listType}">
+                                        <option value="${t.typeId}" ${currentType == t.typeId ? 'selected' : ''}>${t.typeName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group col-md-2">
+                                <label>Status</label>
+                                <select name="status" class="form-control">
+                                    <option value="">All Status</option>
+                                    <option value="Available" ${currentStatus == 'Available' ? 'selected' : ''}>Available</option>
+                                    <option value="Occupied" ${currentStatus == 'Occupied' ? 'selected' : ''}>Occupied</option>
+                                    <option value="Dirty" ${currentStatus == 'Dirty' ? 'selected' : ''}>Dirty</option>
+                                    <option value="Maintenance" ${currentStatus == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group col-md-2">
+                                <label>Active Login</label>
+                                <select name="active" class="form-control">
+                                    <option value="">All</option>
+                                    <option value="true" ${currentActive == 'true' ? 'selected' : ''}>Active (Yes)</option>
+                                    <option value="false" ${currentActive == 'false' ? 'selected' : ''}>Inactive (No)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group col-md-1">
+                                <button type="submit" class="btn btn-info btn-block" title="Filter Results">
+                                    <i class="fas fa-filter"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Room No.</th>
+                                    <th>Room Type</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Active Login</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:if test="${empty roomsList}">
+                                    <tr>
+                                        <td colspan="6" class="text-center">No rooms found matching your criteria.</td>
+                                    </tr>
+                                </c:if>
+
+                                <c:forEach var="room" items="${roomsList}">
+                                    <tr>
+                                        <td><strong>${room.roomNumber}</strong></td>
+                                        <td>${room.roomType.typeName}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${room.status == 'Available'}">
+                                                    <div class="badge badge-success">Available</div>
+                                                </c:when>
+                                                <c:when test="${room.status == 'Occupied'}">
+                                                    <div class="badge badge-danger">Occupied</div>
+                                                </c:when>
+                                                <c:when test="${room.status == 'Maintenance'}">
+                                                    <div class="badge badge-warning">Maintenance</div>
+                                                </c:when>
+                                                <c:when test="${room.status == 'Dirty'}">
+                                                    <div class="badge badge-dark">Dirty</div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <div class="badge badge-secondary">${room.status}</div>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        
+                                        <td class="text-center">
+                                            <c:choose>
+                                                <c:when test="${room.activeLogin}">
+                                                    <div class="badge badge-primary">Yes</div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <div class="badge badge-light">No</div>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex">
+                                                <a href="rooms?action=VIEW&id=${room.roomId}" class="btn btn-info btn-sm mr-2" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+
+                                                <a href="rooms?action=EDIT&id=${room.roomId}" class="btn btn-warning btn-sm mr-2" title="Edit">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </a>
+
+                                                <c:choose>
+                                                    <c:when test="${room.status == 'Maintenance'}">
+                                                        <a href="rooms?action=BAN&id=${room.roomId}" 
+                                                           class="btn btn-success btn-sm mr-2" 
+                                                           onclick="confirmBan(event, '${room.roomNumber}', 'unban', this.href)"
+                                                           title="Unban">
+                                                            <i class="fas fa-unlock"></i>
+                                                        </a>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <a href="rooms?action=BAN&id=${room.roomId}" 
+                                                           class="btn btn-secondary btn-sm mr-2" 
+                                                           onclick="confirmBan(event, '${room.roomNumber}', 'ban', this.href)"
+                                                           title="Ban">
+                                                            <i class="fas fa-ban"></i>
+                                                        </a>
+                                                    </c:otherwise>
+                                                </c:choose>
+
+                                                <a href="rooms?action=DELETE&id=${room.roomId}" 
+                                                   class="btn btn-danger btn-sm" 
+                                                   onclick="confirmDelete(event, '${room.roomNumber}', this.href)"
+                                                   title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <c:if test="${endPage > 1}">
+                        <div class="card-footer text-right">
+                            <nav class="d-inline-block">
+                                <ul class="pagination mb-0">
+                                    <c:if test="${tag > 1}">
+                                        <li class="page-item">
+                                            <a class="page-link" href="rooms?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    </c:if>
+
+                                    <c:forEach begin="1" end="${endPage}" var="i">
+                                        <li class="page-item ${tag == i ? 'active' : ''}">
+                                            <a class="page-link" href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">
+                                                ${i}
+                                            </a>
+                                        </li>
+                                    </c:forEach>
+
+                                    <c:if test="${tag < endPage}">
+                                        <li class="page-item">
+                                            <a class="page-link" href="rooms?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    </c:if>
+                                </ul>
+                            </nav>
+                        </div>
+                    </c:if>
+                    
+                    <c:if test="${isFiltering}">
+                        <div class="text-center mt-3">
+                            <a href="rooms?action=LIST" class="btn btn-link text-muted">Back to Full List</a>
+                        </div>
+                    </c:if>
+
                 </div>
-            </c:if>
+            </div>
+        </div>
+    </section>
+</div>
 
-    </body>
-    
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script>
-    function confirmBan(event, roomNumber, action) {
-        event.preventDefault(); // 1. Ngăn không cho thẻ <a> chạy ngay lập tức
-        const link = event.currentTarget.href; // Lấy đường dẫn từ thẻ <a>
 
-        // Cấu hình nội dung popup tùy theo hành động Ban hay Unban
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmBan(event, roomNumber, action, link) {
+        event.preventDefault(); 
+        
         let titleInfo = "";
         let textInfo = "";
         let iconType = "";
@@ -482,51 +271,44 @@
         if (action === 'ban') {
             titleInfo = "Ban Room " + roomNumber + "?";
             textInfo = "The status will be changed to Maintenance!";
-            iconType = "warning"; // Icon tam giác vàng cảnh báo
-            confirmColor = "#d33"; // Nút màu đỏ
+            iconType = "warning";
+            confirmColor = "#6c757d";
         } else {
             titleInfo = "Unban Room " + roomNumber + "?";
             textInfo = "The room will become Available again!";
-            iconType = "question"; // Icon dấu hỏi xanh
-            confirmColor = "#27ae60"; // Nút màu xanh lá
+            iconType = "question";
+            confirmColor = "#28a745";
         }
 
-        // 2. Hiển thị SweetAlert
         Swal.fire({
             title: titleInfo,
             text: textInfo,
             icon: iconType,
             showCancelButton: true,
             confirmButtonColor: confirmColor,
-            cancelButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
             confirmButtonText: 'Yes',
             cancelButtonText: 'No'
         }).then((result) => {
-            // 3. Nếu người dùng bấm Yes -> Chuyển trang
             if (result.isConfirmed) {
                 window.location.href = link;
             }
         });
     }
-</script>
 
-<script>
-    // Hàm xác nhận xóa phòng
-    function confirmDelete(event, roomNumber) {
-        event.preventDefault(); // Chặn chuyển trang ngay
-        const link = event.currentTarget.href;
-
+    function confirmDelete(event, roomNumber, link) {
+        event.preventDefault(); 
         Swal.fire({
             title: 'Are you sure?',
             text: "Delete Room " + roomNumber + "? You won't be able to revert this!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33', // Màu đỏ cho nút xóa
-            cancelButtonColor: '#3085d6', // Màu xanh cho nút hủy
-            confirmButtonText: 'Yes'
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = link; // Chuyển trang để xóa thật
+                window.location.href = link;
             }
         });
     }
