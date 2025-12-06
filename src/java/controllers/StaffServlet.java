@@ -55,13 +55,13 @@ public class StaffServlet extends HttpServlet {
 
         try {
             switch (action) {
-                case "add": // Mở form thêm mới
+                case "add": 
                     showAddForm(request, response);
                     break;
-                case "edit": // Mở form sửa (kèm dữ liệu cũ)
+                case "edit": 
                     showEditForm(request, response);
                     break;
-                default: // Mặc định: Xem danh sách
+                default: 
                     listStaffs(request, response);
                     break;
             }
@@ -71,15 +71,12 @@ public class StaffServlet extends HttpServlet {
         }
     }
 
-    // 1. Xem danh sách -> staffList.jsp
     private void listStaffs(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         List<Staff> staffs = staffDAO.getAllStaffs();
         request.setAttribute("staffsList", staffs);
         request.getRequestDispatcher("/WEB-INF/views/staff/staffList.jsp").forward(request, response);
     }
-
-    // 2. Form Thêm mới -> staffDetail.jsp (Trống)
     private void showAddForm(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         List<Role> roles = roleDAO.getAllRoles();
@@ -87,14 +84,13 @@ public class StaffServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
     }
 
-    // 3. Form Sửa -> staffDetail.jsp (Có dữ liệu)
     private void showEditForm(HttpServletRequest request, HttpServletResponse response) 
             throws SQLException, ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("staffId"));
         Staff existingStaff = staffDAO.getStaffById(id);
         List<Role> roles = roleDAO.getAllRoles();
         
-        request.setAttribute("staff", existingStaff); // Gửi nhân viên cần sửa sang JSP
+        request.setAttribute("staff", existingStaff);
         request.setAttribute("rolesList", roles);
         request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
     } 
@@ -119,7 +115,7 @@ public class StaffServlet extends HttpServlet {
                 case "deactivate":
                     deactivateStaff(request, response);
                     break;
-                case "activate": // Case Mở khóa
+                case "activate": 
                     activateStaff(request, response);
                     break;
                 default:
