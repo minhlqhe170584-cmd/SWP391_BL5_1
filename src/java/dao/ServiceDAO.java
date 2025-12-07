@@ -14,7 +14,6 @@ public class ServiceDAO extends DBContext {
     private static final String INSERT_SERVICE = "INSERT INTO Services(service_name, price, unit, image_url, is_active, category_id) VALUES(?,?,?,?,?,?)";
     private static final String UPDATE_SERVICE = "UPDATE Services SET service_name=?, price=?, unit=?, image_url=?, is_active=?, category_id=? WHERE service_id=?";
     private static final String DELETE_SERVICE = "DELETE FROM Services WHERE service_id=?";
-    private static final String SEARCH_FILTER = "SELECT * FROM Services WHERE 1=1";
     private static final String BASE_SERVICE_SEARCH = "FROM Services WHERE 1=1";
 
     public ArrayList<Service> getAll() {
@@ -22,7 +21,6 @@ public class ServiceDAO extends DBContext {
         try {
             PreparedStatement st = connection.prepareStatement(GET_ALL_SERVICES);
             ResultSet rs = st.executeQuery();
-
             while (rs.next()) {
                 list.add(new Service(
                         rs.getInt("service_id"),
@@ -34,9 +32,8 @@ public class ServiceDAO extends DBContext {
                         rs.getInt("category_id")
                 ));
             }
-
         } catch (SQLException e) {
-            System.out.println("Error getAll Services: " + e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -46,7 +43,6 @@ public class ServiceDAO extends DBContext {
             PreparedStatement st = connection.prepareStatement(GET_SERVICE_BY_ID);
             st.setInt(1, id);
             ResultSet rs = st.executeQuery();
-
             if (rs.next()) {
                 return new Service(
                         rs.getInt("service_id"),
@@ -58,97 +54,39 @@ public class ServiceDAO extends DBContext {
                         rs.getInt("category_id")
                 );
             }
-
         } catch (SQLException e) {
-            System.out.println("Error getById Service: " + e);
+            e.printStackTrace();
         }
         return null;
     }
 
-    public void insert(Service s) {
-        try {
-            PreparedStatement st = connection.prepareStatement(INSERT_SERVICE);
-            st.setString(1, s.getServiceName());
-            st.setDouble(2, s.getPrice());
-            st.setString(3, s.getUnit());
-            st.setString(4, s.getImageUrl());
-            st.setBoolean(5, s.isIsActive());
-            st.setInt(6, s.getCategoryId());
-            st.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("Error insert Service: " + e);
-        }
+    public void insert(Service s) throws SQLException {
+        PreparedStatement st = connection.prepareStatement(INSERT_SERVICE);
+        st.setString(1, s.getServiceName());
+        st.setDouble(2, s.getPrice());
+        st.setString(3, s.getUnit());
+        st.setString(4, s.getImageUrl());
+        st.setBoolean(5, s.isIsActive());
+        st.setInt(6, s.getCategoryId());
+        st.executeUpdate();
     }
 
-    public void update(Service s) {
-        try {
-            PreparedStatement st = connection.prepareStatement(UPDATE_SERVICE);
-            st.setString(1, s.getServiceName());
-            st.setDouble(2, s.getPrice());
-            st.setString(3, s.getUnit());
-            st.setString(4, s.getImageUrl());
-            st.setBoolean(5, s.isIsActive());
-            st.setInt(6, s.getCategoryId());
-            st.setInt(7, s.getServiceId());
-            st.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error update Service: " + e);
-        }
+    public void update(Service s) throws SQLException {
+        PreparedStatement st = connection.prepareStatement(UPDATE_SERVICE);
+        st.setString(1, s.getServiceName());
+        st.setDouble(2, s.getPrice());
+        st.setString(3, s.getUnit());
+        st.setString(4, s.getImageUrl());
+        st.setBoolean(5, s.isIsActive());
+        st.setInt(6, s.getCategoryId());
+        st.setInt(7, s.getServiceId());
+        st.executeUpdate();
     }
 
-    public void delete(int id) {
-        try {
-            PreparedStatement st = connection.prepareStatement(DELETE_SERVICE);
-            st.setInt(1, id);
-            st.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("Error delete Service: " + e);
-        }
-    }
-
-    public ArrayList<Service> searchFilter(String search, String categoryId) {
-        ArrayList<Service> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(SEARCH_FILTER);
-
-        try {
-            if (search != null && !search.isEmpty()) {
-                sql.append(" AND service_name LIKE ? ");
-            }
-
-            if (categoryId != null && !categoryId.isEmpty()) {
-                sql.append(" AND category_id = ? ");
-            }
-
-            PreparedStatement st = connection.prepareStatement(sql.toString());
-
-            int idx = 1;
-            if (search != null && !search.isEmpty()) {
-                st.setString(idx++, "%" + search + "%");
-            }
-
-            if (categoryId != null && !categoryId.isEmpty()) {
-                st.setInt(idx++, Integer.parseInt(categoryId));
-            }
-
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                list.add(new Service(
-                        rs.getInt("service_id"),
-                        rs.getString("service_name"),
-                        rs.getDouble("price"),
-                        rs.getString("unit"),
-                        rs.getString("image_url"),
-                        rs.getBoolean("is_active"),
-                        rs.getInt("category_id")
-                ));
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error filter search: " + e);
-        }
-
-        return list;
+    public void delete(int id) throws SQLException {
+        PreparedStatement st = connection.prepareStatement(DELETE_SERVICE);
+        st.setInt(1, id);
+        st.executeUpdate();
     }
 
     public ArrayList<Service> search(String search, String categoryId, String sort, int pageIndex, int pageSize) {
@@ -220,11 +158,9 @@ public class ServiceDAO extends DBContext {
                         rs.getInt("category_id")
                 ));
             }
-
         } catch (SQLException e) {
-            System.out.println("Error search service: " + e);
+            e.printStackTrace();
         }
-
         return list;
     }
 
@@ -256,11 +192,9 @@ public class ServiceDAO extends DBContext {
             if (rs.next()) {
                 return rs.getInt(1);
             }
-
         } catch (SQLException e) {
-            System.out.println("Error count service search: " + e);
+            e.printStackTrace();
         }
-
         return 0;
     }
 }

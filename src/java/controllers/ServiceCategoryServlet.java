@@ -2,25 +2,28 @@ package controllers;
 
 import dao.ServiceCategoryDAO;
 import java.io.IOException;
+import java.util.ArrayList;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
+import jakarta.servlet.http.HttpSession;
 import models.ServiceCategory;
 
 @WebServlet(name = "ServiceCategoryServlet", urlPatterns = {"/service-category"})
 public class ServiceCategoryServlet extends HttpServlet {
 
-    ServiceCategoryDAO categoryDAO = new ServiceCategoryDAO();
+    private final ServiceCategoryDAO categoryDAO = new ServiceCategoryDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String action = request.getParameter("action");
-        if (action == null) action = "list";
+        if (action == null) {
+            action = "list";
+        }
 
         switch (action) {
             case "detail":
@@ -31,6 +34,7 @@ public class ServiceCategoryServlet extends HttpServlet {
                 break;
             default:
                 listCategory(request, response);
+                break;
         }
     }
 
@@ -63,28 +67,42 @@ public class ServiceCategoryServlet extends HttpServlet {
         request.setAttribute("page", pageIndex);
         request.setAttribute("totalPages", totalPages);
 
-        request.getRequestDispatcher("/WEB-INF/views/category/list.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/service-category/list.jsp").forward(request, response);
     }
 
     private void showDetailForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String idRaw = request.getParameter("id");
-        ServiceCategory category = null;
-        if (idRaw != null && !idRaw.isEmpty()) {
-            int id = Integer.parseInt(idRaw);
-            category = categoryDAO.getById(id);
+        ServiceCategory category = new ServiceCategory();
+
+        if (idRaw != null && !idRaw.trim().isEmpty()) {
+            try {
+                int id = Integer.parseInt(idRaw);
+                category = categoryDAO.getById(id);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
         }
+        
         request.setAttribute("category", category);
-        request.getRequestDispatcher("/WEB-INF/views/category/detail.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/service-category/detail.jsp").forward(request, response);
     }
 
     private void deleteCategory(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        
         String idRaw = request.getParameter("id");
-        if (idRaw != null && !idRaw.isEmpty()) {
-            int id = Integer.parseInt(idRaw);
-            categoryDAO.delete(id);
+        HttpSession session = request.getSession();
+
+        if (idRaw != null && !idRaw.trim().isEmpty()) {
+            try {
+                int id = Integer.parseInt(idRaw);
+                categoryDAO.delete(id);
+                session.setAttribute("message", "Category deleted successfully.");
+            } catch (Exception e) {
+                session.setAttribute("message", "Error deleting category: " + e.getMessage());
+            }
         }
         response.sendRedirect("service-category");
     }
@@ -105,33 +123,40 @@ public class ServiceCategoryServlet extends HttpServlet {
             errorMessage = "Category name is required.";
         }
 
-        if (errorMessage != null) {
-            ServiceCategory c = new ServiceCategory();
-            if (idRaw != null && !idRaw.isEmpty()) {
-                try {
-                    c.setCategoryId(Integer.parseInt(idRaw));
-                } catch (NumberFormatException e) {
-                }
-            }
-            c.setCategoryName(name);
-            c.setDescription(description);
-            request.setAttribute("category", c);
-            request.setAttribute("errorMessage", errorMessage);
-            request.getRequestDispatcher("/WEB-INF/views/category/detail.jsp").forward(request, response);
-            return;
-        }
-
         ServiceCategory c = new ServiceCategory();
         c.setCategoryName(name);
         c.setDescription(description);
-
-        if (idRaw == null || idRaw.isEmpty()) {
-            categoryDAO.insert(c);
-        } else {
-            c.setCategoryId(Integer.parseInt(idRaw));
-            categoryDAO.update(c);
+        
+        if (idRaw != null && !idRaw.trim().isEmpty()) {
+            try {
+                c.setCategoryId(Integer.parseInt(idRaw));
+            } catch (NumberFormatException e) {
+                 errorMessage = "Invalid Category ID.";
+            }
         }
 
-        response.sendRedirect("service-category");
+        if (errorMessage != null) {
+            request.setAttribute("category", c);
+            request.setAttribute("errorMessage", errorMessage);
+            request.getRequestDispatcher("/WEB-INF/views/service-category/detail.jsp").forward(request, response);
+            return;
+        }
+
+        HttpSession session = request.getSession();
+        try {
+            if (c.getCategoryId() == 0) {
+                categoryDAO.insert(c);
+                session.setAttribute("message", "New category created successfully.");
+            } else {
+                categoryDAO.update(c);
+                session.setAttribute("message", "Category updated successfully.");
+            }
+            response.sendRedirect("service-category");
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("category", c);
+            request.setAttribute("errorMessage", "Database error: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/service-category/detail.jsp").forward(request, response);
+        }
     }
 }

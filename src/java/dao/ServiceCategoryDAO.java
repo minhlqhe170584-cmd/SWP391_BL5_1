@@ -1,4 +1,4 @@
- package dao;
+package dao;
 
 import dbContext.DBContext;
 import java.sql.PreparedStatement;
@@ -21,7 +21,6 @@ public class ServiceCategoryDAO extends DBContext {
         try {
             PreparedStatement st = connection.prepareStatement(GET_ALL_CATEGORIES);
             ResultSet rs = st.executeQuery();
-
             while (rs.next()) {
                 list.add(new ServiceCategory(
                         rs.getInt("category_id"),
@@ -29,9 +28,8 @@ public class ServiceCategoryDAO extends DBContext {
                         rs.getString("description")
                 ));
             }
-
         } catch (SQLException e) {
-            System.out.println("Error getAll Categories: " + e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -41,7 +39,6 @@ public class ServiceCategoryDAO extends DBContext {
             PreparedStatement st = connection.prepareStatement(GET_CATEGORY_BY_ID);
             st.setInt(1, id);
             ResultSet rs = st.executeQuery();
-
             if (rs.next()) {
                 return new ServiceCategory(
                         rs.getInt("category_id"),
@@ -49,47 +46,31 @@ public class ServiceCategoryDAO extends DBContext {
                         rs.getString("description")
                 );
             }
-
         } catch (SQLException e) {
-            System.out.println("Error getById Category: " + e);
+            e.printStackTrace();
         }
         return null;
     }
 
-    public void insert(ServiceCategory c) {
-        try {
-            PreparedStatement st = connection.prepareStatement(INSERT_CATEGORY);
-            st.setString(1, c.getCategoryName());
-            st.setString(2, c.getDescription());
-            st.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error insert Category: " + e);
-        }
+    public void insert(ServiceCategory c) throws SQLException {
+        PreparedStatement st = connection.prepareStatement(INSERT_CATEGORY);
+        st.setString(1, c.getCategoryName());
+        st.setString(2, c.getDescription());
+        st.executeUpdate();
     }
 
-    public void update(ServiceCategory c) {
-        try {
-            PreparedStatement st = connection.prepareStatement(UPDATE_CATEGORY);
-            st.setString(1, c.getCategoryName());
-            st.setString(2, c.getDescription());
-            st.setInt(3, c.getCategoryId());
-            st.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error update Category: " + e);
-        }
+    public void update(ServiceCategory c) throws SQLException {
+        PreparedStatement st = connection.prepareStatement(UPDATE_CATEGORY);
+        st.setString(1, c.getCategoryName());
+        st.setString(2, c.getDescription());
+        st.setInt(3, c.getCategoryId());
+        st.executeUpdate();
     }
 
-    public void delete(int id) {
-        try {
-            PreparedStatement st = connection.prepareStatement(DELETE_CATEGORY);
-            st.setInt(1, id);
-            st.executeUpdate();
-
-        } catch (SQLException e) {
-            System.out.println("Error delete Category: " + e);
-        }
+    public void delete(int id) throws SQLException {
+        PreparedStatement st = connection.prepareStatement(DELETE_CATEGORY);
+        st.setInt(1, id);
+        st.executeUpdate();
     }
 
     public ArrayList<ServiceCategory> search(String search, String sort, int pageIndex, int pageSize) {
@@ -144,7 +125,7 @@ public class ServiceCategoryDAO extends DBContext {
                 ));
             }
         } catch (SQLException e) {
-            System.out.println("Error search category: " + e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -167,7 +148,7 @@ public class ServiceCategoryDAO extends DBContext {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            System.out.println("Error count category search: " + e);
+            e.printStackTrace();
         }
         return 0;
     }

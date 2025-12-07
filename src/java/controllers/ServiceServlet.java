@@ -3,27 +3,30 @@ package controllers;
 import dao.ServiceCategoryDAO;
 import dao.ServiceDAO;
 import java.io.IOException;
+import java.util.ArrayList;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
+import jakarta.servlet.http.HttpSession;
 import models.Service;
 import models.ServiceCategory;
 
 @WebServlet(name = "ServiceServlet", urlPatterns = {"/service"})
 public class ServiceServlet extends HttpServlet {
 
-    ServiceDAO serviceDAO = new ServiceDAO();
-    ServiceCategoryDAO categoryDAO = new ServiceCategoryDAO();
+    private final ServiceDAO serviceDAO = new ServiceDAO();
+    private final ServiceCategoryDAO categoryDAO = new ServiceCategoryDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String action = request.getParameter("action");
-        if (action == null) action = "list";
+        if (action == null) {
+            action = "list";
+        }
 
         switch (action) {
             case "detail":
@@ -34,6 +37,7 @@ public class ServiceServlet extends HttpServlet {
                 break;
             default:
                 listService(request, response);
+                break;
         }
     }
 
@@ -60,7 +64,6 @@ public class ServiceServlet extends HttpServlet {
         ArrayList<Service> list = serviceDAO.search(search, categoryId, sort, pageIndex, pageSize);
         int totalRecords = serviceDAO.countSearch(search, categoryId);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
-
         ArrayList<ServiceCategory> categories = categoryDAO.getAll();
 
         request.setAttribute("list", list);
@@ -78,14 +81,18 @@ public class ServiceServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String idRaw = request.getParameter("id");
-        Service service = null;
-        if (idRaw != null && !idRaw.isEmpty()) {
-            int id = Integer.parseInt(idRaw);
-            service = serviceDAO.getById(id);
+        Service service = new Service();
+        
+        if (idRaw != null && !idRaw.trim().isEmpty()) {
+            try {
+                int id = Integer.parseInt(idRaw);
+                service = serviceDAO.getById(id);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
         }
 
         ArrayList<ServiceCategory> categories = categoryDAO.getAll();
-
         request.setAttribute("service", service);
         request.setAttribute("categories", categories);
 
@@ -94,10 +101,18 @@ public class ServiceServlet extends HttpServlet {
 
     private void deleteService(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        
         String idRaw = request.getParameter("id");
-        if (idRaw != null && !idRaw.isEmpty()) {
-            int id = Integer.parseInt(idRaw);
-            serviceDAO.delete(id);
+        HttpSession session = request.getSession();
+
+        if (idRaw != null && !idRaw.trim().isEmpty()) {
+            try {
+                int id = Integer.parseInt(idRaw);
+                serviceDAO.delete(id);
+                session.setAttribute("message", "Service deleted successfully.");
+            } catch (Exception e) {
+                session.setAttribute("message", "Error deleting service: " + e.getMessage());
+            }
         }
         response.sendRedirect("service");
     }
@@ -112,81 +127,77 @@ public class ServiceServlet extends HttpServlet {
         String name = request.getParameter("serviceName");
         String unit = request.getParameter("unit");
         String image = request.getParameter("imageUrl");
-        boolean active = request.getParameter("isActive") != null;
         String priceStr = request.getParameter("price");
         String categoryIdStr = request.getParameter("categoryId");
+        boolean active = request.getParameter("isActive") != null;
 
         String errorMessage = null;
+        double price = 0;
+        int categoryId = 0;
 
         if (name == null || name.trim().isEmpty()) {
             errorMessage = "Service name is required.";
-        } else if (priceStr == null || priceStr.trim().isEmpty()) {
-            errorMessage = "Price is required.";
         } else if (categoryIdStr == null || categoryIdStr.trim().isEmpty()) {
             errorMessage = "Category is required.";
+        } else if (priceStr == null || priceStr.trim().isEmpty()) {
+            errorMessage = "Price is required.";
         } else {
             try {
-                double price = Double.parseDouble(priceStr);
+                price = Double.parseDouble(priceStr);
                 if (price <= 0) {
                     errorMessage = "Price must be greater than zero.";
                 }
             } catch (NumberFormatException e) {
                 errorMessage = "Invalid price format.";
             }
+            
+            try {
+                categoryId = Integer.parseInt(categoryIdStr);
+            } catch (NumberFormatException e) {
+                errorMessage = "Invalid category format.";
+            }
+        }
+
+        Service s = new Service();
+        s.setServiceName(name);
+        s.setUnit(unit);
+        s.setImageUrl(image);
+        s.setIsActive(active);
+        s.setPrice(price);
+        s.setCategoryId(categoryId);
+        
+        if (idRaw != null && !idRaw.trim().isEmpty()) {
+            try {
+                s.setServiceId(Integer.parseInt(idRaw));
+            } catch (NumberFormatException e) {
+                 errorMessage = "Invalid Service ID.";
+            }
         }
 
         if (errorMessage != null) {
-            Service s = new Service();
-            if (idRaw != null && !idRaw.isEmpty()) {
-                try {
-                    s.setServiceId(Integer.parseInt(idRaw));
-                } catch (NumberFormatException e) {
-                }
-            }
-            s.setServiceName(name);
-            s.setUnit(unit);
-            s.setImageUrl(image);
-            s.setIsActive(active);
-            try {
-                if (priceStr != null && !priceStr.trim().isEmpty()) {
-                    s.setPrice(Double.parseDouble(priceStr));
-                }
-            } catch (NumberFormatException e) {
-                s.setPrice(0);
-            }
-            try {
-                if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
-                    s.setCategoryId(Integer.parseInt(categoryIdStr));
-                }
-            } catch (NumberFormatException e) {
-            }
-
-            ArrayList<ServiceCategory> categories = categoryDAO.getAll();
-            request.setAttribute("categories", categories);
             request.setAttribute("service", s);
+            request.setAttribute("categories", categoryDAO.getAll());
             request.setAttribute("errorMessage", errorMessage);
             request.getRequestDispatcher("/WEB-INF/views/service/detail.jsp").forward(request, response);
             return;
         }
 
-        int categoryId = Integer.parseInt(categoryIdStr);
-        double price = Double.parseDouble(priceStr);
-
-        Service s = new Service();
-        s.setServiceName(name);
-        s.setUnit(unit);
-        s.setPrice(price);
-        s.setImageUrl(image);
-        s.setIsActive(active);
-        s.setCategoryId(categoryId);
-
-        if (idRaw == null || idRaw.isEmpty()) {
-            serviceDAO.insert(s);
-        } else {
-            s.setServiceId(Integer.parseInt(idRaw));
-            serviceDAO.update(s);
+        HttpSession session = request.getSession();
+        try {
+            if (s.getServiceId() == 0) {
+                serviceDAO.insert(s);
+                session.setAttribute("message", "Service created successfully.");
+            } else {
+                serviceDAO.update(s);
+                session.setAttribute("message", "Service updated successfully.");
+            }
+            response.sendRedirect("service");
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("service", s);
+            request.setAttribute("categories", categoryDAO.getAll());
+            request.setAttribute("errorMessage", "Database error: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/service/detail.jsp").forward(request, response);
         }
-
-        response.sendRedirect("service");
     }
 }
