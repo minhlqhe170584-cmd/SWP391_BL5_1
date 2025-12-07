@@ -5,6 +5,8 @@
 package models;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  *
@@ -82,6 +84,13 @@ public class Customer {
 
     public LocalDateTime getCreateAt() {
         return createAt;
+    }
+    
+    public Date getCreatedAtAsDate() {
+        if (createAt == null) {
+            return null;
+        }
+        return Date.from(createAt.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public void setCreateAt(LocalDateTime createAt) {
