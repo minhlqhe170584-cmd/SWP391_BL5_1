@@ -1,65 +1,122 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${empty staff ? 'Thêm Nhân viên mới' : 'Cập nhật Nhân viên'}</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f6f9; }
-        .form-container { background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 3px; font-size: 16px; }
-        .btn-cancel { background-color: #6c757d; color: white; text-decoration: none; padding: 10px 15px; border-radius: 3px; margin-left: 10px; font-size: 16px; }
-        h2 { text-align: center; color: #333; }
-    </style>
-</head>
-<body>
 
-    <div class="form-container">
-        <h2>${empty staff ? '➕ Thêm Nhân viên' : '✏️ Cập nhật Nhân viên'}</h2>
+<jsp:include page="/WEB-INF/views/common/header.jsp" />
+<jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
+
+<div class="main-content">
+    <section class="section">
         
-        <form method="POST" action="staffs">
-            <input type="hidden" name="action" value="${empty staff ? 'create' : 'update'}"/>
-            
-            <c:if test="${not empty staff}">
-                <input type="hidden" name="staffId" value="${staff.staffId}"/>
-            </c:if>
-            
-            <div class="form-group">
-                <label>Họ và Tên:</label>
-                <input type="text" name="fullName" value="${staff.fullName}" required placeholder="Nhập họ tên đầy đủ">
+        <div class="section-header">
+            <div class="section-header-back">
+                <a href="staffs" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
             </div>
-            
-            <div class="form-group">
-                <label>Email:</label>
-                <input type="email" name="email" value="${staff.email}" required placeholder="example@email.com">
+            <h1>${staff != null ? 'Cập nhật Nhân viên' : 'Thêm Nhân viên Mới'}</h1>
+            <div class="section-header-breadcrumb">
+                <div class="breadcrumb-item active"><a href="dashboard">Dashboard</a></div>
+                <div class="breadcrumb-item"><a href="staffs">Nhân viên</a></div>
+                <div class="breadcrumb-item">${staff != null ? 'Cập nhật' : 'Thêm mới'}</div>
             </div>
-            
-            <div class="form-group">
-                <label>Mật khẩu:</label>
-                <input type="password" name="password" ${empty staff ? 'required' : ''} placeholder="${empty staff ? 'Nhập mật khẩu' : 'Nhập mật khẩu mới (Bỏ qua nếu không đổi)'}">
-            </div>
-            
-            <div class="form-group">
-                <label>Vai trò:</label>
-                <select name="roleId" required>
-                    <c:forEach var="role" items="${rolesList}">
-                        <option value="${role.roleId}" <c:if test="${not empty staff && role.roleId == staff.role.roleId}">selected</c:if>>
-                            ${role.roleName}
-                        </option>
-                    </c:forEach>
-                </select>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button type="submit" class="btn-submit">Lưu lại</button>
-                <a href="staffs" class="btn-cancel">Hủy bỏ</a>
-            </div>
-        </form>
-    </div>
+        </div>
 
-</body>
-</html>
+        <div class="section-body">
+            <h2 class="section-title">${staff != null ? 'Chỉnh sửa thông tin' : 'Tạo tài khoản mới'}</h2>
+            <p class="section-lead">
+                ${staff != null ? 'Cập nhật thông tin chi tiết cho nhân viên này.' : 'Điền đầy đủ thông tin để tạo nhân viên mới vào hệ thống.'}
+            </p>
+
+            <div class="row">
+                <div class="col-12 col-md-8 col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Form Thông tin</h4>
+                        </div>
+                        
+                        <div class="card-body">
+                            <form method="POST" action="staffs" class="needs-validation" novalidate="">
+                                
+                                <input type="hidden" name="action" value="${staff != null ? 'update' : 'create'}">
+                                
+                                <c:if test="${staff != null}">
+                                    <input type="hidden" name="staffId" value="${staff.staffId}">
+                                </c:if>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Họ và Tên <span class="text-danger">*</span></label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" name="fullName" required="" 
+                                               value="${staff.fullName}" placeholder="Ví dụ: Nguyễn Văn A">
+                                        <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Email <span class="text-danger">*</span></label>
+                                    <div class="col-sm-9">
+                                        <input type="email" class="form-control" name="email" required="" 
+                                               value="${staff.email}" placeholder="email@example.com">
+                                        <div class="invalid-feedback">Email không hợp lệ.</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" name="password" 
+                                               ${staff == null ? 'required' : ''} 
+                                               value="${staff.passWordHash}"
+                                               placeholder="Nhập mật khẩu...">
+                                        <c:if test="${staff != null}">
+                                            <small class="form-text text-muted">Nhập mật khẩu mới nếu muốn thay đổi, hoặc giữ nguyên mật khẩu cũ.</small>
+                                        </c:if>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Vai trò <span class="text-danger">*</span></label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control selectric" name="roleId">
+                                            <c:forEach var="r" items="${rolesList}">
+                                                <option value="${r.roleId}" ${staff.role.roleId == r.roleId ? 'selected' : ''}>
+                                                    ${r.roleName}
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-form-label text-md-right col-12 col-md-3 col-lg-3"></label>
+                                    <div class="col-sm-12 col-md-7">
+                                        <button class="btn btn-primary btn-lg" type="submit">
+                                            <i class="fas fa-save"></i> ${staff != null ? 'Lưu Thay Đổi' : 'Tạo Nhân Viên'}
+                                        </button>
+                                        <a href="staffs" class="btn btn-secondary btn-lg ml-2">Hủy bỏ</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        </div>
+                </div>
+                
+                <div class="col-12 col-md-4 col-lg-4">
+                    <div class="card card-warning">
+                        <div class="card-header">
+                            <h4>Lưu ý</h4>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Email phải là duy nhất.</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Mật khẩu nên dài hơn 6 ký tự.</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Vai trò quyết định quyền hạn của nhân viên.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+</div>
+
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />

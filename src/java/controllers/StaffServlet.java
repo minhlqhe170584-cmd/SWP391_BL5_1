@@ -4,64 +4,45 @@ import java.sql.SQLException;
 import dao.RoleDAO;
 import dao.StaffDAO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import models.Role;
 import models.Staff;
 
-/**
- * @author Admin
- */
-// SỬA: Thêm chữ 's' vào urlPatterns để khớp với redirect
-@WebServlet(name = "StaffServlet", urlPatterns = {"/staffs"}) 
+@WebServlet(name = "StaffServlet", urlPatterns = {"/staffs"})
 public class StaffServlet extends HttpServlet {
 
     private StaffDAO staffDAO;
-    private RoleDAO roleDAO; 
+    private RoleDAO roleDAO;
 
     @Override
     public void init() throws ServletException {
-        staffDAO = new StaffDAO(); 
-        roleDAO = new RoleDAO(); 
+        staffDAO = new StaffDAO();
+        roleDAO = new RoleDAO();
     }
-
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet StaffServlet</title>");  
-            out.println("</head>");
-            out.println("<body>");
-            // SỬA: Xóa dấu cách thừa
-            out.println("<h1>Servlet StaffServlet at " + request.getContextPath() + "</h1>"); 
-            out.println("</body>");
-            out.println("</html>");
-        }
-    } 
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
+            throws ServletException, IOException {
         String action = request.getParameter("action");
-        if (action == null) action = "list";
+        if (action == null) {
+            action = "list";
+        }
 
         try {
             switch (action) {
-                case "add": 
+                case "add":
                     showAddForm(request, response);
                     break;
-                case "edit": 
+                case "edit":
                     showEditForm(request, response);
                     break;
-                default: 
+                default:
                     listStaffs(request, response);
                     break;
             }
@@ -71,39 +52,15 @@ public class StaffServlet extends HttpServlet {
         }
     }
 
-    private void listStaffs(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        List<Staff> staffs = staffDAO.getAllStaffs();
-        request.setAttribute("staffsList", staffs);
-        request.getRequestDispatcher("/WEB-INF/views/staff/staffList.jsp").forward(request, response);
-    }
-    private void showAddForm(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        List<Role> roles = roleDAO.getAllRoles();
-        request.setAttribute("rolesList", roles);
-        request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
-    }
-
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, ServletException, IOException {
-        int id = Integer.parseInt(request.getParameter("staffId"));
-        Staff existingStaff = staffDAO.getStaffById(id);
-        List<Role> roles = roleDAO.getAllRoles();
-        
-        request.setAttribute("staff", existingStaff);
-        request.setAttribute("rolesList", roles);
-        request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
-    } 
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8"); 
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
         }
-        
+
         try {
             switch (action) {
                 case "create":
@@ -115,144 +72,127 @@ public class StaffServlet extends HttpServlet {
                 case "deactivate":
                     deactivateStaff(request, response);
                     break;
-                case "activate": 
+                case "activate":
                     activateStaff(request, response);
                     break;
                 default:
-                    response.sendRedirect(request.getContextPath() + "/staffs");
+                    response.sendRedirect("staffs");
                     break;
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            request.getSession().setAttribute("message", "LỖI HỆ THỐNG: Lỗi SQL trong quá trình xử lý Staff.");
-            response.sendRedirect(request.getContextPath() + "/staffs");
+            request.getSession().setAttribute("message", "Lỗi hệ thống: " + e.getMessage());
+            response.sendRedirect("staffs");
         }
     }
 
-    private void insertStaff(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, IOException, ServletException {
-        
+    private void listStaffs(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String keyword = request.getParameter("keyword");
+        String roleIdStr = request.getParameter("roleFilter");
+        String pageStr = request.getParameter("page");
+
+        int pageSize = 5;
+        int pageIndex = 1;
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                pageIndex = Integer.parseInt(pageStr);
+            } catch (NumberFormatException e) {
+                pageIndex = 1;
+            }
+        }
+        int totalRecords = staffDAO.countStaffs(keyword, roleIdStr);
+        int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+
+        List<Staff> staffs = staffDAO.getStaffs(keyword, roleIdStr, pageIndex, pageSize);
+        List<Role> roles = roleDAO.getAllRoles();
+        request.setAttribute("staffsList", staffs);
+        request.setAttribute("rolesList", roles);
+        request.setAttribute("currentPage", pageIndex);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("roleFilter", roleIdStr);
+
+        request.getRequestDispatcher("/WEB-INF/views/staff/staffList.jsp").forward(request, response);
+    }
+
+    private void showAddForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<Role> roles = roleDAO.getAllRoles();
+        request.setAttribute("rolesList", roles);
+        request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
+    }
+
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("staffId"));
+            Staff existingStaff = staffDAO.getStaffById(id);
+            List<Role> roles = roleDAO.getAllRoles();
+            request.setAttribute("staff", existingStaff);
+            request.setAttribute("rolesList", roles);
+            request.getRequestDispatcher("/WEB-INF/views/staff/staffDetail.jsp").forward(request, response);
+        } catch (Exception e) {
+            response.sendRedirect("staffs");
+        }
+    }
+
+    private void insertStaff(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
         int roleId = Integer.parseInt(request.getParameter("roleId"));
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
-        
-        if (fullName == null || fullName.trim().isEmpty() || email == null || email.trim().isEmpty() || password.isEmpty()) {
-            request.getSession().setAttribute("message", "LỖI THÊM: Vui lòng điền đủ thông tin bắt buộc.");
-        } else {
-            Role role = new Role();
-            role.setRoleId(roleId);
-            
-            Staff newStaff = new Staff();
-            newStaff.setRole(role);
-            newStaff.setFullName(fullName.trim());
-            newStaff.setEmail(email.trim());
-            newStaff.setPassWordHash(password); 
-            
-            try {
-                boolean success = staffDAO.createStaff(newStaff);
 
-                if (success) {
-                    request.getSession().setAttribute("message", "Đã thêm nhân viên " + fullName + " thành công!");
-                } else {
-                    request.getSession().setAttribute("message", "LỖI: Không thể thêm nhân viên (Lỗi thao tác DB).");
-                }
-                
-            } catch (SQLException e) {
-                if (e.getMessage() != null && e.getMessage().contains("UNIQUE")) {
-                    request.getSession().setAttribute("message", "LỖI THÊM: Email [" + email + "] đã được sử dụng.");
-                } else {
-                    throw e;
-                }
-            }
-        }        
-        response.sendRedirect(request.getContextPath() + "/staffs");
+        Staff newStaff = new Staff();
+        newStaff.setRole(new Role(roleId, ""));
+        newStaff.setFullName(fullName);
+        newStaff.setEmail(email);
+        newStaff.setPassWordHash(password);
+
+        try {
+            staffDAO.createStaff(newStaff);
+            request.getSession().setAttribute("message", "Thêm mới thành công!");
+        } catch (SQLException e) {
+            request.getSession().setAttribute("message", "Lỗi thêm mới: " + e.getMessage());
+        }
+        response.sendRedirect("staffs");
     }
 
-    private void updateStaff(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, IOException, ServletException {
-        int staffId = Integer.parseInt(request.getParameter("staffId"));
+    private void updateStaff(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        int id = Integer.parseInt(request.getParameter("staffId"));
         int roleId = Integer.parseInt(request.getParameter("roleId"));
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
-        String password = request.getParameter("password"); 
-        
-        Role role = new Role();
-        role.setRoleId(roleId);
-        
-        Staff updatedStaff = new Staff();
-        updatedStaff.setStaffId(staffId);
-        updatedStaff.setRole(role);
-        updatedStaff.setFullName(fullName.trim());
-        updatedStaff.setEmail(email.trim());
-        updatedStaff.setPassWordHash(password); 
+        String password = request.getParameter("password");
 
-        try {            
-            boolean success = staffDAO.updateStaff(updatedStaff); 
+        Staff staff = new Staff();
+        staff.setStaffId(id);
+        staff.setRole(new Role(roleId, ""));
+        staff.setFullName(fullName);
+        staff.setEmail(email);
+        staff.setPassWordHash(password);
 
-            if (success) {
-                request.getSession().setAttribute("message", "Cập nhật nhân viên " + fullName + " thành công!");
-            } else {
-                 request.getSession().setAttribute("message", "LỖI: Không tìm thấy nhân viên ID=" + staffId + " để cập nhật.");
-            }
-
-        } catch (Exception e) {
-            if (e.getMessage() != null && e.getMessage().contains("UNIQUE")) {
-                request.getSession().setAttribute("message", "LỖI CẬP NHẬT: Email [" + email + "] đã được sử dụng bởi người khác.");
-            } else {
-                throw e; 
-            }
-        }
-
-        response.sendRedirect(request.getContextPath() + "/staffs");
+        staffDAO.updateStaff(staff);
+        request.getSession().setAttribute("message", "Cập nhật thành công!");
+        response.sendRedirect("staffs");
     }
 
-    private void deactivateStaff(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, IOException, ServletException {
-        
-        String staffIdStr = request.getParameter("staffId");
-        
-        try {
-            int staffId = Integer.parseInt(staffIdStr);
-            boolean success = staffDAO.deactivateStaff(staffId);
-            
-            if (success) {
-                 request.getSession().setAttribute("message", "Đã vô hiệu hóa nhân viên ID=" + staffId + " thành công!");
-            } else {
-                 request.getSession().setAttribute("message", "LỖI: Không tìm thấy nhân viên để vô hiệu hóa.");
-            }
-
-        } catch (NumberFormatException e) {
-            request.getSession().setAttribute("message", "LỖI ĐẦU VÀO: ID nhân viên không hợp lệ.");
-        }
-        
-        response.sendRedirect(request.getContextPath() + "/staffs");
+    private void deactivateStaff(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        int id = Integer.parseInt(request.getParameter("staffId"));
+        staffDAO.deactivateStaff(id);
+        request.getSession().setAttribute("message", "Đã khóa tài khoản!");
+        response.sendRedirect("staffs");
     }
 
-    private void activateStaff(HttpServletRequest request, HttpServletResponse response) 
-        throws SQLException, IOException, ServletException {
-    
-        String staffIdStr = request.getParameter("staffId");
-        
-        try {
-            int staffId = Integer.parseInt(staffIdStr); 
-            boolean success = staffDAO.activateStaff(staffId); 
-            
-            if (success) {
-                 request.getSession().setAttribute("message", "Đã MỞ KHÓA nhân viên ID=" + staffId + " thành công!");
-            } else {
-                 request.getSession().setAttribute("message", "LỖI: Không tìm thấy nhân viên để mở khóa.");
-            }
-
-        } catch (NumberFormatException e) {
-            request.getSession().setAttribute("message", "LỖI ĐẦU VÀO: ID nhân viên không hợp lệ.");
-        }
-        
-        response.sendRedirect(request.getContextPath() + "/staffs");
-    }
-
-    @Override
-    public String getServletInfo() {
-        return "Short description";
+    private void activateStaff(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        int id = Integer.parseInt(request.getParameter("staffId"));
+        staffDAO.activateStaff(id);
+        request.getSession().setAttribute("message", "Đã mở khóa tài khoản!");
+        response.sendRedirect("staffs");
     }
 }
