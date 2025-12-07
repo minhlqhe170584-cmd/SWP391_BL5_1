@@ -27,7 +27,7 @@ public class RegisterServlet extends HttpServlet {
         
         request.setCharacterEncoding("UTF-8");
 
-        // 1. Lấy dữ liệu (Không lấy cccd nữa)
+        // 1. Lấy dữ liệu 
         String fullName = request.getParameter("fullname");
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
