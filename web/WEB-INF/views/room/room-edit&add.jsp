@@ -105,10 +105,10 @@
                                         </div>
 
                                         <input type="text"
+                                               id="roomNumber"
                                                name="roomNumber"
                                                value="${room.roomNumber}"
                                                class="form-control"
-                                               required
                                                placeholder="Ex: 101, 205..."
                                                <c:if test="${room != null && room.roomId > 0}">
                                                    readonly
@@ -118,6 +118,11 @@
                                     <small class="form-text text-muted">
                                         Unique identifier for the room (e.g., 101).
                                     </small>
+
+                                    <!--Thông báo nếu trường Room Number trống-->
+                                    <small id="errorMsg" class="text-danger" style="display: none; margin-top: 5px;">
+                                        Room Number can not be null. Please enter the room number!
+                                    </small>
                                 </div>
 
                                 <!-- ROOM TYPE -->
@@ -126,9 +131,9 @@
                                     <select name="typeId" class="form-control selectric">
                                         <c:forEach var="t" items="${listType}">
                                             <option value="${t.typeId}"
-                                                <c:if test="${room != null && room.typeId == t.typeId}">
-                                                    selected
-                                                </c:if>>
+                                                    <c:if test="${room != null && room.typeId == t.typeId}">
+                                                        selected
+                                                    </c:if>>
                                                 ${t.typeName} (Capacity: ${t.capacity} people)
                                             </option>
                                         </c:forEach>
@@ -183,8 +188,8 @@
                                     <a href="rooms?action=LIST" class="btn btn-secondary btn-lg mr-2">
                                         <i class="fas fa-times"></i> Cancel
                                     </a>
-                                    <button type="submit" class="btn btn-primary btn-lg">
-                                        <i class="fas fa-save"></i> Save Changes
+                                    <button type="submit" class="btn btn-primary btn-lg" onclick="return validateRoom()"> 
+                                        <i class="fas fa-save"></i> Save
                                     </button>
                                 </div>
 
@@ -197,5 +202,34 @@
         </div>
     </section>
 </div>
+
+<!--Validate trương room Number khi trống                                        -->
+<script>
+    function validateRoom() {
+        // 1. Lấy phần tử input và thẻ lỗi
+        var inputElement = document.getElementById("roomNumber");
+        var errorText = document.getElementById("errorMsg");
+
+        // Kiểm tra an toàn để tránh lỗi Javascript nếu ID bị sai
+        if (!inputElement || !errorText) return false;
+
+        var roomInput = inputElement.value;
+
+        // 2. Kiểm tra điều kiện
+        if (roomInput.trim() === "") {
+            // Hiện lỗi
+            errorText.style.display = "block";
+            // Focus lại vào ô nhập liệu để người dùng biết cần nhập ở đâu
+            inputElement.focus();
+            inputElement.classList.add("is-invalid"); // Thêm viền đỏ của Bootstrap (nếu muốn đẹp hơn)
+            return false; // Chặn form submit
+        } else {
+            // Ẩn lỗi
+            errorText.style.display = "none";
+            inputElement.classList.remove("is-invalid");
+            return true; // Cho phép form submit
+        }
+    }
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
