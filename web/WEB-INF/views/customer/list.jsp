@@ -15,17 +15,17 @@
             <div class="card">
                 <div class="card-header">
                     <h4>Customer List</h4>
-                    <div class="card-header-action">
-                        <a href="service?action=detail" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add New Service
-                        </a>
-                    </div>
                 </div>
                 <div class="card-body">
                     
                     <% String message = (String) request.getSession().getAttribute("message");
                        if(message != null) { %>
-                        <div class="alert alert-info"><%= message %></div>
+                            <div class="alert alert-info alert-dismissible show fade">
+                            <div class="alert-body">
+                                <button class="close" data-dismiss="alert"><span>&times;</span></button>
+                                <%= message %>
+                            </div>
+                        </div>
                     <% request.getSession().removeAttribute("message");
                        } %>
 
@@ -100,14 +100,27 @@
                                     </td>
                                     <td>
                                         <div class="d-flex">
-                                            <a href="service?action=detail&id=${s.serviceId}" class="btn btn-warning btn-sm mr-2" title="Edit">
+                                            <a href="customer?action=detail&id=${c.customerId}" class="btn btn-warning btn-sm mr-2" title="Edit">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </a>
 
-                                            <a href="service?action=delete&id=${s.serviceId}" class="btn btn-danger btn-sm" 
-                                               onclick="return confirm('Are you sure you want to delete this service?');" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
+                                            <form method="POST" action="customer" style="margin:0">
+                                                    <input type="hidden" name="customerId" value="${c.customerId}">
+                                                    <c:choose>
+                                                        <c:when test="${c.isActive}">
+                                                            <button type="submit" name="action" value="deactive" class="btn btn-danger btn-sm" 
+                                                                    onclick="return confirm('Are you sure you want to active this customer?')" title="Deactive">
+                                                                <i class="fas fa-lock"></i>
+                                                            </button>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <button type="submit" name="action" value="active" class="btn btn-success btn-sm" 
+                                                                    onclick="return confirm('Are you sure you want to deactive this customer?')" title="Active">
+                                                                <i class="fas fa-unlock"></i>
+                                                            </button>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -121,7 +134,7 @@
                             <ul class="pagination justify-content-center">
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <li class="page-item <c:if test='${p == page}'>active</c:if>">
-                                        <a class="page-link" href="customer?page=${p}&search=${search}&status=${status}&sort=${sort}>${p}</a>
+                                        <a class="page-link" href="customer?page=${p}&search=${search}&status=${status}&sort=${sort}">${p}</a>
                                     </li>
                                 </c:forEach>
                             </ul>

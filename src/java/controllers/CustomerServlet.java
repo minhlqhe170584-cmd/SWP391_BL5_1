@@ -12,9 +12,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import models.Customer;
+import utils.UpdateCustomerValidator;
 
 /**
  *
@@ -40,16 +42,27 @@ private final CustomerDAO customerDAO = new CustomerDAO(); // Or use Dependency 
                 showDetailForm(request, response);
                 break;
             default:
-                listService(request, response);
+                listCustomer(request, response);
                 break;
         }
     }
       
-    private void showDetailForm(HttpServletRequest request, HttpServletResponse response) {
-       
+    private void showDetailForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+       String id = request.getParameter("id");
+       Customer customer = new Customer();
+       if(id != null && !id.trim().isEmpty()){
+            try {
+                customer = customerDAO.getCustomerById(Integer.parseInt(id));
+            } catch (NumberFormatException e) {       
+                request.getSession().setAttribute("message", "Invalid Service ID.");
+                e.printStackTrace();
+            }
+        }
+       request.setAttribute("customer", customer);
+       request.getRequestDispatcher("/WEB-INF/views/customer/detail.jsp").forward(request, response);
     }
 
-    private void listService(HttpServletRequest request, HttpServletResponse response) 
+    private void listCustomer(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         String search = request.getParameter("search");
         String status = request.getParameter("status");
@@ -87,9 +100,114 @@ private final CustomerDAO customerDAO = new CustomerDAO(); // Or use Dependency 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-      
+                request.setCharacterEncoding("UTF-8");
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "list";
+        }
+        try {
+            switch (action) {
+            case "active":
+                activateCustomer(request, response);
+                break;
+            case "deactive":
+                deactivateCustomer(request, response);
+                break;
+            case "update":
+                updateCustomer(request, response);
+                break;   
+            default:
+                response.sendRedirect("customer");
+                break;
+            }
+        } 
+        catch (SQLException ex) 
+        {
+            request.getSession().setAttribute("message",ex.getMessage());
+            response.sendRedirect("customers");
+            System.getLogger(CustomerServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+    }
+    
+    private void deactivateCustomer(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        int id = Integer.parseInt(request.getParameter("customerId"));
+        customerDAO.deactivateCustomer(id);
+        request.getSession().setAttribute("message", "Deactivate Account");
+        response.sendRedirect("customer");
     }
 
+    private void activateCustomer(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        int id = Integer.parseInt(request.getParameter("customerId"));
+        customerDAO.activateCustomer(id);
+        request.getSession().setAttribute("message", "Activate Account");
+        response.sendRedirect("customer");
+    }
+
+    private void updateCustomer(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        
+        String id = request.getParameter("customerId");
+        String fullName = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String password = request.getParameter("password");
+        
+        List<String> errors = UpdateCustomerValidator.validate(fullName, email, phone, password);
+        
+        Integer customerId = null;
+        if(id != null && !id.trim().isEmpty()){
+            try {
+                customerId = Integer.valueOf(id);
+            } catch (NumberFormatException e) {
+                String errorMessage = "Invalid Customer ID.";
+                errors.add(errorMessage);
+            }
+        }
+         
+        if (!errors.isEmpty()) {
+        request.getSession().setAttribute("errorMessage", String.join(", ", errors));
+        
+        // Preserve form data
+        Customer customer = new Customer();
+        customer.setCustomerId(customerId);
+        customer.setFullName(fullName);
+        customer.setEmail(email);
+        customer.setPhone(phone);
+        request.setAttribute("customer", customer);
+        
+        request.getRequestDispatcher("/WEB-INF/views/customer/detail.jsp").forward(request, response);
+        return; 
+    }
+        
+        Customer customer = new Customer();
+        customer.setCustomerId(customerId);
+        customer.setFullName(fullName);
+        customer.setEmail(email);
+        customer.setPhone(phone);
+        customer.setPassword(password);
+        
+//        if (!errors.isEmpty()) {
+//        request.setAttribute("customer", customer);
+//        request.getSession().setAttribute("errorMessage", String.join(", ", errors));
+//        request.getRequestDispatcher("/WEB-INF/views/customer/detail.jsp").forward(request, response);  
+//        return;
+//        }
+        
+        try{
+        customerDAO.updateCustomer(customer);
+        request.getSession().setAttribute("message", "Customer updated successfully!");
+        response.sendRedirect("customer");
+        }
+        catch (Exception e)
+        {
+        e.printStackTrace();
+        request.getSession().setAttribute("errorMessage", "Database error: " + e.getMessage());
+        request.setAttribute("customer", customer);
+        request.getRequestDispatcher("/WEB-INF/views/customer/detail.jsp").forward(request, response);
+        }
+    }
 
     @Override
     public String getServletInfo() {

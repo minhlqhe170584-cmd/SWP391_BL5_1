@@ -26,8 +26,9 @@ public class CustomerDAO extends DBContext{
     private static final String GET_ALL_CUSTOMER = "SELECT customer_id, full_name, email, password, phone, is_active, created_at FROM Customers ORDER BY customer_id";
     private static final String GET_CUSTOMER_BY_ID = "SELECT customer_id, full_name, email, password, phone, is_active, created_at FROM Customers WHERE customer_id = ?";
     private static final String INSERT_NEW_CUSTOMER = "INSERT INTO Customers(full_name, email, password, phone, is_active, created_at) VALUES(?,?,?,?,?,?,?)";
-    private static final String UPDATE_CUSTOMER = "UPDATE Customers SET full_name=?, email=?, password=?, phone=?, is_active=? WHERE customer_id=?";
-    private static final String DEACTIVE_CUSTOMER = "UPDATE Customers SET is_active=? WHERE customer_id=?";
+    private static final String UPDATE_CUSTOMER = "UPDATE Customers SET full_name=?, email=?, password=?, phone=? WHERE customer_id=?";
+    private static final String DEACTIVE_CUSTOMER = "UPDATE Customers SET is_active= 0 WHERE customer_id=?";
+    private static final String ACTIVE_CUSTOMER = "UPDATE Customers SET is_active= 1 WHERE customer_id=?";
     private static final String SEARCH_FILTER = "SELECT * FROM Customers WHERE 1=1";
     private static final String BASE_CUSTOMER_SEARCH = "FROM Customers WHERE 1=1";
     
@@ -100,27 +101,41 @@ public class CustomerDAO extends DBContext{
             st.setString(2, customer.getEmail());
             st.setString(3, customer.getPassword());
             st.setString(4, customer.getPhone());
-            st.setBoolean(5, customer.isIsActive());
-            st.setInt(6, customer.getCustomerId());
+            st.setInt(5, customer.getCustomerId());
             
             int rowsAffected = st.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Error updating customer: " + e);
+            e.printStackTrace();
         }
         return false;
     }
     
-    public boolean deactivateCustomer(int customerId, boolean isActive) {
+    public boolean deactivateCustomer(int customerId) {
         try {
             PreparedStatement st = connection.prepareStatement(DEACTIVE_CUSTOMER);
-            st.setBoolean(1, isActive);
-            st.setInt(2, customerId);
+            st.setInt(1, customerId);
             
             int rowsAffected = st.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
             System.out.println("Error deactivating customer: " + e);
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+        public boolean activateCustomer(int customerId) {
+        try {
+            PreparedStatement st = connection.prepareStatement(ACTIVE_CUSTOMER);
+            st.setInt(1, customerId);
+            
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("Error activating customer: " + e);
+            e.printStackTrace();
         }
         return false;
     }
