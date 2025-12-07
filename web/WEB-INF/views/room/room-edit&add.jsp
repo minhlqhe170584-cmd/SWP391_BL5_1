@@ -189,7 +189,7 @@
                                         <i class="fas fa-times"></i> Cancel
                                     </a>
                                     <button type="submit" class="btn btn-primary btn-lg" onclick="return validateRoom()"> 
-                                        <i class="fas fa-save"></i> Save Changes
+                                        <i class="fas fa-save"></i> Save
                                     </button>
                                 </div>
 
