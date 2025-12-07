@@ -3,17 +3,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-
 <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Room Management</title>
-    </head>
-    <body>
-
-
 
 <div class="main-content">
     <section class="section">
@@ -126,6 +116,7 @@
                                     <th>Room Type</th>
                                     <th>Status</th>
                                     <th class="text-center">Active Login</th>
+                                    <th>Price (Day)</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -169,6 +160,9 @@
                                                     <div class="badge badge-light">No</div>
                                                 </c:otherwise>
                                             </c:choose>
+                                        </td>
+                                        <td>
+                                            <fmt:formatNumber value="${room.roomType.basePriceWeekday}" type="currency" currencySymbol="$" />
                                         </td>
                                         <td>
                                             <div class="d-flex">
@@ -257,6 +251,7 @@
     </section>
 </div>
 
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -313,4 +308,3 @@
         });
     }
 </script>
-</html>
