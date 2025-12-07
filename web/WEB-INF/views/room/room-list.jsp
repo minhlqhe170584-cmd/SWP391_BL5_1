@@ -116,7 +116,7 @@
                                     <th>Room Type</th>
                                     <th>Status</th>
                                     <th class="text-center">Active Login</th>
-                                    <th>Price (Day)</th>
+                                    <th hidden="">Price (Day)</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -161,7 +161,7 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td>
+                                        <td hidden="">
                                             <fmt:formatNumber value="${room.roomType.basePriceWeekday}" type="currency" currencySymbol="$" />
                                         </td>
                                         <td>
