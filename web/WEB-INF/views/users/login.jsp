@@ -1,180 +1,139 @@
 <%-- 
     Document   : login
-    Project    : Smart Hotel Management (SWP391)
-    Description: Màn hình đăng nhập (Đã bỏ "Ghi nhớ tôi")
+    Description: Trang Đăng Nhập (Style Sona - Bo tròn mềm mại)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <!DOCTYPE html>
-<html lang="vi">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Đăng Nhập - Smart Hotel System</title>
+<html lang="zxx">
+<head>
+    <title>Đăng Nhập | Smart Hotel</title>
+    <jsp:include page="../components/head.jsp"></jsp:include>
+    
+    <style>
+        body {
+            /* Ảnh nền Sona */
+            background-image: url('${pageContext.request.contextPath}/assets/img/hero/hero-1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cabin', sans-serif;
+            overflow: hidden;
+        }
         
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); z-index: 0;
+        }
+
+        .login-card {
+            position: relative; z-index: 1;
+            width: 420px;
+            background: #ffffff;
+            /* Bo tròn khung thẻ */
+            border-radius: 15px; 
+            padding: 40px;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+        }
+
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header h2 {
+            color: #e67e22; font-weight: 700; text-transform: uppercase;
+            font-size: 28px; margin-bottom: 10px;
+        }
+        .login-header p { color: #666; font-size: 14px; }
+
+        .input-group { margin-bottom: 20px; position: relative; }
         
-        <style>
-            body {
-                background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                
-                /* Căn giữa màn hình */
-                height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                
-                margin: 0;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
+        /* --- CHỈNH SỬA: BO TRÒN Ô INPUT --- */
+        .form-control {
+            height: 50px;
+            border: 1px solid #ebebeb;
+            /* Bo tròn 50px để tạo hình viên thuốc */
+            border-radius: 50px; 
+            padding-left: 20px;
+            font-size: 14px;
+            color: #19191a;
+        }
+        .form-control:focus { border-color: #e67e22; box-shadow: none; }
 
-            .overlay {
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 0;
-            }
+        /* --- CHỈNH SỬA: BO TRÒN NÚT BẤM --- */
+        .btn-login {
+            display: inline-block;
+            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            color: #ffffff;
+            background: #e67e22;
+            border: none;
+            padding: 14px 20px;
+            letter-spacing: 2px;
+            width: 100%;
+            /* Bo tròn nút */
+            border-radius: 50px; 
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3); /* Thêm bóng cho đẹp */
+        }
+        .btn-login:hover {
+            background: #2c3e50;
+            transform: translateY(-2px); /* Hiệu ứng nhấn */
+        }
 
-            .login-card {
-                position: relative;
-                z-index: 1;
-                width: 400px;
-                background: rgba(255, 255, 255, 0.95);
-                border-radius: 15px;
-                box-shadow: 0 15px 25px rgba(0,0,0,0.5);
-                padding: 40px 30px;
-            }
+        .extra-links { text-align: center; margin-top: 25px; font-size: 14px; }
+        .extra-links a { color: #e67e22; font-weight: 600; transition: 0.3s; }
+        .extra-links a:hover { color: #dfa974; text-decoration: underline; }
+        
+        .alert-custom {
+            font-size: 13px; padding: 10px; border-radius: 10px;
+            background: #ffe3e3; color: #d63031;
+            border-left: 4px solid #d63031; margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
 
-            .login-header {
-                text-align: center;
-                margin-bottom: 30px;
-            }
-            .login-header h3 {
-                color: #e67e22;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-top: 10px;
-            }
+    <div class="overlay"></div>
 
-            .form-control {
-                border-radius: 25px;
-                height: 45px;
-                padding-left: 20px;
-                font-size: 14px;
-            }
-            .form-control:focus {
-                box-shadow: none;
-                border-color: #e67e22;
-            }
-            .input-group-text {
-                background: transparent;
-                border: none;
-                border-bottom: 1px solid #ced4da;
-                color: #e67e22;
-            }
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Đăng Nhập</h2>
+            <p>Chào mừng bạn đến với Smart Hotel</p>
+        </div>
 
-            .btn-login {
-                border-radius: 25px;
-                height: 45px;
-                background: linear-gradient(to right, #e67e22, #d35400);
-                border: none;
-                color: white;
-                font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-top: 20px;
-                transition: 0.3s;
-            }
-            .btn-login:hover {
-                background: linear-gradient(to right, #d35400, #e67e22);
-                box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4);
-                color: white;
-            }
+        <c:if test="${mess != null}">
+            <div class="alert-custom">
+                <i class="fa fa-exclamation-circle"></i> ${mess}
+            </div>
+        </c:if>
 
-            .extra-links {
-                text-align: center;
-                margin-top: 25px;
-                font-size: 14px;
-            }
-            .extra-links a {
-                color: #d35400;
-                text-decoration: none;
-                font-weight: 600;
-            }
-            .extra-links a:hover {
-                text-decoration: underline;
-            }
+        <form action="${pageContext.request.contextPath}/login" method="post">
+            <div class="input-group">
+                <input type="text" name="user" class="form-control" placeholder="Email hoặc Số phòng" required autofocus value="${user}">
+            </div>
             
-            .alert-custom {
-                font-size: 13px;
-                border-radius: 10px;
-                text-align: center;
-            }
-        </style>
-    </head>
-    <body>
-
-        <div class="overlay"></div>
-
-        <div class="login-card">
+            <div class="input-group">
+                <input type="password" name="pass" class="form-control" placeholder="Mật khẩu" required>
+            </div>
             
-            <div class="login-header">
-                <i class="fas fa-hotel fa-3x" style="color: #e67e22;"></i>
-                <h3>Smart Hotel</h3>
-                <p class="text-muted">Đăng nhập hệ thống</p>
+            <div class="input-group d-flex justify-content-end">
+                <a href="${pageContext.request.contextPath}/forgot" style="font-size: 13px; color: #666;">Quên mật khẩu?</a>
             </div>
 
-            <c:if test="${mess != null}">
-                <div class="alert alert-danger alert-custom">
-                    <i class="fas fa-exclamation-triangle"></i> ${mess}
-                </div>
-            </c:if>
+            <button type="submit" class="btn-login">Đăng Nhập Ngay</button>
+        </form>
 
-            <form action="login" method="post">
-                
-                <div class="form-group">
-                    <label class="text-muted small">Tên đăng nhập / Số phòng</label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-user"></i></span>
-                        </div>
-                        <input type="text" name="user" class="form-control" placeholder="Nhập username..." required autofocus>
-                    </div>
-                </div>
+        <div class="extra-links">
+            <span>Chưa có tài khoản?</span>
+            <a href="${pageContext.request.contextPath}/register">Đăng ký tại đây</a>
+            <br><br>
+            <a href="${pageContext.request.contextPath}/home"><i class="fa fa-long-arrow-left"></i> Quay về Trang chủ</a>
+        </div>
+    </div>
 
-                <div class="form-group">
-                    <label class="text-muted small">Mật khẩu</label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        </div>
-                        <input type="password" name="pass" class="form-control" placeholder="Nhập password..." required>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end align-items-center small">
-                    <a href="#" class="text-muted">Quên mật khẩu?</a>
-                </div>
-
-                <button type="submit" class="btn btn-login btn-block">
-                    Đăng Nhập <i class="fas fa-sign-in-alt ml-2"></i>
-                </button>
-            </form>
-
-            <div class="extra-links">
-                <p>Chưa có tài khoản? <a href="register">Đăng ký ngay</a></p>
-
-                <p><a href="home" style="color: #6c757d;"><i class="fas fa-home"></i> Quay về trang chủ</a></p>
-            </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+</body>
 </html>
