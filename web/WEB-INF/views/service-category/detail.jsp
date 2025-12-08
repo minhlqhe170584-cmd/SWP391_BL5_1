@@ -1,50 +1,98 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${empty category.categoryId ? 'Add Category' : 'Update Category'}</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f6f9; }
-        .form-container { background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 3px; font-size: 16px; }
-        .btn-cancel { background-color: #6c757d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 3px; margin-left: 10px; font-size: 16px; }
-        h2 { text-align: center; color: #333; }
-        .error-msg { color: red; text-align: center; margin-bottom: 15px; }
-    </style>
-</head>
-<body>
 
-    <div class="form-container">
-        <h2>${empty category.categoryId ? '➕ Add Category' : '✏️ Update Category'}</h2>
-        
-        <c:if test="${not empty errorMessage}">
-            <div class="error-msg">${errorMessage}</div>
-        </c:if>
-        
-        <form method="post" action="service-category">
-            <input type="hidden" name="categoryId" value="${category.categoryId}" />
-            
-            <div class="form-group">
-                <label>Category Name (*):</label>
-                <input type="text" name="categoryName" value="${category.categoryName}" required placeholder="Enter category name">
-            </div>
-            
-            <div class="form-group">
-                <label>Description:</label>
-                <textarea name="description" rows="4" placeholder="Enter description">${category.description}</textarea>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button type="submit" class="btn-submit">Save</button>
-                <a href="service-category" class="btn-cancel">Cancel</a>
-            </div>
-        </form>
-    </div>
+<jsp:include page="/WEB-INF/views/common/header.jsp" />
+<jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
 
-</body>
-</html>
+<div class="main-content">
+    <section class="section">
+        
+        <div class="section-header">
+            <div class="section-header-back">
+                <a href="service-category" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
+            </div>
+            <h1>${category.categoryId == 0 ? 'Add New Category' : 'Update Category'}</h1>
+            <div class="section-header-breadcrumb">
+                <div class="breadcrumb-item active"><a href="dashboard">Dashboard</a></div>
+                <div class="breadcrumb-item"><a href="service-category">Category Management</a></div>
+                <div class="breadcrumb-item">${category.categoryId == 0 ? 'Add New' : 'Update'}</div>
+            </div>
+        </div>
+
+        <div class="section-body">
+            
+            <c:if test="${not empty errorMessage}">
+                <div class="alert alert-danger alert-dismissible show fade">
+                    <div class="alert-body">
+                        <button class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                        ${errorMessage}
+                    </div>
+                </div>
+            </c:if>
+
+            <div class="row">
+                <div class="col-12 col-md-6 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>${category.categoryId == 0 ? 'Add Category Form' : 'Update Category Form'}</h4>
+                        </div>
+                        <div class="card-body">
+                            
+                            <form method="post" action="service-category" class="needs-validation" novalidate="">
+                                <input type="hidden" name="categoryId" value="${category.categoryId}" />
+                                
+                                <div class="form-group">
+                                    <label>Category Name <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                <i class="fas fa-tags"></i>
+                                            </div>
+                                        </div>
+                                        <input type="text" class="form-control" name="categoryName" 
+                                               value="${category.categoryName}" required placeholder="Ex: Food, Laundry...">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea class="form-control" name="description" rows="4" style="height: 100px;" 
+                                              placeholder="Enter detailed description for this category">${category.description}</textarea>
+                                </div>
+                                
+                                <div class="form-group text-right">
+                                    <button class="btn btn-primary btn-lg" type="submit">
+                                        <i class="fas fa-save"></i> ${category.categoryId == 0 ? 'Save Category' : 'Save Changes'}
+                                    </button>
+                                    <a href="service-category" class="btn btn-secondary btn-lg ml-2">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-6">
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h4><i class="fas fa-info-circle"></i> Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>Service categories help classify amenities provided by the hotel.</p>
+                            <ul>
+                                <li><strong>Category Name:</strong> Must be unique and concise.</li>
+                                <li><strong>Description:</strong> Helps staff understand the scope of this category.</li>
+                            </ul>
+                            <div class="alert alert-light">
+                                <b>Note:</b> Deleting a category may affect child services belonging to it.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />

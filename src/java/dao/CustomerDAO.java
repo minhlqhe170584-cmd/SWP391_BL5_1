@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import models.Customer;
 import dbContext.DBContext;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,186 +23,294 @@ import java.util.Map;
  */
 public class CustomerDAO extends DBContext{
     
-    private static final String GET_ALL_CUSTOMER = "SELECT customer_id, full_name, email, password, phone, is_active, create_at FROM Customers ORDER BY customer_id";
-    private static final String GET_CUSTOMER_BY_ID = "SELECT customer_id, full_name, email, password, phone, is_active, create_at FROM Customers WHERE customer_id = ?";
-    private static final String INSERT_NEW_CUSTOMER = "INSERT INTO Customers(full_name, email, password, phone, is_active, create_at) VALUES(?,?,?,?,?,?,?)";
-    private static final String UPDATE_CUSTOMER = "UPDATE Customers SET full_name=?, email=?, password=?, phone=?, is_active=? WHERE customer_id=?";
-    private static final String DEACTIVE_CUSTOMER = "UPDATE Customers SET is_active=? WHERE customer_id=?";
-    private static final String SEARCH_FILTER ="SELECT * FROM Customers WHERE 1=1";
+    private static final String GET_ALL_CUSTOMER = "SELECT customer_id, full_name, email, password, phone, is_active, created_at FROM Customers ORDER BY customer_id";
+    private static final String GET_CUSTOMER_BY_ID = "SELECT customer_id, full_name, email, password, phone, is_active, created_at FROM Customers WHERE customer_id = ?";
+    private static final String INSERT_NEW_CUSTOMER = "INSERT INTO Customers(full_name, email, password, phone, is_active, created_at) VALUES(?,?,?,?,?,?,?)";
+    private static final String UPDATE_CUSTOMER = "UPDATE Customers SET full_name=?, email=?, password=?, phone=? WHERE customer_id=?";
+    private static final String DEACTIVE_CUSTOMER = "UPDATE Customers SET is_active= 0 WHERE customer_id=?";
+    private static final String ACTIVE_CUSTOMER = "UPDATE Customers SET is_active= 1 WHERE customer_id=?";
+    private static final String SEARCH_FILTER = "SELECT * FROM Customers WHERE 1=1";
+    private static final String BASE_CUSTOMER_SEARCH = "FROM Customers WHERE 1=1";
     
-    public List<Customer> getAllCustomer() {
-        List<Customer> list = new ArrayList<>();
-        
-        // Use try-with-resources to ensure PreparedStatement and ResultSet close automatically
-        try (PreparedStatement st = connection.prepareStatement(GET_ALL_CUSTOMER);
-             ResultSet rs = st.executeQuery()) {
-
+    public ArrayList<Customer> getAllCustomers() {
+        ArrayList<Customer> list = new ArrayList<>();
+        try {
+            PreparedStatement st = connection.prepareStatement(GET_ALL_CUSTOMER);
+            ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 list.add(new Customer(
                     rs.getInt("customer_id"),
-                    rs.getString("full_name"),       // Fixed column name to match SQL
-                    rs.getString("email"),           // Fixed column name to match SQL
-                    rs.getString("password"),        // Fixed column name to match SQL
-                    rs.getString("phone"),           // Fixed column name to match SQL  
+                    rs.getString("full_name"),
+                    rs.getString("email"),
+                    rs.getString("password"),
+                    rs.getString("phone"),
                     rs.getBoolean("is_active"),
-                    rs.getObject("create_at", LocalDateTime.class)
+                    rs.getTimestamp("created_at").toLocalDateTime()
                 ));
             }
-        } catch (SQLException ex) {
-            System.out.println("Error getAllCustomer: " + ex.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Error getting all customers: " + e);
         }
         return list;
     }
-
-    public Customer getCustomerById(int id) {
-        try (PreparedStatement st = connection.prepareStatement(GET_CUSTOMER_BY_ID)) {
-            st.setInt(1, id);
-            
-            try (ResultSet rs = st.executeQuery()) {
-                if (rs.next()) {
-                    return new Customer(
-                        rs.getInt("customer_id"),
-                        rs.getString("full_name"),
-                        rs.getString("email"),
-                        rs.getString("password"),
-                        rs.getString("phone"),
-                        rs.getBoolean("is_active"),
-                        rs.getObject("create_at", LocalDateTime.class)
-                    );
-                }
+    
+    public Customer getCustomerById(int customerId) {
+        try {
+            PreparedStatement st = connection.prepareStatement(GET_CUSTOMER_BY_ID);
+            st.setInt(1, customerId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return new Customer(
+                    rs.getInt("customer_id"),
+                    rs.getString("full_name"),
+                    rs.getString("email"),
+                    rs.getString("password"),
+                    rs.getString("phone"),
+                    rs.getBoolean("is_active"),
+                    rs.getTimestamp("created_at").toLocalDateTime()
+                );
             }
         } catch (SQLException e) {
-            System.out.println("Error getCustomerById: " + e.getMessage());
+            System.out.println("Error getting customer by ID: " + e);
         }
         return null;
     }
-
-    public void insertCustomer(Customer c) {
-        // SQL requires 7 parameters
-        try (PreparedStatement st = connection.prepareStatement(INSERT_NEW_CUSTOMER)) {
-            st.setString(1, c.getFullName());
-            st.setString(2, c.getEmail());
-            st.setString(3, c.getPassword());
-            st.setString(4, c.getPhone());
-            st.setBoolean(6, c.isIsActive());
-            st.setObject(7, c.getCreateAt());
-
-            st.executeUpdate();
+    
+    public boolean insertCustomer(Customer customer) {
+        try {
+            PreparedStatement st = connection.prepareStatement(INSERT_NEW_CUSTOMER);
+            st.setString(1, customer.getFullName());
+            st.setString(2, customer.getEmail());
+            st.setString(3, customer.getPassword());
+            st.setString(4, customer.getPhone());
+            st.setBoolean(5, customer.isIsActive());
+            st.setTimestamp(6, Timestamp.valueOf(customer.getCreateAt()));
+            
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException e) {
-            System.out.println("Error insert Customer: " + e.getMessage());
+            System.out.println("Error inserting customer: " + e);
         }
-    }
-
-    public void updateCustomer(Customer c) {
-        // SQL requires 7 parameters (6 setters + 1 ID for Where clause)
-        try (PreparedStatement st = connection.prepareStatement(UPDATE_CUSTOMER)) {
-            st.setString(1, c.getFullName());
-            st.setString(2, c.getEmail());
-            st.setString(3, c.getPassword());
-            st.setString(4, c.getPhone());
-            st.setBoolean(6, c.isIsActive());
-            // The ID is the last parameter for the WHERE clause
-            st.setInt(7, c.getCustomerId());
-
-            st.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("Error update Customer: " + e.getMessage());
-        }
+        return false;
     }
     
-    // Added this method since you had the Constant defined for it
-    public void deactivateCustomer(int customerId, boolean isActive) {
-        try (PreparedStatement st = connection.prepareStatement(DEACTIVE_CUSTOMER)) {
-            st.setBoolean(1, isActive);
-            st.setInt(2, customerId);
-            st.executeUpdate();
+    public boolean updateCustomer(Customer customer) {
+        try {
+            PreparedStatement st = connection.prepareStatement(UPDATE_CUSTOMER);
+            st.setString(1, customer.getFullName());
+            st.setString(2, customer.getEmail());
+            st.setString(3, customer.getPassword());
+            st.setString(4, customer.getPhone());
+            st.setInt(5, customer.getCustomerId());
+            
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException e) {
-            System.out.println("Error deactivate Customer: " + e.getMessage());
+            System.out.println("Error updating customer: " + e);
+            e.printStackTrace();
         }
+        return false;
     }
     
-    public int countCustomers(String keyword) {
-        String sql = "SELECT COUNT(*) FROM Customers WHERE 1=1 ";
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql += " AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ";
+    public boolean deactivateCustomer(int customerId) {
+        try {
+            PreparedStatement st = connection.prepareStatement(DEACTIVE_CUSTOMER);
+            st.setInt(1, customerId);
+            
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("Error deactivating customer: " + e);
+            e.printStackTrace();
         }
+        return false;
+    }
+    
+        public boolean activateCustomer(int customerId) {
+        try {
+            PreparedStatement st = connection.prepareStatement(ACTIVE_CUSTOMER);
+            st.setInt(1, customerId);
+            
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.out.println("Error activating customer: " + e);
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    public ArrayList<Customer> searchFilter(String search, String status) {
+        ArrayList<Customer> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(SEARCH_FILTER);
 
-        try (PreparedStatement st = connection.prepareStatement(sql)) {
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                String searchPattern = "%" + keyword + "%";
-                st.setString(1, searchPattern);
-                st.setString(2, searchPattern);
-                st.setString(3, searchPattern);
+        try {
+            if (search != null && !search.isEmpty()) {
+                sql.append(" AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ");
             }
-            try (ResultSet rs = st.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+
+            if (status != null && !status.isEmpty()) {
+                sql.append(" AND is_active = ? ");
             }
+
+            PreparedStatement st = connection.prepareStatement(sql.toString());
+
+            int idx = 1;
+            if (search != null && !search.isEmpty()) {
+                String searchPattern = "%" + search + "%";
+                st.setString(idx++, searchPattern);
+                st.setString(idx++, searchPattern);
+                st.setString(idx++, searchPattern);
+            }
+
+            if (status != null && !status.isEmpty()) {
+                st.setBoolean(idx++, Boolean.parseBoolean(status));
+            }
+
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                list.add(new Customer(
+                    rs.getInt("customer_id"),
+                    rs.getString("full_name"),
+                    rs.getString("email"),
+                    rs.getString("password"),
+                    rs.getString("phone"),
+                    rs.getBoolean("is_active"),
+                    rs.getTimestamp("created_at").toLocalDateTime()
+                ));
+            }
+
         } catch (SQLException e) {
-            System.out.println("Error countCustomers: " + e.getMessage());
+            System.out.println("Error filter search: " + e);
         }
-        return 0;
+
+        return list;
     }
-
     
-    public List<Customer> searchCustomers(String keyword, String sortBy, String sortOrder, int page, int pageSize) {
-        List<Customer> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM Customers WHERE 1=1 ");
+    public ArrayList<Customer> search(String search, String status, String sort, int pageIndex, int pageSize) {
+        ArrayList<Customer> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT customer_id, full_name, email, password, phone, is_active, created_at ").append(BASE_CUSTOMER_SEARCH);
 
-        
-        if (keyword != null && !keyword.trim().isEmpty()) {
+        if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ");
         }
 
-
-        Map<String, String> allowedColumns = new HashMap<>();
-        allowedColumns.put("full_name", "full_name");
-        allowedColumns.put("email", "email");
-        allowedColumns.put("create_at", "create_at");
-        allowedColumns.put("customer_id", "customer_id");
-        
-        String sortCol = allowedColumns.getOrDefault(sortBy, "customer_id");
-        String order = "DESC".equalsIgnoreCase(sortOrder) ? "DESC" : "ASC";
-        
-        sql.append(" ORDER BY ").append(sortCol).append(" ").append(order);
-
-        
-        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-
-        try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
-            int paramIndex = 1;
-
-            
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                String searchPattern = "%" + keyword + "%";
-                st.setString(paramIndex++, searchPattern);
-                st.setString(paramIndex++, searchPattern);
-                st.setString(paramIndex++, searchPattern);
-            }
-
-            
-            int offset = (page - 1) * pageSize;
-            st.setInt(paramIndex++, offset);
-            st.setInt(paramIndex++, pageSize);
-
-            try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new Customer(
-                        rs.getInt("customer_id"),
-                        rs.getString("full_name"),
-                        rs.getString("email"),
-                        rs.getString("password"),
-                        rs.getString("phone"),
-                        rs.getBoolean("is_active"),
-                        rs.getObject("create_at", LocalDateTime.class)
-                    ));
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("Error searchCustomers: " + e.getMessage());
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND is_active = ? ");
         }
+
+        if (sort == null || sort.isEmpty()) {
+            sql.append(" ORDER BY customer_id ASC ");
+        } else {
+            switch (sort) {
+                case "nameAsc":
+                    sql.append(" ORDER BY full_name ASC ");
+                    break;
+                case "nameDesc":
+                    sql.append(" ORDER BY full_name DESC ");
+                    break;
+                case "emailAsc":
+                    sql.append(" ORDER BY email ASC ");
+                    break;
+                case "emailDesc":
+                    sql.append(" ORDER BY email DESC ");
+                    break;
+                case "dateAsc":
+                    sql.append(" ORDER BY created_at ASC ");
+                    break;
+                case "dateDesc":
+                    sql.append(" ORDER BY created_at DESC ");
+                    break;
+                case "idDesc":
+                    sql.append(" ORDER BY customer_id DESC ");
+                    break;
+                case "idAsc":
+                default:
+                    sql.append(" ORDER BY customer_id ASC ");
+                    break;
+            }
+        }
+
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+
+        try {
+            PreparedStatement st = connection.prepareStatement(sql.toString());
+            int idx = 1;
+
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim() + "%";
+                st.setString(idx++, searchPattern);
+                st.setString(idx++, searchPattern);
+                st.setString(idx++, searchPattern);
+            }
+
+            if (status != null && !status.trim().isEmpty()) {
+                if("true".equals(status))st.setInt(idx++, 1);   
+                if("false".equals(status)) st.setInt(idx++, 0);
+            }
+
+            int offset = (pageIndex - 1) * pageSize;
+            st.setInt(idx++, offset);
+            st.setInt(idx, pageSize);
+
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                list.add(new Customer(
+                    rs.getInt("customer_id"),
+                    rs.getString("full_name"),
+                    rs.getString("email"),
+                    rs.getString("password"),
+                    rs.getString("phone"),
+                    rs.getBoolean("is_active"),
+                    rs.getTimestamp("created_at").toLocalDateTime()
+                ));
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error search customer: " + e);
+        }
+
         return list;
+    }
+    
+    public int countSearch(String search, String status) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) ").append(BASE_CUSTOMER_SEARCH);
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (full_name LIKE ? OR email LIKE ? OR phone LIKE ?) ");
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND is_active = ? ");
+        }
+
+        try {
+            PreparedStatement st = connection.prepareStatement(sql.toString());
+            int idx = 1;
+
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim() + "%";
+                st.setString(idx++, searchPattern);
+                st.setString(idx++, searchPattern);
+                st.setString(idx++, searchPattern);
+            }
+
+            if (status != null && !status.trim().isEmpty()) {
+                st.setBoolean(idx++, Boolean.parseBoolean(status));
+            }
+
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error count customer search: " + e);
+        }
+
+        return 0;
     }
     
     

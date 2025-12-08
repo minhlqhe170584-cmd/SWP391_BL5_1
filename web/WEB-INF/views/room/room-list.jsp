@@ -23,7 +23,7 @@
                 </div>
 
                 <div class="card-body">
-                    
+
                     <c:if test="${not empty sessionScope.successMessage}">
                         <div class="alert alert-success alert-dismissible show fade">
                             <div class="alert-body">
@@ -59,17 +59,18 @@
                                     <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="Room number...">
                                 </div>
                             </div>
-                            
+
                             <div class="form-group col-md-2">
                                 <label>Floor</label>
                                 <select name="floor" class="form-control">
-                                    <option value="">All Floors</option>
-                                    <c:forEach begin="1" end="5" var="f">
+                                    <option value="">-- All Floors --</option>
+
+                                    <c:forEach var="f" items="${listFloors}">
                                         <option value="${f}" ${currentFloor == f ? 'selected' : ''}>Floor ${f}</option>
                                     </c:forEach>
                                 </select>
                             </div>
-                            
+
                             <div class="form-group col-md-2">
                                 <label>Type</label>
                                 <select name="typeId" class="form-control">
@@ -79,7 +80,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-                            
+
                             <div class="form-group col-md-2">
                                 <label>Status</label>
                                 <select name="status" class="form-control">
@@ -90,7 +91,7 @@
                                     <option value="Maintenance" ${currentStatus == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
                                 </select>
                             </div>
-                            
+
                             <div class="form-group col-md-2">
                                 <label>Active Login</label>
                                 <select name="active" class="form-control">
@@ -99,7 +100,7 @@
                                     <option value="false" ${currentActive == 'false' ? 'selected' : ''}>Inactive (No)</option>
                                 </select>
                             </div>
-                            
+
                             <div class="form-group col-md-1">
                                 <button type="submit" class="btn btn-info btn-block" title="Filter Results">
                                     <i class="fas fa-filter"></i>
@@ -114,7 +115,7 @@
                                 <tr>
                                     <th>Room No.</th>
                                     <th>Room Type</th>
-                                    <th>Status</th>
+                                    <th hidden="">Status</th>
                                     <th class="text-center">Active Login</th>
                                     <th hidden="">Price (Day)</th>
                                     <th>Action</th>
@@ -131,7 +132,7 @@
                                     <tr>
                                         <td><strong>${room.roomNumber}</strong></td>
                                         <td>${room.roomType.typeName}</td>
-                                        <td>
+                                        <td hidden="">
                                             <c:choose>
                                                 <c:when test="${room.status == 'Available'}">
                                                     <div class="badge badge-success">Available</div>
@@ -150,7 +151,7 @@
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        
+
                                         <td class="text-center">
                                             <c:choose>
                                                 <c:when test="${room.activeLogin}">
@@ -238,7 +239,7 @@
                             </nav>
                         </div>
                     </c:if>
-                    
+
                     <c:if test="${isFiltering}">
                         <div class="text-center mt-3">
                             <a href="rooms?action=LIST" class="btn btn-link text-muted">Back to Full List</a>
@@ -255,56 +256,56 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function confirmBan(event, roomNumber, action, link) {
-        event.preventDefault(); 
-        
-        let titleInfo = "";
-        let textInfo = "";
-        let iconType = "";
-        let confirmColor = "";
+                                                       function confirmBan(event, roomNumber, action, link) {
+                                                           event.preventDefault();
 
-        if (action === 'ban') {
-            titleInfo = "Ban Room " + roomNumber + "?";
-            textInfo = "The status will be changed to Maintenance!";
-            iconType = "warning";
-            confirmColor = "#6c757d";
-        } else {
-            titleInfo = "Unban Room " + roomNumber + "?";
-            textInfo = "The room will become Available again!";
-            iconType = "question";
-            confirmColor = "#28a745";
-        }
+                                                           let titleInfo = "";
+                                                           let textInfo = "";
+                                                           let iconType = "";
+                                                           let confirmColor = "";
 
-        Swal.fire({
-            title: titleInfo,
-            text: textInfo,
-            icon: iconType,
-            showCancelButton: true,
-            confirmButtonColor: confirmColor,
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'No'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = link;
-            }
-        });
-    }
+                                                           if (action === 'ban') {
+                                                               titleInfo = "Ban Room " + roomNumber + "?";
+                                                               textInfo = "The status will be changed to Maintenance!";
+                                                               iconType = "warning";
+                                                               confirmColor = "#6c757d";
+                                                           } else {
+                                                               titleInfo = "Unban Room " + roomNumber + "?";
+                                                               textInfo = "The room will become Available again!";
+                                                               iconType = "question";
+                                                               confirmColor = "#28a745";
+                                                           }
 
-    function confirmDelete(event, roomNumber, link) {
-        event.preventDefault(); 
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "Delete Room " + roomNumber + "? You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = link;
-            }
-        });
-    }
+                                                           Swal.fire({
+                                                               title: titleInfo,
+                                                               text: textInfo,
+                                                               icon: iconType,
+                                                               showCancelButton: true,
+                                                               confirmButtonColor: confirmColor,
+                                                               cancelButtonColor: '#d33',
+                                                               confirmButtonText: 'Yes',
+                                                               cancelButtonText: 'No'
+                                                           }).then((result) => {
+                                                               if (result.isConfirmed) {
+                                                                   window.location.href = link;
+                                                               }
+                                                           });
+                                                       }
+
+                                                       function confirmDelete(event, roomNumber, link) {
+                                                           event.preventDefault();
+                                                           Swal.fire({
+                                                               title: 'Are you sure?',
+                                                               text: "Delete Room " + roomNumber + "? You won't be able to revert this!",
+                                                               icon: 'warning',
+                                                               showCancelButton: true,
+                                                               confirmButtonColor: '#d33',
+                                                               cancelButtonColor: '#3085d6',
+                                                               confirmButtonText: 'Yes, delete it!'
+                                                           }).then((result) => {
+                                                               if (result.isConfirmed) {
+                                                                   window.location.href = link;
+                                                               }
+                                                           });
+                                                       }
 </script>

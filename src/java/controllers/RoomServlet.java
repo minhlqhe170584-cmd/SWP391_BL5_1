@@ -190,6 +190,10 @@ public class RoomServlet extends HttpServlet {
                     // 1. Chuẩn bị dữ liệu Dropdown
                     List<models.RoomType> listType = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listType);
+                    
+                    // Lấy danh sách tầng động 
+                    List<Integer> listFloors = roomDAO.getExistingFloors();
+                    request.setAttribute("listFloors", listFloors);
 
                     // 2. Lấy tham số Filter
                     String keyword = request.getParameter("keyword");

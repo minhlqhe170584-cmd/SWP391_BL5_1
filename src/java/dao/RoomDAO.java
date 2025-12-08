@@ -13,7 +13,7 @@ import models.RoomType;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal; // Đảm bảo import BigDecimal
+import java.math.BigDecimal; 
 
 /**
  *
@@ -23,16 +23,8 @@ public class RoomDAO extends DBContext {
 
     /**
      * Hàm kiểm tra đăng nhập cho Room Account
-     *
-     * @param roomNumber Số phòng (User nhập vào)
-     * @param password Mật khẩu phòng (User nhập vào)
-     * @return Object Room nếu đúng, null nếu sai
      */
     public Room checkRoomLogin(String roomNumber, String password) {
-        // SQL Logic:
-        // 1. Đúng số phòng (room_number)
-        // 2. Đúng mật khẩu (room_password)
-        // 3. Phòng đang được kích hoạt cho phép đăng nhập (is_active_login = 1)
         String sql = "SELECT * FROM Rooms WHERE room_number = ? AND room_password = ? AND is_active_login = 1";
 
         try {
@@ -64,11 +56,9 @@ public class RoomDAO extends DBContext {
 
         String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, "
                 + "t.type_name "
-                + // Lấy thêm cột tên loại phòng
-                "FROM Rooms r "
+                + "FROM Rooms r "
                 + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
-                + // Kết nối 2 bảng qua type_id
-                "ORDER BY r.room_number ASC";
+                + "ORDER BY r.room_number ASC";
 
         try {
             PreparedStatement st = connection.prepareStatement(sql);
@@ -76,8 +66,6 @@ public class RoomDAO extends DBContext {
 
             while (rs.next()) {
                 Room room = new Room();
-
-                // Set các thuộc tính cơ bản của Room
                 room.setRoomId(rs.getInt("room_id"));
                 room.setRoomNumber(rs.getString("room_number"));
                 room.setStatus(rs.getString("status"));
@@ -85,15 +73,10 @@ public class RoomDAO extends DBContext {
                 room.setActiveLogin(rs.getBoolean("is_active_login"));
                 room.setTypeId(rs.getInt("type_id"));
 
-                // --- PHẦN MỚI THÊM ---
-                // Tạo đối tượng RoomType và set tên lấy từ DB
                 RoomType rt = new RoomType();
                 rt.setTypeId(rs.getInt("type_id"));
-                rt.setTypeName(rs.getString("type_name")); // Lấy type_name từ kết quả join
-
-                // Gán RoomType vào Room
+                rt.setTypeName(rs.getString("type_name")); 
                 room.setRoomType(rt);
-                // ---------------------
 
                 roomList.add(room);
             }
@@ -102,7 +85,7 @@ public class RoomDAO extends DBContext {
         }
         return roomList;
     }
-    
+
     //Phần xử lý phân trang màn hình List Room
     // 1. Hàm đếm tổng số lượng phòng
     public int getTotalRooms() {
@@ -122,21 +105,17 @@ public class RoomDAO extends DBContext {
     // 2. Hàm lấy danh sách phòng theo trang (Mỗi trang 5 phòng)
     public List<Room> pagingRooms(int index) {
         List<Room> list = new ArrayList<>();
-        // SQL Server: Dùng OFFSET và FETCH NEXT để phân trang
-        // index: số trang hiện tại (1, 2, 3...)
-        // (index - 1) * 5: Số dòng cần bỏ qua
-        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name " +
-                     "FROM Rooms r " +
-                     "INNER JOIN RoomTypes t ON r.type_id = t.type_id " +
-                     "ORDER BY r.room_number ASC " +
-                     "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
-        
+        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name "
+                + "FROM Rooms r "
+                + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                + "ORDER BY r.room_number ASC "
+                + "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
+
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            // Tính toán vị trí bắt đầu lấy
-            st.setInt(1, (index - 1) * 5); 
+            st.setInt(1, (index - 1) * 5);
             ResultSet rs = st.executeQuery();
-            
+
             while (rs.next()) {
                 Room room = new Room();
                 room.setRoomId(rs.getInt("room_id"));
@@ -144,13 +123,12 @@ public class RoomDAO extends DBContext {
                 room.setStatus(rs.getString("status"));
                 room.setActiveLogin(rs.getBoolean("is_active_login"));
                 room.setTypeId(rs.getInt("type_id"));
-                
-                // Set Room Type Name
+
                 RoomType rt = new RoomType();
                 rt.setTypeId(rs.getInt("type_id"));
                 rt.setTypeName(rs.getString("type_name"));
                 room.setRoomType(rt);
-                
+
                 list.add(room);
             }
         } catch (SQLException e) {
@@ -158,25 +136,21 @@ public class RoomDAO extends DBContext {
         }
         return list;
     }
-    //Kết thúc phần xử lý phân trang
-    
-    
-    //Phần xử lý tìm kiếm phòng theo roomNumber
-    // Hàm tìm kiếm theo số phòng (Search by Room Number)
+
+    // Hàm tìm kiếm theo số phòng
     public List<Room> searchRoomsByNumber(String keyword) {
         List<Room> list = new ArrayList<>();
-        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name " +
-                     "FROM Rooms r " +
-                     "INNER JOIN RoomTypes t ON r.type_id = t.type_id " +
-                     "WHERE r.room_number LIKE ? " +  // Điều kiện tìm kiếm
-                     "ORDER BY r.room_number ASC";
-        
+        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name "
+                + "FROM Rooms r "
+                + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                + "WHERE r.room_number LIKE ? "
+                + "ORDER BY r.room_number ASC";
+
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            // Thêm dấu % để tìm gần đúng (VD: nhập "10" tìm ra "101", "102", "210"...)
-            st.setString(1, "%" + keyword + "%"); 
+            st.setString(1, "%" + keyword + "%");
             ResultSet rs = st.executeQuery();
-            
+
             while (rs.next()) {
                 Room room = new Room();
                 room.setRoomId(rs.getInt("room_id"));
@@ -184,12 +158,12 @@ public class RoomDAO extends DBContext {
                 room.setStatus(rs.getString("status"));
                 room.setActiveLogin(rs.getBoolean("is_active_login"));
                 room.setTypeId(rs.getInt("type_id"));
-                
+
                 RoomType rt = new RoomType();
                 rt.setTypeId(rs.getInt("type_id"));
                 rt.setTypeName(rs.getString("type_name"));
                 room.setRoomType(rt);
-                
+
                 list.add(room);
             }
         } catch (SQLException e) {
@@ -197,17 +171,16 @@ public class RoomDAO extends DBContext {
         }
         return list;
     }
-    
-    
-    // Phần Xử Lý filter bộ lọc
+
+    // === TÌM KIẾM CÓ BỘ LỌC ===
     public List<Room> findRooms(String keyword, String typeId, String status, String active, String floor) {
         List<Room> list = new ArrayList<>();
-        
+
         StringBuilder sql = new StringBuilder(
-            "SELECT r.room_id, r.room_number, r.status, r.is_active_login, r.type_id, t.type_name " +
-            "FROM Rooms r " +
-            "INNER JOIN RoomTypes t ON r.type_id = t.type_id " +
-            "WHERE 1=1 ");
+                "SELECT r.room_id, r.room_number, r.status, r.is_active_login, r.type_id, t.type_name "
+                + "FROM Rooms r "
+                + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                + "WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
 
@@ -231,23 +204,22 @@ public class RoomDAO extends DBContext {
             sql.append(" AND r.is_active_login = ? ");
             params.add(Boolean.parseBoolean(active));
         }
-        
-        // 5. Logic lọc tầng
+
+        // 5. Logic lọc tầng (ĐÃ SỬA: Dùng SUBSTRING thay vì LIKE để tránh lỗi 1 -> 10, 11)
         if (floor != null && !floor.isEmpty()) {
-            sql.append(" AND r.room_number LIKE ? ");
-            params.add(floor + "%"); 
+            // Logic: Cắt bỏ 2 ký tự cuối để lấy số tầng, so sánh chính xác
+            sql.append(" AND SUBSTRING(r.room_number, 1, LEN(r.room_number)-2) = ? ");
+            params.add(floor);
         }
 
         sql.append(" ORDER BY r.room_number ASC");
 
-        // --- TỐI ƯU: Dùng try-with-resources để tự động đóng PreparedStatement và ResultSet ---
         try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
-            
             // Gán tham số
             for (int i = 0; i < params.size(); i++) {
                 st.setObject(i + 1, params.get(i));
             }
-            
+
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     Room room = new Room();
@@ -256,12 +228,12 @@ public class RoomDAO extends DBContext {
                     room.setStatus(rs.getString("status"));
                     room.setActiveLogin(rs.getBoolean("is_active_login"));
                     room.setTypeId(rs.getInt("type_id"));
-                    
+
                     RoomType rt = new RoomType();
                     rt.setTypeId(rs.getInt("type_id"));
                     rt.setTypeName(rs.getString("type_name"));
                     room.setRoomType(rt);
-                    
+
                     list.add(room);
                 }
             }
@@ -270,30 +242,39 @@ public class RoomDAO extends DBContext {
         }
         return list;
     }
-    
-    
-    /**
-     * Lấy danh sách tất cả các loại phòng (để hiển thị trong Dropdown filter)
-     * @return List<RoomType>
-     */
-    public List<RoomType> getAllRoomTypes() {
-        List<RoomType> list = new ArrayList<>();
-        String sql = "SELECT * FROM RoomTypes";
-        
+
+    // === HÀM LẤY DANH SÁCH TẦNG TỪ DB (CẦN CHO DROPDOWN) ===
+    public List<Integer> getExistingFloors() {
+        List<Integer> floors = new ArrayList<>();
+        // Logic: Lấy các số tầng tồn tại, loại bỏ trùng lặp, sắp xếp tăng dần
+        String sql = "SELECT DISTINCT CAST(SUBSTRING(room_number, 1, LEN(room_number)-2) AS INT) as floor_num "
+                + "FROM Rooms "
+                + "WHERE LEN(room_number) > 2 " // Chỉ lấy số phòng hợp lệ (> 2 ký tự)
+                + "ORDER BY floor_num";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
-            
+            while (rs.next()) {
+                floors.add(rs.getInt("floor_num"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getExistingFloors: " + e.getMessage());
+        }
+        return floors;
+    }
+
+    public List<RoomType> getAllRoomTypes() {
+        List<RoomType> list = new ArrayList<>();
+        String sql = "SELECT * FROM RoomTypes";
+
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+
             while (rs.next()) {
                 RoomType rt = new RoomType();
                 rt.setTypeId(rs.getInt("type_id"));
                 rt.setTypeName(rs.getString("type_name"));
-                
-                // Các trường khác nếu muốn lấy đầy đủ (nhưng cho dropdown thì chỉ cần ID và Name là đủ)
-                // rt.setCapacity(rs.getInt("capacity"));
-                // rt.setBasePriceWeekday(rs.getBigDecimal("base_price_weekday"));
-                // ...
-                
                 list.add(rt);
             }
         } catch (SQLException e) {
@@ -301,15 +282,15 @@ public class RoomDAO extends DBContext {
         }
         return list;
     }
-    
+
     //Phần xử lý Room Details
     public Room getRoomById(int id) {
-        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, " +
-                     "t.type_name, t.capacity, t.base_price_weekday, t.base_price_weekend, t.description " +
-                     "FROM Rooms r " +
-                     "INNER JOIN RoomTypes t ON r.type_id = t.type_id " +
-                     "WHERE r.room_id = ?";
-        
+        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, "
+                + "t.type_name, t.capacity, t.base_price_weekday, t.base_price_weekend, t.description "
+                + "FROM Rooms r "
+                + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                + "WHERE r.room_id = ?";
+
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) {
@@ -322,7 +303,6 @@ public class RoomDAO extends DBContext {
                     room.setActiveLogin(rs.getBoolean("is_active_login"));
                     room.setTypeId(rs.getInt("type_id"));
 
-                    // Tạo đối tượng RoomType để chứa thông tin chi tiết
                     models.RoomType rt = new models.RoomType();
                     rt.setTypeId(rs.getInt("type_id"));
                     rt.setTypeName(rs.getString("type_name"));
@@ -330,10 +310,9 @@ public class RoomDAO extends DBContext {
                     rt.setDescription(rs.getString("description"));
                     rt.setBasePriceWeekday(rs.getBigDecimal("base_price_weekday"));
                     rt.setBasePriceWeekend(rs.getBigDecimal("base_price_weekend"));
-                    
-                    // Gán RoomType vào Room
+
                     room.setRoomType(rt);
-                    
+
                     return room;
                 }
             }
@@ -342,35 +321,31 @@ public class RoomDAO extends DBContext {
         }
         return null;
     }
-    
-    //Kết thúc phần xử Room Details
-    
+
     //Phần xử lý Update Room
     public void updateRoom(Room room) {
         String sql = "UPDATE Rooms SET room_number = ?, type_id = ?, status = ?, room_password = ?, is_active_login = ? WHERE room_id = ?";
-        
+
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setString(1, room.getRoomNumber());
             st.setInt(2, room.getTypeId());
             st.setString(3, room.getStatus());
             st.setString(4, room.getRoomPassword());
             st.setBoolean(5, room.isActiveLogin());
-            st.setInt(6, room.getRoomId()); // Điều kiện WHERE room_id = ?
-            
+            st.setInt(6, room.getRoomId());
+
             st.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error updateRoom: " + e.getMessage());
         }
     }
-    
-    
+
     //Kiểm tra số phòng đã tồn tại chưa
     public boolean checkRoomNumberExists(String roomNumber, int currentId) {
-        // Logic: Tìm xem có phòng nào KHÁC phòng hiện tại mà trùng số phòng không
         String sql = "SELECT COUNT(*) FROM Rooms WHERE room_number = ? AND room_id != ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setString(1, roomNumber);
-            st.setInt(2, currentId); // Nếu là Create thì truyền id = 0 hoặc -1
+            st.setInt(2, currentId);
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
@@ -381,11 +356,7 @@ public class RoomDAO extends DBContext {
         }
         return false;
     }
-    
-    
-    // Kết thúc phần xử lý Update Room
-    
-    
+
     //Phần Ban Room cấm phòng
     public void updateRoomStatus(int roomId, String newStatus) {
         String sql = "UPDATE Rooms SET status = ? WHERE room_id = ?";
@@ -397,30 +368,24 @@ public class RoomDAO extends DBContext {
             System.err.println("Error updateRoomStatus: " + e.getMessage());
         }
     }
-    
-    //Kết thúc phần cấm phòng
-    
-    
+
     //Phần xử lý Insert phòng(Thêm phòng mới)
     public void insertRoom(Room room) {
         String sql = "INSERT INTO Rooms (room_number, type_id, status, room_password, is_active_login) VALUES (?, ?, ?, ?, ?)";
-        
+
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setString(1, room.getRoomNumber());
             st.setInt(2, room.getTypeId());
             st.setString(3, room.getStatus());
             st.setString(4, room.getRoomPassword());
             st.setBoolean(5, room.isActiveLogin());
-            
+
             st.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error insertRoom: " + e.getMessage());
         }
     }
-    
-    //Kết thúc phần xử lý Insert phòng
-    
-    
+
     //Phần xử lý delete phòng
     public void deleteRoom(int roomId) {
         String sql = "DELETE FROM Rooms WHERE room_id = ?";
@@ -431,7 +396,4 @@ public class RoomDAO extends DBContext {
             System.err.println("Error deleteRoom: " + e.getMessage());
         }
     }
-    
-    // Kết thúc phần xử lý delete phòng
-
 }

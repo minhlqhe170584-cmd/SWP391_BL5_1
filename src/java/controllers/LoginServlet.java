@@ -51,8 +51,9 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("USER", staff);
                 session.setMaxInactiveInterval(1800); // 30 phút
 
-                // Phân quyền: Nếu là Admin (RoleID = 1)
-                if (staff.getRole() != null && staff.getRole().getRoleId() == 1) {
+                // Phân quyền: Nếu là Admin (RoleID = 1) -> Vào trang Dashboard
+                // (Bạn cần đảm bảo trong Staff đã có thuộc tính Role hoặc RoleId)
+                if (staff.getRole() != null && staff.getRole().getRoleName().equals("Admin")) {
                     response.sendRedirect("staffs"); 
                 } else {
                     response.sendRedirect("staff/home.jsp"); // Trang nhân viên thường
