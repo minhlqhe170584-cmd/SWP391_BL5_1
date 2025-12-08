@@ -121,7 +121,7 @@
             </div>
             
             <div class="input-group d-flex justify-content-end">
-                <a href="#" style="font-size: 13px; color: #666;">Quên mật khẩu?</a>
+                <a href="${pageContext.request.contextPath}/forgot" style="font-size: 13px; color: #666;">Quên mật khẩu?</a>
             </div>
 
             <button type="submit" class="btn-login">Đăng Nhập Ngay</button>
