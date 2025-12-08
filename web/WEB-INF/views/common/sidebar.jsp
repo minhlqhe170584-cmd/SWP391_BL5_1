@@ -49,6 +49,12 @@
                     <i class="fas fa-users"></i> <span>Customer</span>
                 </a>
             </li>
+            <li class="menu-header">Task Management</li>
+            <li>
+                <a class="nav-link" href="${pageContext.request.contextPath}/task">
+                    <i class="fas fa-users"></i> <span>Tasks</span>
+                </a>
+            </li>
         </ul>
     </aside>
 </div>

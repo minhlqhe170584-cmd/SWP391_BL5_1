@@ -7,6 +7,7 @@ package models;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 /**
  *
  * @author Admin
@@ -20,11 +21,10 @@ public class Staff {
     private String passWordHash;
     private boolean isActive;
     private LocalDateTime createdAt;
+    private List<Task> tasks;
 
     public Staff() {
-    }
-
-    ;
+    };
 
     public Staff(int staffId, Role role, String fullName, String email, String passWordHash, boolean isActive, LocalDateTime createdAt) {
         this.staffId = staffId;
@@ -34,6 +34,26 @@ public class Staff {
         this.passWordHash = passWordHash;
         this.isActive = isActive;
         this.createdAt = createdAt;
+    }
+
+    public Staff(int staffId, Role role, String fullName, String email, String passWordHash, boolean isActive, LocalDateTime createdAt, List<Task> tasks) {
+        this.staffId = staffId;
+        this.role = role;
+        this.fullName = fullName;
+        this.email = email;
+        this.passWordHash = passWordHash;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.tasks = tasks;
+    }
+
+    
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
     }
 
     public int getStaffId() {

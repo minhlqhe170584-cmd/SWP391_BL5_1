@@ -4,6 +4,8 @@
  */
 package models;
 
+import java.util.List;
+
 /**
  *
  * @author Admin
@@ -15,7 +17,8 @@ public class Room {
     private RoomType roomType;
     private String status;       // Available, Occupied, Dirty...
     private String roomPassword; // Mật khẩu đăng nhập tạm thời
-    private boolean isActiveLogin; // true: Đang cho phép đăng nhập
+    private boolean isActiveLogin;// true: Đang cho phép đăng nhập
+    private List<Task> tasks;
 
     public Room() {
     }
@@ -28,6 +31,33 @@ public class Room {
         this.status = status;
         this.roomPassword = roomPassword;
         this.isActiveLogin = isActiveLogin;
+    }
+
+    public Room(int roomId, String roomNumber, int typeId, RoomType roomType, String status, String roomPassword, boolean isActiveLogin, List<Task> tasks) {
+        this.roomId = roomId;
+        this.roomNumber = roomNumber;
+        this.typeId = typeId;
+        this.roomType = roomType;
+        this.status = status;
+        this.roomPassword = roomPassword;
+        this.isActiveLogin = isActiveLogin;
+        this.tasks = tasks;
+    }
+
+    public boolean isIsActiveLogin() {
+        return isActiveLogin;
+    }
+
+    public void setIsActiveLogin(boolean isActiveLogin) {
+        this.isActiveLogin = isActiveLogin;
+    }
+
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
     }
     
     
