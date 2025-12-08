@@ -11,11 +11,11 @@
             <div class="section-header-back">
                 <a href="service-category" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
             </div>
-            <h1>${empty category.categoryId ? 'Add New Category' : 'Update Category'}</h1>
+            <h1>${category.categoryId == 0 ? 'Add New Category' : 'Update Category'}</h1>
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item active"><a href="dashboard">Dashboard</a></div>
                 <div class="breadcrumb-item"><a href="service-category">Category Management</a></div>
-                <div class="breadcrumb-item">${empty category.categoryId ? 'Add New' : 'Update'}</div>
+                <div class="breadcrumb-item">${category.categoryId == 0 ? 'Add New' : 'Update'}</div>
             </div>
         </div>
 
@@ -36,7 +36,7 @@
                 <div class="col-12 col-md-6 col-lg-6">
                     <div class="card">
                         <div class="card-header">
-                            <h4>${empty category.categoryId ? 'Add Category Form' : 'Update Category Form'}</h4>
+                            <h4>${category.categoryId == 0 ? 'Add Category Form' : 'Update Category Form'}</h4>
                         </div>
                         <div class="card-body">
                             
@@ -64,7 +64,7 @@
                                 
                                 <div class="form-group text-right">
                                     <button class="btn btn-primary btn-lg" type="submit">
-                                        <i class="fas fa-save"></i> ${empty category.categoryId ? 'Save Category' : 'Save Changes'}
+                                        <i class="fas fa-save"></i> ${category.categoryId == 0 ? 'Save Category' : 'Save Changes'}
                                     </button>
                                     <a href="service-category" class="btn btn-secondary btn-lg ml-2">Cancel</a>
                                 </div>
