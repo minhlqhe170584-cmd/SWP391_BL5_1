@@ -35,6 +35,9 @@ public class ServiceServlet extends HttpServlet {
             case "delete":
                 deleteService(request, response);
                 break;
+            case "toggle-status":
+                toggleStatus(request, response);
+                break;
             default:
                 listService(request, response);
                 break;
@@ -112,6 +115,29 @@ public class ServiceServlet extends HttpServlet {
                 session.setAttribute("message", "Service deleted successfully.");
             } catch (Exception e) {
                 session.setAttribute("message", "Error deleting service: " + e.getMessage());
+            }
+        }
+        response.sendRedirect("service");
+    }
+    
+    private void toggleStatus(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException {
+        String idRaw = request.getParameter("id");
+        
+        if (idRaw != null && !idRaw.trim().isEmpty()) {
+            try {
+                int id = Integer.parseInt(idRaw);
+                Service s = serviceDAO.getById(id);
+                
+                if (s != null) {
+                    boolean newStatus = !s.isIsActive();
+
+                    serviceDAO.updateStatus(id, newStatus);
+                    
+                    request.getSession().setAttribute("message", "Đã đổi trạng thái thành công!");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         response.sendRedirect("service");

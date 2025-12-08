@@ -1,84 +1,158 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${empty service ? 'Add New Service' : 'Update Service'}</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f6f9; }
-        .form-container { background: white; padding: 20px; border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input[type=text], 
-        .form-group input[type=number],
-        .form-group select { width: 100%; padding: 8px; box-sizing: border-box;
-            border: 1px solid #ccc; border-radius: 4px; }
-        .btn-submit { background-color: #28a745; color: white;
-            border: none; padding: 10px 20px; cursor: pointer; border-radius: 3px; font-size: 16px; }
-        .btn-cancel { background-color: #6c757d; color: white; text-decoration: none; padding: 10px 20px;
-            border-radius: 3px; margin-left: 10px; font-size: 16px; }
-        h2 { text-align: center; color: #333; }
-        .error-msg { color: red; text-align: center; margin-bottom: 15px; }
-    </style>
-</head>
-<body>
 
-    <div class="form-container">
-        <h2>${empty service ? '➕ Add Service' : '✏️ Update Service'}</h2>
+<jsp:include page="/WEB-INF/views/common/header.jsp" />
+<jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
+
+<div class="main-content">
+    <section class="section">
         
-        <c:if test="${not empty errorMessage}">
-            <div class="error-msg">${errorMessage}</div>
-        </c:if>
-        
-        <form method="POST" action="service">
-            <input type="hidden" name="serviceId" value="${service.serviceId}"/>
-            
-            <div class="form-group">
-                <label>Service Name (*):</label>
-                <input type="text" name="serviceName" value="${service.serviceName}" required placeholder="Enter service name">
+        <div class="section-header">
+            <div class="section-header-back">
+                <a href="service" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
             </div>
-            
-            <div class="form-group">
-                <label>Category (*):</label>
-                <select name="categoryId" required>
-                    <option value="">-- Select Category --</option>
-                    <c:forEach var="cat" items="${categories}">
-                        <option value="${cat.categoryId}" <c:if test="${not empty service && service.categoryId == cat.categoryId}">selected</c:if>>
-                            ${cat.categoryName}
-                        </option>
-                    </c:forEach>
-                </select>
+            <h1>${empty service ? 'Add New Service' : 'Update Service'}</h1>
+            <div class="section-header-breadcrumb">
+                <div class="breadcrumb-item active"><a href="dashboard">Dashboard</a></div>
+                <div class="breadcrumb-item"><a href="service">Service Management</a></div>
+                <div class="breadcrumb-item">${empty service ? 'Add New' : 'Update'}</div>
             </div>
-            
-            <div class="form-group">
-                <label>Price (*):</label>
-                <input type="number" step="0.01" name="price" value="${service.price}" required placeholder="0.00">
-            </div>
+        </div>
 
-            <div class="form-group">
-                <label>Unit:</label>
-                <input type="text" name="unit" value="${service.unit}" placeholder="e.g. Per Hour, Per Item">
-            </div>
-
-            <div class="form-group">
-                <label>Image URL:</label>
-                <input type="text" name="imageUrl" value="${service.imageUrl}" placeholder="http://example.com/image.jpg">
-            </div>
+        <div class="section-body">
             
-            <div class="form-group" style="display: flex; align-items: center;">
-                <input type="checkbox" name="isActive" id="isActive" value="true" style="width: auto; margin-right: 10px;" 
-                    <c:if test="${empty service || service.isActive}">checked</c:if>>
-                <label for="isActive" style="margin-bottom: 0;">Active</label>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button type="submit" class="btn-submit">Save</button>
-                <a href="service" class="btn-cancel">Cancel</a>
-            </div>
-        </form>
-    </div>
+            <c:if test="${not empty errorMessage}">
+                <div class="alert alert-danger alert-dismissible show fade">
+                    <div class="alert-body">
+                        <button class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                        ${errorMessage}
+                    </div>
+                </div>
+            </c:if>
 
-</body>
-</html>
+            <div class="row">
+                <div class="col-12 col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>${empty service ? 'Add Service Form' : 'Update Service Form'}</h4>
+                        </div>
+                        <div class="card-body">
+                            
+                            <form method="POST" action="service" class="needs-validation" novalidate="">
+                                <input type="hidden" name="serviceId" value="${service.serviceId}"/>
+                                
+                                <div class="form-group">
+                                    <label>Service Name <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                <i class="fas fa-concierge-bell"></i>
+                                            </div>
+                                        </div>
+                                        <input type="text" class="form-control" name="serviceName" 
+                                               value="${service.serviceName}" required placeholder="Ex: Motorbike rental, Laundry...">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Category <span class="text-danger">*</span></label>
+                                    <select class="form-control select2" name="categoryId" required>
+                                        <option value="">-- Select Category --</option>
+                                        <c:forEach var="cat" items="${categories}">
+                                            <option value="${cat.categoryId}" <c:if test="${not empty service && service.categoryId == cat.categoryId}">selected</c:if>>
+                                                ${cat.categoryName}
+                                            </option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Price <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        <i class="fas fa-dollar-sign"></i>
+                                                    </div>
+                                                </div>
+                                                <input type="number" step="0.01" class="form-control" name="price" 
+                                                       value="${service.price}" required placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Unit</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        <i class="fas fa-balance-scale"></i>
+                                                    </div>
+                                                </div>
+                                                <input type="text" class="form-control" name="unit" 
+                                                       value="${service.unit}" placeholder="Ex: Hour, Item, Time...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Image URL</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        </div>
+                                        <input type="text" class="form-control" name="imageUrl" 
+                                               value="${service.imageUrl}" placeholder="http://example.com/image.jpg">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="control-label">Status</div>
+                                    <label class="custom-switch mt-2 pl-0">
+                                        <input type="checkbox" name="isActive" value="true" class="custom-switch-input" 
+                                            <c:if test="${empty service || service.isActive}">checked</c:if>>
+                                        <span class="custom-switch-indicator"></span>
+                                        <span class="custom-switch-description">Active</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group text-right">
+                                    <button class="btn btn-primary btn-lg" type="submit">
+                                        <i class="fas fa-save"></i> ${empty service ? 'Save Service' : 'Save Changes'}
+                                    </button>
+                                    <a href="service" class="btn btn-secondary btn-lg ml-2">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h4><i class="fas fa-lightbulb"></i> Instructions</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>Fill in all information to create a new service.</p>
+                            <div class="alert alert-secondary">
+                                <b>Service Price:</b> Enter accurately for automatic invoice calculation.
+                            </div>
+                            <div class="alert alert-secondary">
+                                <b>Unit:</b> Helps customers understand pricing (e.g., per hour, per item, or per quantity).
+                            </div>
+                            <p>If "Active" is unchecked, this service will be hidden from customer booking lists but remains in the system.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />

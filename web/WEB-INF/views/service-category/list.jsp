@@ -39,7 +39,7 @@
                                 <option value="idDesc"   <c:if test="${sort == 'idDesc'}">selected</c:if>>ID (Newest)</option>
                             </select>
                             <div class="input-group-append ml-2">
-                                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
+                                <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-filter"></i> Filter</button>
                             </div>
                         </div>
                     </form>
