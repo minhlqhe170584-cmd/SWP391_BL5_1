@@ -115,7 +115,7 @@
                                 <tr>
                                     <th>Room No.</th>
                                     <th>Room Type</th>
-                                    <th>Status</th>
+                                    <th hidden="">Status</th>
                                     <th class="text-center">Active Login</th>
                                     <th hidden="">Price (Day)</th>
                                     <th>Action</th>
@@ -132,7 +132,7 @@
                                     <tr>
                                         <td><strong>${room.roomNumber}</strong></td>
                                         <td>${room.roomType.typeName}</td>
-                                        <td>
+                                        <td hidden="">
                                             <c:choose>
                                                 <c:when test="${room.status == 'Available'}">
                                                     <div class="badge badge-success">Available</div>
