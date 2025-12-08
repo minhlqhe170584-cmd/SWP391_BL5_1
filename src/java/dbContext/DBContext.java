@@ -24,7 +24,7 @@ public class DBContext {
             
             // 3. Cấu hình kết nối
             // encrypt=true;trustServerCertificate=true: Để tránh lỗi bảo mật SSL trên Java mới
-            String url = "jdbc:sqlserver://localhost:1433;databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
+            String url = "jdbc:sqlserver://Localhost:1433;databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true";
 
             // 4. Gọi Driver
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");

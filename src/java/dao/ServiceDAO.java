@@ -15,6 +15,7 @@ public class ServiceDAO extends DBContext {
     private static final String UPDATE_SERVICE = "UPDATE Services SET service_name=?, price=?, unit=?, image_url=?, is_active=?, category_id=? WHERE service_id=?";
     private static final String DELETE_SERVICE = "DELETE FROM Services WHERE service_id=?";
     private static final String BASE_SERVICE_SEARCH = "FROM Services WHERE 1=1";
+    private static final String UPDATE_STATUS = "UPDATE Services SET is_active = ? WHERE service_id = ?";
 
     public ArrayList<Service> getAll() {
         ArrayList<Service> list = new ArrayList<>();
@@ -196,5 +197,16 @@ public class ServiceDAO extends DBContext {
             e.printStackTrace();
         }
         return 0;
+    }
+    
+    public void updateStatus(int id, boolean status) throws SQLException {
+        try {
+            PreparedStatement st = connection.prepareStatement(UPDATE_STATUS);
+            st.setBoolean(1, status);
+            st.setInt(2, id);
+            st.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

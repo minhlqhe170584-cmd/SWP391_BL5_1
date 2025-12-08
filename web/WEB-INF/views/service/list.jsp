@@ -9,6 +9,10 @@
     <section class="section">
         <div class="section-header">
             <h1>Service Management</h1>
+            <div class="section-header-breadcrumb">
+                <div class="breadcrumb-item active"><a href="dashboard">Dashboard</a></div>
+                <div class="breadcrumb-item">Services</div>
+            </div>
         </div>
 
         <div class="section-body">
@@ -25,7 +29,14 @@
                     
                     <% String message = (String) request.getSession().getAttribute("message");
                        if(message != null) { %>
-                        <div class="alert alert-info"><%= message %></div>
+                        <div class="alert alert-success alert-dismissible show fade">
+                            <div class="alert-body">
+                                <button class="close" data-dismiss="alert">
+                                    <span>&times;</span>
+                                </button>
+                                <%= message %>
+                            </div>
+                        </div>
                     <% request.getSession().removeAttribute("message");
                        } %>
 
@@ -55,7 +66,7 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                             <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-search"></i> Filter</button>
+                             <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-filter"></i> Filter</button>
                         </div>
                     </form>
 
@@ -69,7 +80,7 @@
                                 <th>Price</th>
                                 <th>Unit</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th style="min-width: 150px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -104,6 +115,13 @@
                                     </td>
                                     <td>
                                         <div class="d-flex">
+                                            <a href="service?action=toggle-status&id=${s.serviceId}" 
+                                               class="btn btn-sm mr-2 ${s.isActive ? 'btn-secondary' : 'btn-success'}" 
+                                               title="${s.isActive ? 'Deactivate' : 'Activate'}"
+                                               style="width: 32px;">
+                                                <i class="fas ${s.isActive ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                                            </a>
+
                                             <a href="service?action=detail&id=${s.serviceId}" class="btn btn-warning btn-sm mr-2" title="Edit">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </a>
@@ -123,11 +141,19 @@
                     <c:if test="${totalPages > 1}">
                         <nav aria-label="Page navigation" class="mt-4">
                             <ul class="pagination justify-content-center">
+                                <li class="page-item <c:if test='${page <= 1}'>disabled</c:if>">
+                                    <a class="page-link" href="service?page=${page - 1}&search=${search}&categoryId=${categoryId}&sort=${sort}">Previous</a>
+                                </li>
+                                
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <li class="page-item <c:if test='${p == page}'>active</c:if>">
                                         <a class="page-link" href="service?page=${p}&search=${search}&categoryId=${categoryId}&sort=${sort}">${p}</a>
                                     </li>
                                 </c:forEach>
+
+                                <li class="page-item <c:if test='${page >= totalPages}'>disabled</c:if>">
+                                    <a class="page-link" href="service?page=${page + 1}&search=${search}&categoryId=${categoryId}&sort=${sort}">Next</a>
+                                </li>
                             </ul>
                         </nav>
                     </c:if>
