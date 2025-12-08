@@ -110,6 +110,8 @@
                                                value="${room.roomNumber}"
                                                class="form-control"
                                                placeholder="Ex: 101, 205..."
+                                               minlength="3"  <%--  Bắt buộc tối thiểu 3 ký tự --%>
+                                        <%--       required        Bắt buộc nhập --%>
                                                <c:if test="${room != null && room.roomId > 0}">
                                                    readonly
                                                </c:if>
@@ -203,33 +205,41 @@
     </section>
 </div>
 
-<!--Validate trương room Number khi trống                                        -->
+<!--Validate trương room Number                                      -->
 <script>
     function validateRoom() {
         // 1. Lấy phần tử input và thẻ lỗi
         var inputElement = document.getElementById("roomNumber");
         var errorText = document.getElementById("errorMsg");
 
-        // Kiểm tra an toàn để tránh lỗi Javascript nếu ID bị sai
+        // Kiểm tra an toàn
         if (!inputElement || !errorText) return false;
 
-        var roomInput = inputElement.value;
+        var roomInput = inputElement.value.trim(); // Cắt khoảng trắng thừa
 
-        // 2. Kiểm tra điều kiện
-        if (roomInput.trim() === "") {
-            // Hiện lỗi
+        // 2. Reset trạng thái cũ (xóa lỗi trước khi check)
+        errorText.style.display = "none";
+        inputElement.classList.remove("is-invalid");
+
+        // 3. Kiểm tra Rỗng
+        if (roomInput === "") {
+            errorText.innerText = "Room Number cannot be null. Please enter the room number!";
             errorText.style.display = "block";
-            // Focus lại vào ô nhập liệu để người dùng biết cần nhập ở đâu
             inputElement.focus();
-            inputElement.classList.add("is-invalid"); // Thêm viền đỏ của Bootstrap (nếu muốn đẹp hơn)
-            return false; // Chặn form submit
-        } else {
-            // Ẩn lỗi
-            errorText.style.display = "none";
-            inputElement.classList.remove("is-invalid");
-            return true; // Cho phép form submit
+            inputElement.classList.add("is-invalid"); 
+            return false;
+        } 
+        // 4. Kiểm tra Độ dài (< 3 ký tự)
+        else if (roomInput.length < 3) {
+            errorText.innerText = "Room Number must be at least 3 characters!";
+            errorText.style.display = "block";
+            inputElement.focus();
+            inputElement.classList.add("is-invalid");
+            return false;
         }
+        
+        // Hợp lệ
+        return true; 
     }
 </script>
-
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
