@@ -1,3 +1,5 @@
+
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -8,9 +10,6 @@
 <div class="offcanvas-menu-wrapper">
     <div class="canvas-close">
         <i class="icon_close"></i>
-    </div>
-    <div class="search-icon search-switch">
-        <i class="icon_search"></i>
     </div>
     
     <div class="header-configure-area">
@@ -23,7 +22,7 @@
                 <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
             </li>
             <li class="${pageContext.request.servletPath.contains('room') ? 'active' : ''}">
-                <a href="${pageContext.request.contextPath}/rooms">Phòng</a>
+                <a href="${pageContext.request.contextPath}/roomsHomepage">Phòng</a>
             </li>
             <li><a href="${pageContext.request.contextPath}/services">Dịch vụ</a></li>
             
@@ -39,6 +38,7 @@
                     </ul>
                 </li>
             </c:if>
+            <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
         </ul>
     </nav>
     <div id="mobile-menu-wrap"></div>
@@ -119,7 +119,7 @@
                 <div class="col-lg-10">
                     <div class="nav-menu">
                         <nav class="mainmenu">
-                            <ul>
+                            <ul class="text-right">
                                 <li class="${pageContext.request.servletPath.contains('home') ? 'active' : ''}">
                                     <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
                                 </li>
@@ -132,19 +132,11 @@
                                     <li><a href="${pageContext.request.contextPath}/order" style="color: #e67e22;">GỌI MÓN</a></li>
                                 </c:if>
 
-                                <li><a href="#">Tin Tức</a>
-                                    <ul class="dropdown">
-                                        <li><a href="#">Sự kiện</a></li>
-                                        <li><a href="#">Khuyến mãi</a></li>
-                                    </ul>
-                                </li>
                                 <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
                             </ul>
                         </nav>
-                        <div class="nav-right search-switch">
-                            <i class="icon_search"></i>
+                        
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
