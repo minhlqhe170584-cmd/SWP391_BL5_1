@@ -9,10 +9,10 @@ import models.Service;
 
 public class ServiceDAO extends DBContext {
 
-    private static final String GET_ALL_SERVICES = "SELECT service_id, service_name, price, unit, image_url, is_active, category_id FROM Services ORDER BY service_id";
-    private static final String GET_SERVICE_BY_ID = "SELECT service_id, service_name, price, unit, image_url, is_active, category_id FROM Services WHERE service_id = ?";
-    private static final String INSERT_SERVICE = "INSERT INTO Services(service_name, price, unit, image_url, is_active, category_id) VALUES(?,?,?,?,?,?)";
-    private static final String UPDATE_SERVICE = "UPDATE Services SET service_name=?, price=?, unit=?, image_url=?, is_active=?, category_id=? WHERE service_id=?";
+    private static final String GET_ALL_SERVICES = "SELECT service_id, service_name, image_url, is_active, category_id FROM Services ORDER BY service_id";
+    private static final String GET_SERVICE_BY_ID = "SELECT service_id, service_name, image_url, is_active, category_id FROM Services WHERE service_id = ?";
+    private static final String INSERT_SERVICE = "INSERT INTO Services(service_name, image_url, is_active, category_id) VALUES(?,?,?,?)";
+    private static final String UPDATE_SERVICE = "UPDATE Services SET service_name=?, image_url=?, is_active=?, category_id=? WHERE service_id=?";
     private static final String DELETE_SERVICE = "DELETE FROM Services WHERE service_id=?";
     private static final String BASE_SERVICE_SEARCH = "FROM Services WHERE 1=1";
     private static final String UPDATE_STATUS = "UPDATE Services SET is_active = ? WHERE service_id = ?";
@@ -26,8 +26,6 @@ public class ServiceDAO extends DBContext {
                 list.add(new Service(
                         rs.getInt("service_id"),
                         rs.getString("service_name"),
-                        rs.getDouble("price"),
-                        rs.getString("unit"),
                         rs.getString("image_url"),
                         rs.getBoolean("is_active"),
                         rs.getInt("category_id")
@@ -48,8 +46,6 @@ public class ServiceDAO extends DBContext {
                 return new Service(
                         rs.getInt("service_id"),
                         rs.getString("service_name"),
-                        rs.getDouble("price"),
-                        rs.getString("unit"),
                         rs.getString("image_url"),
                         rs.getBoolean("is_active"),
                         rs.getInt("category_id")
@@ -64,23 +60,19 @@ public class ServiceDAO extends DBContext {
     public void insert(Service s) throws SQLException {
         PreparedStatement st = connection.prepareStatement(INSERT_SERVICE);
         st.setString(1, s.getServiceName());
-        st.setDouble(2, s.getPrice());
-        st.setString(3, s.getUnit());
-        st.setString(4, s.getImageUrl());
-        st.setBoolean(5, s.isIsActive());
-        st.setInt(6, s.getCategoryId());
+        st.setString(2, s.getImageUrl());
+        st.setBoolean(3, s.isIsActive());
+        st.setInt(4, s.getCategoryId());
         st.executeUpdate();
     }
 
     public void update(Service s) throws SQLException {
         PreparedStatement st = connection.prepareStatement(UPDATE_SERVICE);
         st.setString(1, s.getServiceName());
-        st.setDouble(2, s.getPrice());
-        st.setString(3, s.getUnit());
-        st.setString(4, s.getImageUrl());
-        st.setBoolean(5, s.isIsActive());
-        st.setInt(6, s.getCategoryId());
-        st.setInt(7, s.getServiceId());
+        st.setString(2, s.getImageUrl());
+        st.setBoolean(3, s.isIsActive());
+        st.setInt(4, s.getCategoryId());
+        st.setInt(5, s.getServiceId());
         st.executeUpdate();
     }
 
@@ -93,7 +85,7 @@ public class ServiceDAO extends DBContext {
     public ArrayList<Service> search(String search, String categoryId, String sort, int pageIndex, int pageSize) {
         ArrayList<Service> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT service_id, service_name, price, unit, image_url, is_active, category_id ").append(BASE_SERVICE_SEARCH);
+        sql.append("SELECT service_id, service_name, image_url, is_active, category_id ").append(BASE_SERVICE_SEARCH);
 
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND service_name LIKE ? ");
@@ -112,12 +104,6 @@ public class ServiceDAO extends DBContext {
                     break;
                 case "nameDesc":
                     sql.append(" ORDER BY service_name DESC ");
-                    break;
-                case "priceAsc":
-                    sql.append(" ORDER BY price ASC ");
-                    break;
-                case "priceDesc":
-                    sql.append(" ORDER BY price DESC ");
                     break;
                 case "idDesc":
                     sql.append(" ORDER BY service_id DESC ");
@@ -152,8 +138,6 @@ public class ServiceDAO extends DBContext {
                 list.add(new Service(
                         rs.getInt("service_id"),
                         rs.getString("service_name"),
-                        rs.getDouble("price"),
-                        rs.getString("unit"),
                         rs.getString("image_url"),
                         rs.getBoolean("is_active"),
                         rs.getInt("category_id")
@@ -198,7 +182,7 @@ public class ServiceDAO extends DBContext {
         }
         return 0;
     }
-    
+
     public void updateStatus(int id, boolean status) throws SQLException {
         try {
             PreparedStatement st = connection.prepareStatement(UPDATE_STATUS);

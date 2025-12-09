@@ -1,6 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
@@ -59,8 +58,6 @@
                                 <option value="">Sort by...</option>
                                 <option value="nameAsc"  <c:if test="${sort == 'nameAsc'}">selected</c:if>>Name (A-Z)</option>
                                 <option value="nameDesc" <c:if test="${sort == 'nameDesc'}">selected</c:if>>Name (Z-A)</option>
-                                <option value="priceAsc" <c:if test="${sort == 'priceAsc'}">selected</c:if>>Price (Low-High)</option>
-                                <option value="priceDesc"<c:if test="${sort == 'priceDesc'}">selected</c:if>>Price (High-Low)</option>
                                 <option value="idAsc"    <c:if test="${sort == 'idAsc'}">selected</c:if>>ID (Oldest)</option>
                                 <option value="idDesc"   <c:if test="${sort == 'idDesc'}">selected</c:if>>ID (Newest)</option>
                             </select>
@@ -77,8 +74,6 @@
                                 <th>ID</th>
                                 <th>Service Name</th>
                                 <th>Category ID</th>
-                                <th>Price</th>
-                                <th>Unit</th>
                                 <th>Status</th>
                                 <th style="min-width: 150px;">Action</th>
                             </tr>
@@ -86,7 +81,7 @@
                         <tbody>
                             <c:if test="${empty list}">
                                 <tr>
-                                    <td colspan="7" class="text-center">No data found.</td>
+                                    <td colspan="5" class="text-center">No data found.</td>
                                 </tr>
                             </c:if>
 
@@ -99,10 +94,6 @@
                                             ${s.categoryId} 
                                         </div>
                                     </td>
-                                    <td class="text-danger font-weight-bold">
-                                        <fmt:formatNumber value="${s.price}" type="currency" currencySymbol="$"/>
-                                    </td>
-                                    <td>${s.unit}</td>
                                     <td>
                                         <c:choose>
                                             <c:when test="${s.isActive}">

@@ -151,32 +151,18 @@ public class ServiceServlet extends HttpServlet {
 
         String idRaw = request.getParameter("serviceId");
         String name = request.getParameter("serviceName");
-        String unit = request.getParameter("unit");
         String image = request.getParameter("imageUrl");
-        String priceStr = request.getParameter("price");
         String categoryIdStr = request.getParameter("categoryId");
         boolean active = request.getParameter("isActive") != null;
 
         String errorMessage = null;
-        double price = 0;
         int categoryId = 0;
 
         if (name == null || name.trim().isEmpty()) {
             errorMessage = "Service name is required.";
         } else if (categoryIdStr == null || categoryIdStr.trim().isEmpty()) {
             errorMessage = "Category is required.";
-        } else if (priceStr == null || priceStr.trim().isEmpty()) {
-            errorMessage = "Price is required.";
         } else {
-            try {
-                price = Double.parseDouble(priceStr);
-                if (price <= 0) {
-                    errorMessage = "Price must be greater than zero.";
-                }
-            } catch (NumberFormatException e) {
-                errorMessage = "Invalid price format.";
-            }
-            
             try {
                 categoryId = Integer.parseInt(categoryIdStr);
             } catch (NumberFormatException e) {
@@ -186,10 +172,8 @@ public class ServiceServlet extends HttpServlet {
 
         Service s = new Service();
         s.setServiceName(name);
-        s.setUnit(unit);
         s.setImageUrl(image);
         s.setIsActive(active);
-        s.setPrice(price);
         s.setCategoryId(categoryId);
         
         if (idRaw != null && !idRaw.trim().isEmpty()) {
