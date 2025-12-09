@@ -62,7 +62,7 @@ public class UpdateCustomerValidator {
         
         for (char c : password.toCharArray()) {
             if (Character.isUpperCase(c)) hasUpper = true;
-            if (specialChars.indexOf(c) >= 0) hasSpecial = true;
+            if (specialChars.indexOf(c) >= 0) hasSpecial = true;          
         }
         
         return hasUpper && hasSpecial;
