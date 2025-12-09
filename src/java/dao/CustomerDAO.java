@@ -383,4 +383,16 @@ public class CustomerDAO extends DBContext{
             System.out.println("Error register: " + e.getMessage());
         }
     }
+    // Bổ sung vào CustomerDAO.java
+    public void updatePassword(String email, String newPassword) {
+        String sql = "UPDATE Customers SET password = ? WHERE email = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, newPassword);
+            st.setString(2, email);
+            st.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Error updatePassword: " + e.getMessage());
+        }
+    }
 }
