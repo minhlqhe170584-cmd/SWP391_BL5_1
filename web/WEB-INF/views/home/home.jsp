@@ -29,7 +29,7 @@
                         <h1>Smart Hotel Luxury</h1>
                         <p>Trải nghiệm nghỉ dưỡng đẳng cấp 5 sao với công nghệ thông minh. 
                            Đặt phòng dễ dàng, dịch vụ tận tâm chỉ với một chạm.</p>
-                        <a href="${pageContext.request.contextPath}/rooms" class="primary-btn">Khám Phá Ngay</a>
+                        <a href="${pageContext.request.contextPath}/listRooms" class="primary-btn">Khám Phá Ngay</a>
                     </div>
                 </div>
                 </div>

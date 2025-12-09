@@ -1,52 +1,28 @@
-
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <div class="offcanvas-menu-overlay"></div>
-<div class="canvas-open">
-    <i class="icon_menu"></i>
-</div>
+<div class="canvas-open"><i class="icon_menu"></i></div>
 <div class="offcanvas-menu-wrapper">
-    <div class="canvas-close">
-        <i class="icon_close"></i>
-    </div>
-    
+    <div class="canvas-close"><i class="icon_close"></i></div>
     <div class="header-configure-area">
         <a href="${pageContext.request.contextPath}/rooms" class="bk-btn">Đặt Phòng Ngay</a>
     </div>
-    
     <nav class="mainmenu mobile-menu">
         <ul>
-            <li class="${pageContext.request.servletPath.contains('home') ? 'active' : ''}">
-                <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
-            </li>
-            <li class="${pageContext.request.servletPath.contains('room') ? 'active' : ''}">
-                <a href="${pageContext.request.contextPath}/roomsHomepage">Phòng</a>
-            </li>
+            <li><a href="${pageContext.request.contextPath}/home">Trang chủ</a></li>
+            <li><a href="${pageContext.request.contextPath}/rooms">Phòng</a></li>
             <li><a href="${pageContext.request.contextPath}/services">Dịch vụ</a></li>
+            <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
             
             <c:if test="${sessionScope.USER == null}">
                 <li><a href="${pageContext.request.contextPath}/login">Đăng nhập</a></li>
-                <li><a href="${pageContext.request.contextPath}/register">Đăng ký</a></li>
             </c:if>
-            <c:if test="${sessionScope.USER != null}">
-                <li><a href="#">Tài khoản</a>
-                    <ul class="dropdown">
-                        <li><a href="${pageContext.request.contextPath}/profile">Hồ sơ</a></li>
-                        <li><a href="${pageContext.request.contextPath}/logout">Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </c:if>
-            <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
         </ul>
     </nav>
     <div id="mobile-menu-wrap"></div>
-    <ul class="top-widget">
-        <li><i class="fa fa-phone"></i> (12) 345 67890</li>
-        <li><i class="fa fa-envelope"></i> info@smarthotel.com</li>
-    </ul>
 </div>
+
 <header class="header-section header-normal">
     <div class="top-nav">
         <div class="container">
@@ -61,39 +37,24 @@
                     <div class="tn-right">
                         <div class="top-social">
                             <a href="#"><i class="fa fa-facebook"></i></a>
-                            <a href="#"><i class="fa fa-twitter"></i></a>
                             <a href="#"><i class="fa fa-instagram"></i></a>
                         </div>
                         <a href="${pageContext.request.contextPath}/rooms" class="bk-btn">Đặt Phòng Ngay</a>
-                        
                         <div class="language-option">
                             <c:choose>
                                 <c:when test="${sessionScope.USER == null && sessionScope.CURRENT_ROOM == null}">
-                                    <span class="text-dark">Tài khoản <i class="fa fa-angle-down"></i></span>
-                                    <div class="flag-dropdown">
-                                        <ul>
-                                            <li><a href="${pageContext.request.contextPath}/login">Đăng nhập</a></li>
-                                            <li><a href="${pageContext.request.contextPath}/register">Đăng ký</a></li>
-                                        </ul>
-                                    </div>
+                                    <span class="text-dark" onclick="window.location.href='${pageContext.request.contextPath}/login'" style="cursor: pointer;">
+                                        <i class="fa fa-user"></i> Đăng nhập
+                                    </span>
                                 </c:when>
-
                                 <c:otherwise>
                                     <span class="text-warning font-weight-bold">
-                                        <i class="fa fa-user"></i> 
+                                        <i class="fa fa-user-circle"></i> 
                                         <c:if test="${sessionScope.USER != null}">${sessionScope.USER.fullName}</c:if>
                                         <c:if test="${sessionScope.CURRENT_ROOM != null}">Phòng ${sessionScope.CURRENT_ROOM.roomNumber}</c:if>
-                                        <i class="fa fa-angle-down"></i>
                                     </span>
                                     <div class="flag-dropdown">
                                         <ul>
-                                            <c:if test="${sessionScope.ROLE == 'STAFF'}">
-                                                <li><a href="${pageContext.request.contextPath}/admin/dashboard">Quản trị</a></li>
-                                            </c:if>
-                                            <c:if test="${sessionScope.ROLE == 'CUSTOMER'}">
-                                                <li><a href="${pageContext.request.contextPath}/profile">Hồ sơ</a></li>
-                                                <li><a href="${pageContext.request.contextPath}/history">Lịch sử</a></li>
-                                            </c:if>
                                             <li><a href="${pageContext.request.contextPath}/logout">Đăng xuất</a></li>
                                         </ul>
                                     </div>
@@ -120,23 +81,30 @@
                     <div class="nav-menu">
                         <nav class="mainmenu">
                             <ul class="text-right">
-                                <li class="${pageContext.request.servletPath.contains('home') ? 'active' : ''}">
+                                <li class="${pageContext.request.servletPath.contains('/home') || pageContext.request.servletPath.equals('/') ? 'active' : ''}">
                                     <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
                                 </li>
-                                <li class="${pageContext.request.servletPath.contains('room') ? 'active' : ''}">
-                                    <a href="${pageContext.request.contextPath}/rooms">Phòng Nghỉ</a>
+                                
+                                <li class="${pageContext.request.servletPath.contains('/rooms') ? 'active' : ''}">
+                                    <a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a>
                                 </li>
-                                <li><a href="${pageContext.request.contextPath}/services">Dịch Vụ</a></li>
+                                
+                                <li class="${pageContext.request.servletPath.contains('/services') ? 'active' : ''}">
+                                    <a href="${pageContext.request.contextPath}/services">Dịch Vụ</a>
+                                </li>
                                 
                                 <c:if test="${sessionScope.ROLE == 'ROOM'}">
-                                    <li><a href="${pageContext.request.contextPath}/order" style="color: #e67e22;">GỌI MÓN</a></li>
+                                    <li class="${pageContext.request.servletPath.contains('/order') ? 'active' : ''}">
+                                        <a href="${pageContext.request.contextPath}/order" style="color: #e67e22;">GỌI MÓN</a>
+                                    </li>
                                 </c:if>
 
-                                <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
+                                <li class="${pageContext.request.servletPath.contains('/contact') ? 'active' : ''}">
+                                    <a href="${pageContext.request.contextPath}/contact">Liên Hệ</a>
+                                </li>
                             </ul>
                         </nav>
-                        
-                        </div>
+                    </div>
                 </div>
             </div>
         </div>
