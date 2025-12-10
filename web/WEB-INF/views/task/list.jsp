@@ -8,7 +8,7 @@
 <div class="main-content">
     <section class="section">
         <div class="section-header">
-            <h1>Customer Management</h1>
+            <h1>Task Management</h1>
         </div>
 
         <div class="section-body">

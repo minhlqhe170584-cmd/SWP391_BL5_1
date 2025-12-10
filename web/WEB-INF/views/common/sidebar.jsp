@@ -25,7 +25,7 @@
             
             <li class="menu-header">Room Management</li>
             <li>
-                <a class="nav-link" href="${pageContext.request.contextPath}/rooms">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/rooms">
                     <i class="fas fa-users"></i> <span>Room</span>
                 </a>
             </li>
@@ -58,7 +58,7 @@
             <li class="menu-header">Task Management</li>
             <li>
                 <a class="nav-link" href="${pageContext.request.contextPath}/task">
-                    <i class="fas fa-users"></i> <span>Tasks</span>
+                    <i class="fas fa-users"></i> <span>Task</span>
                 </a>
             </li>
         </ul>

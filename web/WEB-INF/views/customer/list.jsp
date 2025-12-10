@@ -68,7 +68,6 @@
                                 <th>Email</th>
                                 <th>Phone</th>
                                 <th>Status</th>
-                                <th>Created At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -82,9 +81,9 @@
                             <c:forEach var="c" items="${list}">
                                 <tr>
                                     <td>#${c.customerId}</td>
-                                    <td class="font-weight-bold">${c.fullName}</td>
-                                    <td>${c.email}</td>
-                                    <td>${c.phone}</td>
+                                    <td class="font-weight-bold text-break" style="max-width: 200px;">${c.fullName}</td>
+                                    <td class="text-break" style="max-width: 200px;">${c.email}</td>
+                                    <td class="text-break" style="max-width: 200px;">${c.phone}</td>
                                     <td>
                                         <c:choose>
                                             <c:when test="${c.isActive}">
@@ -94,9 +93,6 @@
                                                 <div class="badge badge-secondary">Inactive</div>
                                             </c:otherwise>
                                         </c:choose>
-                                    </td>
-                                    <td>
-                                        <fmt:formatDate value="${c.createdAtAsDate}" pattern="dd/MM/yyyy"/>
                                     </td>
                                     <td>
                                         <div class="d-flex">
@@ -132,11 +128,17 @@
                     <c:if test="${totalPages > 1}">
                         <nav aria-label="Page navigation" class="mt-4">
                             <ul class="pagination justify-content-center">
+                                <li class="page-item" <c:if test="${page <= 1}">disabled</c:if>>
+                                    <a class="page-link" href="customer?page=${page-1}&search=${search}&status=${status}&sort=${sort}">Previous</a>
+                                </li>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <li class="page-item <c:if test='${p == page}'>active</c:if>">
                                         <a class="page-link" href="customer?page=${p}&search=${search}&status=${status}&sort=${sort}">${p}</a>
                                     </li>
                                 </c:forEach>
+                               <li class="page-item" <c:if test="${page >= totalPages}">disabled</c:if>>
+                                    <a class="page-link" href="customer?page=${page+1}&search=${search}&status=${status}&sort=${sort}">Next</a>
+                                </li>
                             </ul>
                         </nav>
                     </c:if>
