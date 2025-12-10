@@ -98,14 +98,14 @@ public class BicycleDAO extends DBContext {
         }
 
         if (sort == null || sort.isEmpty()) {
-            sql.append(" ORDER BY b.bike_id DESC ");
+            sql.append(" ORDER BY b.bike_id ASC ");
         } else {
             switch (sort) {
                 case "codeAsc": sql.append(" ORDER BY b.bike_code ASC "); break;
                 case "codeDesc": sql.append(" ORDER BY b.bike_code DESC "); break;
                 case "statusAsc": sql.append(" ORDER BY b.status ASC "); break;
-                case "idAsc": sql.append(" ORDER BY b.bike_id ASC "); break;
-                default: sql.append(" ORDER BY b.bike_id DESC "); break;
+                case "idDesc": sql.append(" ORDER BY b.bike_id DESC "); break;
+                default: sql.append(" ORDER BY b.bike_id ASC "); break;
             }
         }
 

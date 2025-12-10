@@ -57,4 +57,6 @@ public class BikeRentalOption {
     public void setPrice(double price) {
         this.price = price;
     }
+    
+    
 }

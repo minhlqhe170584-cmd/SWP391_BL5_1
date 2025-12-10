@@ -82,6 +82,7 @@ public class LoginServlet extends HttpServlet {
             if (room != null) {
                 session.setAttribute("ROLE", "ROOM");
                 session.setAttribute("CURRENT_ROOM", room);
+                session.setAttribute("ROOM_ID", room.getRoomId());
                 
                 response.sendRedirect("services"); // Chuyển sang trang đặt dịch vụ
                 return;
