@@ -10,7 +10,6 @@
         <div class="section-header">
             <h1>Staff Management</h1>
         </div>
-
         <div class="section-body">
             <div class="card">
 

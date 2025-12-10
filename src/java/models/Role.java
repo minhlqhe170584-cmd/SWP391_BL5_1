@@ -15,7 +15,7 @@ public class Role {
 
     public Role() {
     }
-
+//loi
     public Role(int roleId, String roleName) {
         this.roleId = roleId;
         this.roleName = roleName;
