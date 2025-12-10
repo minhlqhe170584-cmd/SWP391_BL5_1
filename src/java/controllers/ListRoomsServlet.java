@@ -21,7 +21,7 @@ public class ListRoomsServlet extends HttpServlet {
         // List<Room> list = dao.getAllRooms();
         // request.setAttribute("listRoom", list);
 
-        // 2. Chuyển hướng vào trang giao diện
+        // 2. Chuyển hướng vào trang go diện
         // File rooms.jsp nằm trong thư mục bảo mật WEB-INF
         request.getRequestDispatcher("/WEB-INF/views/home/listRooms.jsp").forward(request, response);
     }

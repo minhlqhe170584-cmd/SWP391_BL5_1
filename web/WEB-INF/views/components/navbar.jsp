@@ -1,3 +1,7 @@
+<%-- 
+    Document   : navbar
+    Description: Menu chuẩn (Sử dụng URL /listRooms)
+--%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -6,13 +10,15 @@
 <div class="offcanvas-menu-wrapper">
     <div class="canvas-close"><i class="icon_close"></i></div>
     <div class="header-configure-area">
-        <a href="${pageContext.request.contextPath}/rooms" class="bk-btn">Đặt Phòng Ngay</a>
+        <a href="${pageContext.request.contextPath}/listRooms" class="bk-btn">Đặt Phòng Ngay</a>
     </div>
     <nav class="mainmenu mobile-menu">
-        <ul>
+        <ul id="mobile-nav-list">
             <li><a href="${pageContext.request.contextPath}/home">Trang chủ</a></li>
-            <li><a href="${pageContext.request.contextPath}/rooms">Phòng</a></li>
-            <li><a href="${pageContext.request.contextPath}/services">Dịch vụ</a></li>
+            
+            <li><a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a></li>
+            
+            <li><a href="${pageContext.request.contextPath}/services">Dịch Vụ</a></li>
             <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
             
             <c:if test="${sessionScope.USER == null}">
@@ -39,7 +45,8 @@
                             <a href="#"><i class="fa fa-facebook"></i></a>
                             <a href="#"><i class="fa fa-instagram"></i></a>
                         </div>
-                        <a href="${pageContext.request.contextPath}/rooms" class="bk-btn">Đặt Phòng Ngay</a>
+                        <a href="${pageContext.request.contextPath}/listRooms" class="bk-btn">Đặt Phòng Ngay</a>
+                        
                         <div class="language-option">
                             <c:choose>
                                 <c:when test="${sessionScope.USER == null && sessionScope.CURRENT_ROOM == null}">
@@ -80,28 +87,13 @@
                 <div class="col-lg-10">
                     <div class="nav-menu">
                         <nav class="mainmenu">
-                            <ul class="text-right">
-                                <li class="${pageContext.request.servletPath.contains('/home') || pageContext.request.servletPath.equals('/') ? 'active' : ''}">
-                                    <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
-                                </li>
+                            <ul class="text-right" id="pc-nav-list">
+                                <li><a href="${pageContext.request.contextPath}/home">Trang chủ</a></li>
                                 
-                                <li class="${pageContext.request.servletPath.contains('/rooms') ? 'active' : ''}">
-                                    <a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a>
-                                </li>
+                                <li><a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a></li>
                                 
-                                <li class="${pageContext.request.servletPath.contains('/services') ? 'active' : ''}">
-                                    <a href="${pageContext.request.contextPath}/services">Dịch Vụ</a>
-                                </li>
-                                
-                                <c:if test="${sessionScope.ROLE == 'ROOM'}">
-                                    <li class="${pageContext.request.servletPath.contains('/order') ? 'active' : ''}">
-                                        <a href="${pageContext.request.contextPath}/order" style="color: #e67e22;">GỌI MÓN</a>
-                                    </li>
-                                </c:if>
-
-                                <li class="${pageContext.request.servletPath.contains('/contact') ? 'active' : ''}">
-                                    <a href="${pageContext.request.contextPath}/contact">Liên Hệ</a>
-                                </li>
+                                <li><a href="${pageContext.request.contextPath}/services">Dịch Vụ</a></li>
+                                <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
                             </ul>
                         </nav>
                     </div>
@@ -110,3 +102,25 @@
         </div>
     </div>
 </header>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var currentUrl = window.location.pathname; 
+        
+        function setActiveMenu(listId) {
+            var menuItems = document.querySelectorAll('#' + listId + ' li a');
+            menuItems.forEach(function(link) {
+                var linkHref = link.getAttribute('href');
+                // Nếu URL chứa link (ví dụ URL /SWP/listRooms chứa link /SWP/listRooms)
+                if (linkHref && currentUrl.includes(linkHref) && linkHref.length > 2) {
+                    link.parentElement.classList.add('active');
+                }
+                else if (currentUrl.endsWith('/home') && linkHref.endsWith('/home')) {
+                    link.parentElement.classList.add('active');
+                }
+            });
+        }
+        setActiveMenu('pc-nav-list');
+        setActiveMenu('mobile-nav-list');
+    });
+</script>
