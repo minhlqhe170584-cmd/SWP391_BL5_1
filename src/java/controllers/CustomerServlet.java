@@ -175,6 +175,7 @@ private final CustomerDAO customerDAO = new CustomerDAO(); // Or use Dependency 
         customer.setFullName(fullName);
         customer.setEmail(email);
         customer.setPhone(phone);
+        customer.setPassword(password);
         request.setAttribute("customer", customer);
         
         request.getRequestDispatcher("/WEB-INF/views/customer/detail.jsp").forward(request, response);
