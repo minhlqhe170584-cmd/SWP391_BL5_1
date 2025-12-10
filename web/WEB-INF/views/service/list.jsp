@@ -30,16 +30,15 @@
                        if(message != null) { %>
                         <div class="alert alert-success alert-dismissible show fade">
                             <div class="alert-body">
-                                <button class="close" data-dismiss="alert">
-                                    <span>&times;</span>
-                                </button>
+                                <button class="close" data-dismiss="alert"><span>&times;</span></button>
                                 <%= message %>
                             </div>
                         </div>
-                    <% request.getSession().removeAttribute("message");
-                       } %>
+                    <% request.getSession().removeAttribute("message"); } %>
 
                     <form method="get" action="service" class="form-row mb-3">
+                        <input type="hidden" name="view" value="${view}">
+                        
                         <div class="col-md-4">
                             <input type="text" name="search" class="form-control" placeholder="Search service name..." value="${search}">
                         </div>
@@ -67,6 +66,17 @@
                         </div>
                     </form>
 
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link ${empty view ? 'active' : ''}" href="service">Active Services</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link ${view == 'deleted' ? 'active' : ''} text-danger" href="service?view=deleted">
+                                <i class="fas fa-trash-alt"></i> Trash Bin
+                            </a>
+                        </li>
+                    </ul>
+
                     <div class="table-responsive">
                        <table class="table table-striped">
                          <thead>
@@ -90,12 +100,13 @@
                                     <td>#${s.serviceId}</td>
                                     <td class="font-weight-bold">${s.serviceName}</td>
                                     <td>
-                                        <div class="badge badge-light">
-                                            ${s.categoryId} 
-                                        </div>
+                                        <div class="badge badge-light">${s.categoryId}</div>
                                     </td>
                                     <td>
                                         <c:choose>
+                                            <c:when test="${s.isDeleted}">
+                                                <div class="badge badge-danger">Deleted</div>
+                                            </c:when>
                                             <c:when test="${s.isActive}">
                                                 <div class="badge badge-success">Active</div>
                                             </c:when>
@@ -106,21 +117,31 @@
                                     </td>
                                     <td>
                                         <div class="d-flex">
-                                            <a href="service?action=toggle-status&id=${s.serviceId}" 
-                                               class="btn btn-sm mr-2 ${s.isActive ? 'btn-secondary' : 'btn-success'}" 
-                                               title="${s.isActive ? 'Deactivate' : 'Activate'}"
-                                               style="width: 32px;">
-                                                <i class="fas ${s.isActive ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                                            </a>
+                                            <c:choose>
+                                                <c:when test="${view == 'deleted'}">
+                                                    <a href="service?action=delete&id=${s.serviceId}&view=deleted" class="btn btn-info btn-sm" 
+                                                       onclick="return confirm('Restore this service?');" title="Restore">
+                                                        <i class="fas fa-trash-restore"></i> Restore
+                                                    </a>
+                                                </c:when>
+                                                
+                                                <c:otherwise>
+                                                    <a href="service?action=toggle-status&id=${s.serviceId}" 
+                                                       class="btn btn-sm mr-2 ${s.isActive ? 'btn-secondary' : 'btn-success'}" 
+                                                       title="${s.isActive ? 'Deactivate' : 'Activate'}" style="width: 32px;">
+                                                        <i class="fas ${s.isActive ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                                                    </a>
 
-                                            <a href="service?action=detail&id=${s.serviceId}" class="btn btn-warning btn-sm mr-2" title="Edit">
-                                                <i class="fas fa-pencil-alt"></i>
-                                            </a>
+                                                    <a href="service?action=detail&id=${s.serviceId}" class="btn btn-warning btn-sm mr-2" title="Edit">
+                                                        <i class="fas fa-pencil-alt"></i>
+                                                    </a>
 
-                                            <a href="service?action=delete&id=${s.serviceId}" class="btn btn-danger btn-sm" 
-                                               onclick="return confirm('Are you sure you want to delete this service?');" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
+                                                    <a href="service?action=delete&id=${s.serviceId}" class="btn btn-danger btn-sm" 
+                                                       onclick="return confirm('Move to Trash?');" title="Soft Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                     </td>
                                 </tr>
@@ -133,17 +154,15 @@
                         <nav aria-label="Page navigation" class="mt-4">
                             <ul class="pagination justify-content-center">
                                 <li class="page-item <c:if test='${page <= 1}'>disabled</c:if>">
-                                    <a class="page-link" href="service?page=${page - 1}&search=${search}&categoryId=${categoryId}&sort=${sort}">Previous</a>
+                                    <a class="page-link" href="service?page=${page - 1}&search=${search}&categoryId=${categoryId}&sort=${sort}&view=${view}">Previous</a>
                                 </li>
-                                
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <li class="page-item <c:if test='${p == page}'>active</c:if>">
-                                        <a class="page-link" href="service?page=${p}&search=${search}&categoryId=${categoryId}&sort=${sort}">${p}</a>
+                                        <a class="page-link" href="service?page=${p}&search=${search}&categoryId=${categoryId}&sort=${sort}&view=${view}">${p}</a>
                                     </li>
                                 </c:forEach>
-
                                 <li class="page-item <c:if test='${page >= totalPages}'>disabled</c:if>">
-                                    <a class="page-link" href="service?page=${page + 1}&search=${search}&categoryId=${categoryId}&sort=${sort}">Next</a>
+                                    <a class="page-link" href="service?page=${page + 1}&search=${search}&categoryId=${categoryId}&sort=${sort}&view=${view}">Next</a>
                                 </li>
                             </ul>
                         </nav>

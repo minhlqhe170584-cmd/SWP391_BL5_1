@@ -43,6 +43,12 @@
                 </a>
             </li>
             
+            <li>
+                <a class="nav-link" href="${pageContext.request.contextPath}/bicycle">
+                    <i class="fas fa-users"></i> <span>Bicycle</span>
+                </a>
+            </li>
+            
             <li class="menu-header">Customer Management</li>
             <li>
                 <a class="nav-link" href="${pageContext.request.contextPath}/customer">

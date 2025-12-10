@@ -10,16 +10,18 @@ public class Service {
     private String imageUrl;
     private boolean isActive;
     private int categoryId;
+    private boolean isDeleted;
 
     public Service() {
     }
 
-    public Service(int serviceId, String serviceName, String imageUrl, boolean isActive, int categoryId) {
+    public Service(int serviceId, String serviceName, String imageUrl, boolean isActive, int categoryId, boolean isDeleted) {
         this.serviceId = serviceId;
         this.serviceName = serviceName;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
         this.categoryId = categoryId;
+        this.isDeleted = isDeleted;
     }
 
     public int getServiceId() {
@@ -61,6 +63,12 @@ public class Service {
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
     }
-    
-    
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 }

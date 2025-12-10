@@ -33,7 +33,7 @@ public class ServiceServlet extends HttpServlet {
                 showDetailForm(request, response);
                 break;
             case "delete":
-                deleteService(request, response);
+                toggleDeleteService(request, response);
                 break;
             case "toggle-status":
                 toggleStatus(request, response);
@@ -51,6 +51,7 @@ public class ServiceServlet extends HttpServlet {
         String categoryId = request.getParameter("categoryId");
         String sort = request.getParameter("sort");
         String pageRaw = request.getParameter("page");
+        String view = request.getParameter("view"); 
 
         int pageIndex = 1;
         int pageSize = 5;
@@ -64,8 +65,8 @@ public class ServiceServlet extends HttpServlet {
             }
         }
 
-        ArrayList<Service> list = serviceDAO.search(search, categoryId, sort, pageIndex, pageSize);
-        int totalRecords = serviceDAO.countSearch(search, categoryId);
+        ArrayList<Service> list = serviceDAO.search(search, categoryId, view, sort, pageIndex, pageSize);
+        int totalRecords = serviceDAO.countSearch(search, categoryId, view);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
         ArrayList<ServiceCategory> categories = categoryDAO.getAll();
 
@@ -74,6 +75,7 @@ public class ServiceServlet extends HttpServlet {
         request.setAttribute("search", search);
         request.setAttribute("categoryId", categoryId);
         request.setAttribute("sort", sort);
+        request.setAttribute("view", view);
         request.setAttribute("page", pageIndex);
         request.setAttribute("totalPages", totalPages);
 
@@ -82,106 +84,92 @@ public class ServiceServlet extends HttpServlet {
 
     private void showDetailForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         String idRaw = request.getParameter("id");
         Service service = new Service();
-        
         if (idRaw != null && !idRaw.trim().isEmpty()) {
             try {
                 int id = Integer.parseInt(idRaw);
                 service = serviceDAO.getById(id);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
+            } catch (NumberFormatException e) {}
         }
-
         ArrayList<ServiceCategory> categories = categoryDAO.getAll();
         request.setAttribute("service", service);
         request.setAttribute("categories", categories);
-
         request.getRequestDispatcher("/WEB-INF/views/service/detail.jsp").forward(request, response);
     }
 
-    private void deleteService(HttpServletRequest request, HttpServletResponse response)
+    private void toggleDeleteService(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
         String idRaw = request.getParameter("id");
         HttpSession session = request.getSession();
 
         if (idRaw != null && !idRaw.trim().isEmpty()) {
             try {
                 int id = Integer.parseInt(idRaw);
-                serviceDAO.delete(id);
-                session.setAttribute("message", "Service deleted successfully.");
+                boolean isDeleted = serviceDAO.isDeleted(id);
+                
+                if (isDeleted) {
+                    serviceDAO.restore(id);
+                    session.setAttribute("message", "Service restored successfully.");
+                } else {
+                    serviceDAO.softDelete(id);
+                    session.setAttribute("message", "Service moved to trash.");
+                }
             } catch (Exception e) {
-                session.setAttribute("message", "Error deleting service: " + e.getMessage());
+                session.setAttribute("message", "Error: " + e.getMessage());
             }
         }
-        response.sendRedirect("service");
+        String currentView = request.getParameter("view");
+        response.sendRedirect("service" + (currentView != null ? "?view=" + currentView : ""));
     }
-    
-    private void toggleStatus(HttpServletRequest request, HttpServletResponse response) 
+
+    private void toggleStatus(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String idRaw = request.getParameter("id");
-        
         if (idRaw != null && !idRaw.trim().isEmpty()) {
             try {
                 int id = Integer.parseInt(idRaw);
                 Service s = serviceDAO.getById(id);
-                
-                if (s != null) {
+                if (s != null && !s.isIsDeleted()) {
                     boolean newStatus = !s.isIsActive();
-
                     serviceDAO.updateStatus(id, newStatus);
-                    
-                    request.getSession().setAttribute("message", "Đã đổi trạng thái thành công!");
+                    request.getSession().setAttribute("message", "Status updated successfully!");
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) {}
         }
-        response.sendRedirect("service");
+        String currentView = request.getParameter("view");
+        response.sendRedirect("service" + (currentView != null ? "?view=" + currentView : ""));
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
-
         String idRaw = request.getParameter("serviceId");
         String name = request.getParameter("serviceName");
         String image = request.getParameter("imageUrl");
         String categoryIdStr = request.getParameter("categoryId");
         boolean active = request.getParameter("isActive") != null;
 
-        String errorMessage = null;
-        int categoryId = 0;
-
-        if (name == null || name.trim().isEmpty()) {
-            errorMessage = "Service name is required.";
-        } else if (categoryIdStr == null || categoryIdStr.trim().isEmpty()) {
-            errorMessage = "Category is required.";
-        } else {
-            try {
-                categoryId = Integer.parseInt(categoryIdStr);
-            } catch (NumberFormatException e) {
-                errorMessage = "Invalid category format.";
-            }
-        }
-
         Service s = new Service();
         s.setServiceName(name);
         s.setImageUrl(image);
         s.setIsActive(active);
-        s.setCategoryId(categoryId);
-        
+
         if (idRaw != null && !idRaw.trim().isEmpty()) {
-            try {
-                s.setServiceId(Integer.parseInt(idRaw));
-            } catch (NumberFormatException e) {
-                 errorMessage = "Invalid Service ID.";
-            }
+            try { s.setServiceId(Integer.parseInt(idRaw)); } catch (NumberFormatException e) {}
+        }
+        if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
+            try { s.setCategoryId(Integer.parseInt(categoryIdStr)); } catch (NumberFormatException e) {}
+        }
+
+        String errorMessage = null;
+        if (name == null || name.trim().isEmpty()) {
+            errorMessage = "Service name is required.";
+        } else if (categoryIdStr == null || categoryIdStr.trim().isEmpty()) {
+            errorMessage = "Category is required.";
+        } else if (serviceDAO.isExistName(name, s.getServiceId())) {
+            errorMessage = "Service name '" + name + "' already exists.";
         }
 
         if (errorMessage != null) {
@@ -203,7 +191,6 @@ public class ServiceServlet extends HttpServlet {
             }
             response.sendRedirect("service");
         } catch (Exception e) {
-            e.printStackTrace();
             request.setAttribute("service", s);
             request.setAttribute("categories", categoryDAO.getAll());
             request.setAttribute("errorMessage", "Database error: " + e.getMessage());

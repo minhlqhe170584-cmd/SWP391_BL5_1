@@ -89,7 +89,7 @@ CREATE TABLE Invoices (
 
 CREATE TABLE ServiceCategories (
     category_id INT IDENTITY(1,1) PRIMARY KEY,
-    category_name NVARCHAR(50) NOT NULL
+    category_name NVARCHAR(50) NOT NULL,
     description NVARCHAR(MAX)
 );
 
@@ -99,7 +99,8 @@ CREATE TABLE Services (
     service_name NVARCHAR(100) NOT NULL,
     category_id INT FOREIGN KEY REFERENCES ServiceCategories(category_id),
     image_url VARCHAR(255),
-    is_active BIT DEFAULT 1
+    is_active BIT DEFAULT 1,
+    is_deleted BIT DEFAULT 0
 );
 
 -- --- CÁC BẢNG CHI TIẾT (CHỈ GIỮ BIKE, COMMENT CÁI KHÁC) ---
@@ -195,19 +196,29 @@ CREATE TABLE Tasks (
 GO
 
 -- ====================================================
--- VI. DỮ LIỆU MẪU (TEST XE ĐẠP)
+-- VI. DỮ LIỆU MẪU (TEST XE ĐẠP) - ĐÃ SỬA LỖI
 -- ====================================================
 
 -- 1. Setup cơ bản
-INSERT INTO StaffRoles VALUES ('Manager'), ('Staff');
-INSERT INTO Staff (full_name, email, password, role_id) VALUES (N'Admin', 'admin', '123', 1);
+-- SỬA LỖI: Thêm (role_name)
+INSERT INTO StaffRoles (role_name) VALUES ('Manager'), ('Staff');
 
-INSERT INTO RoomTypes VALUES ('Standard', 500000);
-INSERT INTO Rooms (room_number, type_id, room_password, is_active_login) VALUES 
-('101', 1, '123456', 1); -- Phòng 101 đang có khách
+-- Đã đúng (vì có liệt kê cột)
+INSERT INTO Staff (full_name, email, password, role_id) 
+VALUES (N'Admin', 'admin', '123', 1);
+
+-- SỬA LỖI: Thêm (type_name, base_price)
+INSERT INTO RoomTypes (type_name, base_price) 
+VALUES ('Standard', 500000);
+
+-- Đã đúng
+INSERT INTO Rooms (room_number, type_id, room_password, is_active_login) 
+VALUES ('101', 1, '123456', 1); 
 
 -- 2. Setup Dịch vụ Xe đạp
-INSERT INTO ServiceCategories VALUES (N'Bike');
+-- SỬA LỖI: Thêm (category_name) - Mặc dù bảng này có 3 cột, nhưng description null được
+INSERT INTO ServiceCategories (category_name) VALUES (N'Bike');
+
 INSERT INTO Services (service_name, category_id) VALUES (N'Thuê Xe Đạp', 1);
 
 -- Bảng giá thuê
@@ -222,6 +233,7 @@ INSERT INTO Bicycles (bike_code, service_id, status) VALUES
 -- 3. Test Order
 -- Phòng 101 thuê xe 1 ngày
 INSERT INTO ServiceOrders (room_id, status) VALUES (1, 'Pending'); -- Order ID 1
+
 INSERT INTO OrderDetails (order_id, service_id, item_name, unit_price) VALUES 
 (1, 1, N'1 Ngày', 100000);
 
