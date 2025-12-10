@@ -29,7 +29,6 @@
                         <h2>Phòng Nghỉ</h2>
                         <div class="bt-option">
                             <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
-                            <span>Danh sách phòng</span>
                         </div>
                     </div>
                 </div>
