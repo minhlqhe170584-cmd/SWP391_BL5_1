@@ -79,7 +79,7 @@ public class BicycleDAO extends DBContext {
         updateSt.executeUpdate();
     }
 
-    public ArrayList<Bicycle> search(String search, String statusFilter, String sort, int pageIndex, int pageSize) {
+    public ArrayList<Bicycle> search(String search, String statusFilter, String view, String sort, int pageIndex, int pageSize) {
         ArrayList<Bicycle> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT b.bike_id, b.bike_code, b.service_id, b.status, b.condition, s.service_name ").append(BASE_BICYCLE_SEARCH);
@@ -88,22 +88,23 @@ public class BicycleDAO extends DBContext {
             sql.append(" AND (b.bike_code LIKE ? OR s.service_name LIKE ?) ");
         }
 
-        if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-            if (!statusFilter.equals("All")) {
-                sql.append(" AND b.status = ? ");
-            }
+        if ("deleted".equals(view)) {
+            sql.append(" AND b.status = 'Deleted' ");
         } else {
             sql.append(" AND b.status != 'Deleted' ");
+            if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
+                sql.append(" AND b.status = ? ");
+            }
         }
 
         if (sort == null || sort.isEmpty()) {
-            sql.append(" ORDER BY b.bike_id ASC ");
+            sql.append(" ORDER BY b.bike_id DESC ");
         } else {
             switch (sort) {
                 case "codeAsc": sql.append(" ORDER BY b.bike_code ASC "); break;
                 case "codeDesc": sql.append(" ORDER BY b.bike_code DESC "); break;
                 case "statusAsc": sql.append(" ORDER BY b.status ASC "); break;
-                case "idDesc": sql.append(" ORDER BY b.bike_id DESC "); break;
+                case "idAsc": sql.append(" ORDER BY b.bike_id ASC "); break;
                 default: sql.append(" ORDER BY b.bike_id DESC "); break;
             }
         }
@@ -119,8 +120,8 @@ public class BicycleDAO extends DBContext {
                 st.setString(idx++, "%" + search.trim() + "%");
             }
 
-            if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-                if (!statusFilter.equals("All")) {
+            if (!"deleted".equals(view)) {
+                if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
                     st.setString(idx++, statusFilter);
                 }
             }
@@ -146,7 +147,7 @@ public class BicycleDAO extends DBContext {
         return list;
     }
 
-    public int countSearch(String search, String statusFilter) {
+    public int countSearch(String search, String statusFilter, String view) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) ").append(BASE_BICYCLE_SEARCH);
 
@@ -154,12 +155,13 @@ public class BicycleDAO extends DBContext {
             sql.append(" AND (b.bike_code LIKE ? OR s.service_name LIKE ?) ");
         }
 
-        if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-            if (!statusFilter.equals("All")) {
-                sql.append(" AND b.status = ? ");
-            }
+        if ("deleted".equals(view)) {
+            sql.append(" AND b.status = 'Deleted' ");
         } else {
             sql.append(" AND b.status != 'Deleted' ");
+            if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
+                sql.append(" AND b.status = ? ");
+            }
         }
 
         try {
@@ -171,8 +173,8 @@ public class BicycleDAO extends DBContext {
                 st.setString(idx++, "%" + search.trim() + "%");
             }
             
-            if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-                if (!statusFilter.equals("All")) {
+            if (!"deleted".equals(view)) {
+                if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
                     st.setString(idx++, statusFilter);
                 }
             }
