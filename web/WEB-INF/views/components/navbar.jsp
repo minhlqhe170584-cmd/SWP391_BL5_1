@@ -18,7 +18,7 @@
             
             <li><a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a></li>
             
-            <li><a href="${pageContext.request.contextPath}/services">Dịch Vụ</a></li>
+            <li><a href="${pageContext.request.contextPath}/service">Dịch Vụ</a></li>
             <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
             
             <c:if test="${sessionScope.USER == null}">
