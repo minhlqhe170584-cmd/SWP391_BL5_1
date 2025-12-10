@@ -247,3 +247,7 @@ nbdist/
 # Ignore all local history of files
 .history
 .ionide
+
+src/java/dbContext/
+src/java/dbContext/DBContext.java
+.gitignore
