@@ -117,22 +117,23 @@ public class ServiceCategoryServlet extends HttpServlet {
         String name = request.getParameter("categoryName");
         String description = request.getParameter("description");
 
-        String errorMessage = null;
-
-        if (name == null || name.trim().isEmpty()) {
-            errorMessage = "Category name is required.";
-        }
-
         ServiceCategory c = new ServiceCategory();
         c.setCategoryName(name);
         c.setDescription(description);
-        
+
         if (idRaw != null && !idRaw.trim().isEmpty()) {
             try {
                 c.setCategoryId(Integer.parseInt(idRaw));
             } catch (NumberFormatException e) {
-                 errorMessage = "Invalid Category ID.";
             }
+        }
+
+        String errorMessage = null;
+
+        if (name == null || name.trim().isEmpty()) {
+            errorMessage = "Category name is required.";
+        } else if (categoryDAO.isExistName(name, c.getCategoryId())) {
+            errorMessage = "Category name '" + name + "' already exists.";
         }
 
         if (errorMessage != null) {

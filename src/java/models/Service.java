@@ -7,23 +7,21 @@ package models;
 public class Service {
     private int serviceId;
     private String serviceName;
-    private double price;
-    private String unit;
     private String imageUrl;
     private boolean isActive;
     private int categoryId;
+    private boolean isDeleted;
 
     public Service() {
     }
 
-    public Service(int serviceId, String serviceName, double price, String unit, String imageUrl, boolean isActive, int categoryId) {
+    public Service(int serviceId, String serviceName, String imageUrl, boolean isActive, int categoryId, boolean isDeleted) {
         this.serviceId = serviceId;
         this.serviceName = serviceName;
-        this.price = price;
-        this.unit = unit;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
         this.categoryId = categoryId;
+        this.isDeleted = isDeleted;
     }
 
     public int getServiceId() {
@@ -40,22 +38,6 @@ public class Service {
 
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public String getUnit() {
-        return unit;
-    }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
     }
 
     public String getImageUrl() {
@@ -81,6 +63,12 @@ public class Service {
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
     }
-    
-    
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 }

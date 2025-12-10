@@ -152,4 +152,20 @@ public class ServiceCategoryDAO extends DBContext {
         }
         return 0;
     }
+    
+    public boolean isExistName(String name, int idToExclude) {
+        String sql = "SELECT COUNT(*) FROM ServiceCategories WHERE category_name = ? AND category_id != ?";
+        try {
+            java.sql.PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, name);
+            st.setInt(2, idToExclude);
+            java.sql.ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

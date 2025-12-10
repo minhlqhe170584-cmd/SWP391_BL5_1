@@ -67,37 +67,6 @@
                                         </c:forEach>
                                     </select>
                                 </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Price <span class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        <i class="fas fa-dollar-sign"></i>
-                                                    </div>
-                                                </div>
-                                                <input type="number" step="0.01" class="form-control" name="price" 
-                                                       value="${service.price}" required placeholder="0.00">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Unit</label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        <i class="fas fa-balance-scale"></i>
-                                                    </div>
-                                                </div>
-                                                <input type="text" class="form-control" name="unit" 
-                                                       value="${service.unit}" placeholder="Ex: Hour, Item, Time...">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <div class="form-group">
                                     <label>Image URL</label>
@@ -116,7 +85,7 @@
                                     <div class="control-label">Status</div>
                                     <label class="custom-switch mt-2 pl-0">
                                         <input type="checkbox" name="isActive" value="true" class="custom-switch-input" 
-                                            <c:if test="${empty service || service.isActive}">checked</c:if>>
+                                            <c:if test="${service.serviceId == 0 || service.isActive}">checked</c:if>>
                                         <span class="custom-switch-indicator"></span>
                                         <span class="custom-switch-description">Active</span>
                                     </label>
@@ -139,14 +108,11 @@
                             <h4><i class="fas fa-lightbulb"></i> Instructions</h4>
                         </div>
                         <div class="card-body">
-                            <p>Fill in all information to create a new service.</p>
+                            <p>Fill in information to identify the service type.</p>
                             <div class="alert alert-secondary">
-                                <b>Service Price:</b> Enter accurately for automatic invoice calculation.
+                                <b>Note:</b> Pricing is now managed in separate configurations (e.g., Bike Rental Options), not directly here.
                             </div>
-                            <div class="alert alert-secondary">
-                                <b>Unit:</b> Helps customers understand pricing (e.g., per hour, per item, or per quantity).
-                            </div>
-                            <p>If "Active" is unchecked, this service will be hidden from customer booking lists but remains in the system.</p>
+                            <p>If "Active" is unchecked, this service will be hidden from customer booking lists.</p>
                         </div>
                     </div>
                 </div>
