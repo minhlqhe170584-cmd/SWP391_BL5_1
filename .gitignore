@@ -247,7 +247,3 @@ nbdist/
 # Ignore all local history of files
 .history
 .ionide
-
-# End of https://www.toptal.com/developers/gitignore/api/netbeans,visualstudiocode,intellij,java
-src/java/dbContext/
-src/java/dbContext/DBContext.java
