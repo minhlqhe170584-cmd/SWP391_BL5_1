@@ -25,7 +25,7 @@
             
             <li class="menu-header">Room Management</li>
             <li>
-                <a class="nav-link" href="${pageContext.request.contextPath}/rooms">
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/rooms">
                     <i class="fas fa-users"></i> <span>Room</span>
                 </a>
             </li>
