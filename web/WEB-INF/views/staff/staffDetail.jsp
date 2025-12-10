@@ -6,7 +6,6 @@
 
 <div class="main-content">
     <section class="section">
-        
         <div class="section-header">
             <div class="section-header-back">
                 <a href="staffs" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
@@ -14,7 +13,7 @@
             <h1>${staff != null ? 'Cập nhật Nhân viên' : 'Thêm Nhân viên Mới'}</h1>
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item active"><a href="dashboard">Dashboard</a></div>
-                <div class="breadcrumb-item"><a href="staffs">Nhân viên</a></div>
+                <div class="breadcrumb-item"><a href="staffs">Staff</a></div>
                 <div class="breadcrumb-item">${staff != null ? 'Cập nhật' : 'Thêm mới'}</div>
             </div>
         </div>
@@ -29,7 +28,7 @@
                 <div class="col-12 col-md-8 col-lg-8">
                     <div class="card">
                         <div class="card-header">
-                            <h4>Form Thông tin</h4>
+                            <h4>Form</h4>
                         </div>
                         
                         <div class="card-body">
@@ -45,8 +44,12 @@
                                     <label class="col-sm-3 col-form-label">Họ và Tên <span class="text-danger">*</span></label>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control" name="fullName" required="" 
+                                               pattern=".*\S+.*" 
+                                               title="Vui lòng nhập họ tên (không được chỉ chứa khoảng trắng)"
                                                value="${staff.fullName}" placeholder="Ví dụ: Nguyễn Văn A">
-                                        <div class="invalid-feedback">Vui lòng nhập họ tên.</div>
+                                        <div class="invalid-feedback">
+                                            Vui lòng nhập họ tên hợp lệ (không được để trống).
+                                        </div>
                                     </div>
                                 </div>
 
@@ -55,7 +58,7 @@
                                     <div class="col-sm-9">
                                         <input type="email" class="form-control" name="email" required="" 
                                                value="${staff.email}" placeholder="email@example.com">
-                                        <div class="invalid-feedback">Email không hợp lệ.</div>
+                                        <div class="invalid-feedback">Email không đúng định dạng.</div>
                                     </div>
                                 </div>
 
@@ -63,9 +66,14 @@
                                     <label class="col-sm-3 col-form-label">Mật khẩu <span class="text-danger">*</span></label>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control" name="password" 
+                                               pattern=".*\S+.*"
+                                               title="Mật khẩu không được chứa toàn dấu cách"
                                                ${staff == null ? 'required' : ''} 
                                                value="${staff.passWordHash}"
                                                placeholder="Nhập mật khẩu...">
+                                        <div class="invalid-feedback">
+                                            Mật khẩu không được để trống hoặc chỉ chứa dấu cách.
+                                        </div>
                                         <c:if test="${staff != null}">
                                             <small class="form-text text-muted">Nhập mật khẩu mới nếu muốn thay đổi, hoặc giữ nguyên mật khẩu cũ.</small>
                                         </c:if>
@@ -95,8 +103,8 @@
                                     </div>
                                 </div>
                             </form>
-                        </div>
-                        </div>
+                            </div>
+                    </div>
                 </div>
                 
                 <div class="col-12 col-md-4 col-lg-4">
@@ -108,12 +116,11 @@
                             <ul class="list-unstyled">
                                 <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Email phải là duy nhất.</li>
                                 <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Mật khẩu nên dài hơn 6 ký tự.</li>
-                                <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Vai trò quyết định quyền hạn của nhân viên.</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success"></i> Vai trò quyết định quyền hạn.</li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                
             </div>
         </div>
     </section>

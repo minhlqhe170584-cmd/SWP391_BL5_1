@@ -13,12 +13,12 @@
 
         <div class="section-body">
             <div class="card">
-                
+
                 <div class="card-header">
                     <h4>Staff List</h4>
                     <div class="card-header-form">
                         <form method="GET" action="staffs" class="form-inline">
-                            
+
                             <div class="form-group mr-2">
                                 <select name="roleFilter" class="form-control" onchange="this.form.submit()" style="border-radius: 30px; height: 31px; padding: 0 10px; font-size: 12px;">
                                     <option value="">-- All Roles --</option>
@@ -36,27 +36,28 @@
                                     <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
                                 </div>
                             </div>
-                            
+
                             <a href="staffs" class="btn btn-light ml-1" title="Làm mới"><i class="fas fa-sync-alt"></i></a>
                         </form>
                     </div>
-                    
+
                     <div class="card-header-action ml-auto">
                         <a href="staffs?action=add" class="btn btn-primary">➕ Add New Staff</a>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    
-                    <% String message = (String) request.getSession().getAttribute("message"); 
-                       if(message != null) { %>
-                        <div class="alert alert-success alert-dismissible show fade">
-                            <div class="alert-body">
-                                <button class="close" data-dismiss="alert"><span>&times;</span></button>
-                                <%= message %>
-                            </div>
+
+                    <% String message = (String) request.getSession().getAttribute("message");
+                        if (message != null) {%>
+                    <div class="alert alert-success alert-dismissible show fade">
+                        <div class="alert-body">
+                            <button class="close" data-dismiss="alert"><span>&times;</span></button>
+                            <%= message%>
                         </div>
-                    <% request.getSession().removeAttribute("message"); } %>
+                    </div>
+                    <% request.getSession().removeAttribute("message");
+                        }%>
 
                     <div class="table-responsive">
                         <table class="table table-striped">
@@ -79,11 +80,12 @@
 
                                 <c:forEach var="staff" items="${staffsList}">
                                     <tr>
-                                        <td>
+                                        <td class="text-break" style="max-width: 200px;">
                                             <img alt="image" src="${pageContext.request.contextPath}/admin_screen/assets/img/avatar/avatar-1.png" class="rounded-circle mr-1" width="30">
                                             ${staff.fullName}
                                         </td>
-                                        <td>${staff.email}</td>
+                                        <td class="text-break" style="max-width: 250px;">
+                                            ${staff.email}</td>
                                         <td><div class="badge badge-info">${staff.role.roleName}</div></td>
                                         <td>
                                             <c:catch>
@@ -131,35 +133,35 @@
                         </table>
                     </div>
 
-                <div class="card-footer text-right">
-                    <nav class="d-inline-block">
-                        <ul class="pagination mb-0">
-                            
-                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="staffs?page=${currentPage - 1}&keyword=${param.keyword}&roleFilter=${param.roleFilter}" tabindex="-1">
-                                    <i class="fas fa-chevron-left"></i>
-                                </a>
-                            </li>
+                    <div class="card-footer text-right">
+                        <nav class="d-inline-block">
+                            <ul class="pagination mb-0">
 
-                            <c:forEach begin="1" end="${totalPages}" var="i">
-                                <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                    <a class="page-link" href="staffs?page=${i}&keyword=${param.keyword}&roleFilter=${param.roleFilter}">
-                                        ${i}
+                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="staffs?page=${currentPage - 1}&keyword=${param.keyword}&roleFilter=${param.roleFilter}" tabindex="-1">
+                                        <i class="fas fa-chevron-left"></i>
                                     </a>
                                 </li>
-                            </c:forEach>
 
-                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                <a class="page-link" href="staffs?page=${currentPage + 1}&keyword=${param.keyword}&roleFilter=${param.roleFilter}">
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
+                                <c:forEach begin="1" end="${totalPages}" var="i">
+                                    <li class="page-item ${currentPage == i ? 'active' : ''}">
+                                        <a class="page-link" href="staffs?page=${i}&keyword=${param.keyword}&roleFilter=${param.roleFilter}">
+                                            ${i}
+                                        </a>
+                                    </li>
+                                </c:forEach>
+
+                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="staffs?page=${currentPage + 1}&keyword=${param.keyword}&roleFilter=${param.roleFilter}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+
                 </div>
-
             </div>
-        </div>
     </section>
 </div>
 
