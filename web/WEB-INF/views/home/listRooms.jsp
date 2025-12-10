@@ -1,6 +1,6 @@
 <%-- 
-    Document   : rooms
-    Description: Trang Danh sách phòng (Template Sona - JSP Standard)
+    Document   : listRooms
+    Description: Trang Danh sách phòng (Đã bỏ nút Chi Tiết)
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -29,6 +29,7 @@
                         <h2>Phòng Nghỉ</h2>
                         <div class="bt-option">
                             <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
+                            <span>Danh sách phòng</span>
                         </div>
                     </div>
                 </div>
@@ -47,26 +48,13 @@
                             <h3>1.500.000đ<span>/đêm</span></h3>
                             <table>
                                 <tbody>
-                                    <tr>
-                                        <td class="r-o">Diện tích:</td>
-                                        <td>30 m2</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Sức chứa:</td>
-                                        <td>Max 3 người</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Giường:</td>
-                                        <td>King Beds</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Tiện ích:</td>
-                                        <td>Wifi, TV, Bồn tắm...</td>
-                                    </tr>
+                                    <tr><td class="r-o">Diện tích:</td><td>30 m2</td></tr>
+                                    <tr><td class="r-o">Sức chứa:</td><td>Max 3 người</td></tr>
+                                    <tr><td class="r-o">Giường:</td><td>King Beds</td></tr>
+                                    <tr><td class="r-o">Tiện ích:</td><td>Wifi, TV, Bồn tắm...</td></tr>
                                 </tbody>
                             </table>
-                            <a href="#" class="primary-btn">Chi Tiết</a>
-                        </div>
+                            </div>
                     </div>
                 </div>
                 
@@ -78,25 +66,12 @@
                             <h3>2.000.000đ<span>/đêm</span></h3>
                             <table>
                                 <tbody>
-                                    <tr>
-                                        <td class="r-o">Diện tích:</td>
-                                        <td>45 m2</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Sức chứa:</td>
-                                        <td>Max 5 người</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Giường:</td>
-                                        <td>2 King Beds</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Tiện ích:</td>
-                                        <td>Wifi, View biển...</td>
-                                    </tr>
+                                    <tr><td class="r-o">Diện tích:</td><td>45 m2</td></tr>
+                                    <tr><td class="r-o">Sức chứa:</td><td>Max 5 người</td></tr>
+                                    <tr><td class="r-o">Giường:</td><td>2 King Beds</td></tr>
+                                    <tr><td class="r-o">Tiện ích:</td><td>Wifi, View biển...</td></tr>
                                 </tbody>
                             </table>
-                            <a href="#" class="primary-btn">Chi Tiết</a>
                         </div>
                     </div>
                 </div>
@@ -109,25 +84,12 @@
                             <h3>1.200.000đ<span>/đêm</span></h3>
                             <table>
                                 <tbody>
-                                    <tr>
-                                        <td class="r-o">Diện tích:</td>
-                                        <td>25 m2</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Sức chứa:</td>
-                                        <td>Max 2 người</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Giường:</td>
-                                        <td>1 Queen Bed</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="r-o">Tiện ích:</td>
-                                        <td>Wifi, Tủ lạnh...</td>
-                                    </tr>
+                                    <tr><td class="r-o">Diện tích:</td><td>25 m2</td></tr>
+                                    <tr><td class="r-o">Sức chứa:</td><td>Max 2 người</td></tr>
+                                    <tr><td class="r-o">Giường:</td><td>1 Queen Bed</td></tr>
+                                    <tr><td class="r-o">Tiện ích:</td><td>Wifi, Tủ lạnh...</td></tr>
                                 </tbody>
                             </table>
-                            <a href="#" class="primary-btn">Chi Tiết</a>
                         </div>
                     </div>
                 </div>
@@ -146,7 +108,6 @@
                                     <tr><td class="r-o">Tiện ích:</td><td>Wifi, Bồn tắm...</td></tr>
                                 </tbody>
                             </table>
-                            <a href="#" class="primary-btn">Chi Tiết</a>
                         </div>
                     </div>
                 </div>
@@ -165,7 +126,6 @@
                                     <tr><td class="r-o">Tiện ích:</td><td>Wifi, Ban công...</td></tr>
                                 </tbody>
                             </table>
-                            <a href="#" class="primary-btn">Chi Tiết</a>
                         </div>
                     </div>
                 </div>
@@ -184,12 +144,11 @@
                                     <tr><td class="r-o">Tiện ích:</td><td>Wifi, TV...</td></tr>
                                 </tbody>
                             </table>
-                            <a href="#" class="primary-btn">Chi Tiết</a>
                         </div>
                     </div>
                 </div>
                 
-                </div>
+            </div>
         </div>
     </section>
     <jsp:include page="../components/footer.jsp"></jsp:include>
