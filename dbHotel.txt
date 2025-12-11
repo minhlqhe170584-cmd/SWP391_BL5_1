@@ -314,4 +314,3 @@ WHERE bike_id = 1;
 INSERT INTO ServiceInvoices(order_id, final_amount, status)
 VALUES (1, 100000, 'Paid');
 GO
-
