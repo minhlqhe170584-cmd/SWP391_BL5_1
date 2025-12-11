@@ -13,28 +13,58 @@
                 </a>
             </div>
 
-            <h1>Add New Room</h1>
+            <c:choose>
+                <c:when test="${room != null && room.roomId > 0}">
+                    <h1>Edit Room Information</h1>
+                </c:when>
+                <c:otherwise>
+                    <h1>Add New Room</h1>
+                </c:otherwise>
+            </c:choose>
 
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item active"><a href="#">Dashboard</a></div>
                 <div class="breadcrumb-item"><a href="rooms?action=LIST">Rooms</a></div>
-                <div class="breadcrumb-item">Create</div>
+                <c:choose>
+                    <c:when test="${room != null && room.roomId > 0}">
+                        <div class="breadcrumb-item">Edit</div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="breadcrumb-item">Create</div>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
 
         <div class="section-body">
-
-            <h2 class="section-title">Create New Room</h2>
-            <p class="section-lead">
-                Fill in the form below to create a new room in the system.
-            </p>
+            <c:choose>
+                <c:when test="${room != null && room.roomId > 0}">
+                    <h2 class="section-title">Update Room Details</h2>
+                    <p class="section-lead">
+                        Modify the information below to update the room.
+                    </p>
+                </c:when>
+                <c:otherwise>
+                    <h2 class="section-title">Create New Room</h2>
+                    <p class="section-lead">
+                        Fill in the form below to create a new room in the system.
+                    </p>
+                </c:otherwise>
+            </c:choose>
 
             <div class="row">
                 <div class="col-12 col-md-8 col-lg-8 mx-auto">
                     <div class="card">
 
                         <div class="card-header">
-                            <h4><i class="fas fa-plus-circle"></i> New Room Form</h4>
+                            <c:choose>
+                                <c:when test="${room != null && room.roomId > 0}">
+                                    <h4><i class="fas fa-edit"></i> Edit Form</h4>
+                                </c:when>
+                                <c:otherwise>
+                                    <h4><i class="fas fa-plus-circle"></i> New Room Form</h4>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
 
                         <div class="card-body">
@@ -54,7 +84,15 @@
 
                             <form action="rooms" method="POST">
 
-                                <input type="hidden" name="action" value="CREATE">
+                                <c:choose>
+                                    <c:when test="${room != null && room.roomId > 0}">
+                                        <input type="hidden" name="action" value="UPDATE">
+                                        <input type="hidden" name="roomId" value="${room.roomId}">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <input type="hidden" name="action" value="CREATE">
+                                    </c:otherwise>
+                                </c:choose>
 
                                 <!-- ROOM NUMBER -->
                                 <div class="form-group">
@@ -69,17 +107,23 @@
                                         <input type="text"
                                                id="roomNumber"
                                                name="roomNumber"
+                                               value="${room.roomNumber}"
                                                class="form-control"
                                                placeholder="Ex: 101, 205..."
-                                               minlength="3">
+                                               minlength="3"  <%--  Bắt buộc tối thiểu 3 ký tự --%>
+                                        <%--       required        Bắt buộc nhập --%>
+                                               <c:if test="${room != null && room.roomId > 0}">
+                                                   readonly
+                                               </c:if>
+                                               >
                                     </div>
-
                                     <small class="form-text text-muted">
                                         Unique identifier for the room (e.g., 101).
                                     </small>
 
+                                    <!--Thông báo nếu trường Room Number trống-->
                                     <small id="errorMsg" class="text-danger" style="display: none; margin-top: 5px;">
-                                        Room Number cannot be null. Please enter the room number!
+                                        Room Number can not be null. Please enter the room number!
                                     </small>
                                 </div>
 
@@ -88,19 +132,24 @@
                                     <label>Room Type</label>
                                     <select name="typeId" class="form-control selectric">
                                         <c:forEach var="t" items="${listType}">
-                                            <option value="${t.typeId}">
+                                            <option value="${t.typeId}"
+                                                    <c:if test="${room != null && room.typeId == t.typeId}">
+                                                        selected
+                                                    </c:if>>
                                                 ${t.typeName} (Capacity: ${t.capacity} people)
                                             </option>
                                         </c:forEach>
                                     </select>
                                 </div>
 
-                                <!-- STATUS (Add only 2 options) -->
+                                <!-- STATUS -->
                                 <div class="form-group">
                                     <label>Status</label>
                                     <select name="status" class="form-control selectric">
-                                        <option value="Available">Available</option>
-                                        <option value="Maintenance">Maintenance</option>
+                                        <option value="Available" ${room.status == 'Available' ? 'selected' : ''}>Available</option>
+                                        <option value="Occupied" ${room.status == 'Occupied' ? 'selected' : ''}>Occupied</option>
+                                        <option value="Dirty" ${room.status == 'Dirty' ? 'selected' : ''}>Dirty</option>
+                                        <option value="Maintenance" ${room.status == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
                                     </select>
                                 </div>
 
@@ -115,6 +164,7 @@
                                         </div>
                                         <input type="text"
                                                name="roomPassword"
+                                               value="${room.roomPassword}"
                                                class="form-control"
                                                placeholder="Enter a secure password">
                                     </div>
@@ -126,7 +176,8 @@
                                     <label class="custom-switch mt-2">
                                         <input type="checkbox"
                                                name="activeLogin"
-                                               class="custom-switch-input">
+                                               class="custom-switch-input"
+                                               ${room.activeLogin ? 'checked' : ''}>
                                         <span class="custom-switch-indicator"></span>
                                         <span class="custom-switch-description">
                                             Enable Guest Login (Allow guests to access services)
@@ -139,7 +190,7 @@
                                     <a href="rooms?action=LIST" class="btn btn-secondary btn-lg mr-2">
                                         <i class="fas fa-times"></i> Cancel
                                     </a>
-                                    <button type="submit" class="btn btn-primary btn-lg" onclick="return validateRoom()">
+                                    <button type="submit" class="btn btn-primary btn-lg" onclick="return validateRoom()"> 
                                         <i class="fas fa-save"></i> Save
                                     </button>
                                 </div>
@@ -191,5 +242,4 @@
         return true; 
     }
 </script>
-
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
