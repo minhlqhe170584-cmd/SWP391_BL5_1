@@ -36,21 +36,24 @@
             </li>
 
             <li class="menu-header">Service Management</li>
-            <li>
-                <a class="nav-link" href="${pageContext.request.contextPath}/service">
-                    <i class="fas fa-users"></i> <span>Service</span>
-                </a>
+            <li class="nav-item">
+                <a href="service" class="nav-link">Service</a>
+            </li>
+            <li class="nav-item">
+                <a href="service-category" class="nav-link">Service Category</a>
+            </li>
+            <li class="nav-item">
+                <a href="bicycle" class="nav-link">Bicycle</a>
             </li>
 
-            <li>
-                <a class="nav-link" href="${pageContext.request.contextPath}/service-category">
-                    <i class="fas fa-users"></i> <span>Service Category</span>
+            <li class="nav-item">
+                <a href="foods" class="nav-link">
+                    <i class="fas fa-utensils nav-icon"></i> <p>Food</p>
                 </a>
             </li>
-
-            <li>
-                <a class="nav-link" href="${pageContext.request.contextPath}/bicycle">
-                    <i class="fas fa-users"></i> <span>Bicycle</span>
+            <li class="nav-item">
+                <a href="drink-manager" class="nav-link">
+                    <i class="fas fa-cocktail nav-icon"></i> <p>Drink</p>
                 </a>
             </li>
 

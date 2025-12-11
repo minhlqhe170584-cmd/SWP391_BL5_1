@@ -314,4 +314,186 @@ WHERE bike_id = 1;
 INSERT INTO ServiceInvoices(order_id, final_amount, status)
 VALUES (1, 100000, 'Paid');
 GO
+USE [SmartHotelDB]
+GO
 
+/* ============================================================
+   PHẦN 1: CẤU TRÚC LẠI BẢNG (RE-DESIGN)
+   Để Food_ID và Drink_ID tự chạy từ 1, chúng cần là IDENTITY riêng.
+============================================================ */
+
+-- 1. Xóa bảng cũ
+IF OBJECT_ID('Foods', 'U') IS NOT NULL DROP TABLE Foods;
+IF OBJECT_ID('Drinks', 'U') IS NOT NULL DROP TABLE Drinks;
+
+-- 2. Dọn dẹp bảng Services (Xóa Food/Drink cũ, giữ lại Xe Đạp)
+DELETE FROM Services 
+WHERE category_id IN (
+    SELECT category_id FROM ServiceCategories 
+    WHERE category_name IN ('Food', 'Drink')
+);
+
+-- 3. Tạo bảng FOODS (Cấu trúc mới)
+CREATE TABLE Foods (
+    food_id INT IDENTITY(1,1) PRIMARY KEY, -- Tự động tăng từ 1
+    service_id INT NOT NULL,               -- Khóa ngoại trỏ về Services
+    food_name NVARCHAR(100) NOT NULL,
+    price DECIMAL(18,0) DEFAULT 0,
+    description NVARCHAR(MAX),
+    is_vegetarian BIT DEFAULT 0,
+    
+    CONSTRAINT FK_Foods_Services FOREIGN KEY (service_id) REFERENCES Services(service_id)
+);
+
+-- 4. Tạo bảng DRINKS (Cấu trúc mới)
+CREATE TABLE Drinks (
+    drink_id INT IDENTITY(1,1) PRIMARY KEY, -- Tự động tăng từ 1
+    service_id INT NOT NULL,                -- Khóa ngoại trỏ về Services
+    drink_name NVARCHAR(100) NOT NULL,
+    price DECIMAL(18,0) DEFAULT 0,
+    description NVARCHAR(MAX),
+    volume_ml INT,
+
+    CONSTRAINT FK_Drinks_Services FOREIGN KEY (service_id) REFERENCES Services(service_id)
+);
+
+-- 5. Chỉnh lại bộ đếm cho Services (Nối đuôi Xe Đạp)
+DECLARE @MaxID INT = (SELECT ISNULL(MAX(service_id), 0) FROM Services);
+DBCC CHECKIDENT ('Services', RESEED, @MaxID);
+GO
+
+/* ============================================================
+   PHẦN 2: THÊM 20 DỮ LIỆU MẪU
+   Lúc này Food_id và Drink_id sẽ tự động chạy từ 1.
+============================================================ */
+BEGIN
+    -- Đảm bảo Category tồn tại
+    IF NOT EXISTS (SELECT * FROM ServiceCategories WHERE category_name = 'Food')
+        INSERT INTO ServiceCategories(category_name, description) VALUES ('Food', N'Đồ ăn');
+    IF NOT EXISTS (SELECT * FROM ServiceCategories WHERE category_name = 'Drink')
+        INSERT INTO ServiceCategories(category_name, description) VALUES ('Drink', N'Đồ uống');
+
+    DECLARE @FoodCat INT = (SELECT category_id FROM ServiceCategories WHERE category_name = 'Food');
+    DECLARE @DrinkCat INT = (SELECT category_id FROM ServiceCategories WHERE category_name = 'Drink');
+    DECLARE @NewServiceID INT; 
+
+    -- ==================== 10 MÓN ĂN (FOODS) ====================
+    -- ID Food sẽ tự nhảy: 1, 2, 3...
+    
+    -- 1
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/pho.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Phở Bò', 65000, N'Bò tái nạm', 0);
+
+    -- 2
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/comtam.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Cơm Tấm', 55000, N'Sườn bì chả', 0);
+
+    -- 3
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/buncha.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Bún Chả', 60000, N'Hà Nội gốc', 0);
+
+    -- 4
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/bunbo.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Bún Bò Huế', 65000, N'Giò heo', 0);
+
+    -- 5
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/mixao.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Mì Xào Giòn', 85000, N'Hải sản', 0);
+
+    -- 6
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/pizza.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Pizza Bò', 120000, N'Size M', 0);
+
+    -- 7
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/burger.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Burger Gà', 90000, N'Cay', 0);
+
+    -- 8
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/salad.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Salad Nga', 50000, N'Mayonnaise', 1);
+
+    -- 9
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/steak.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Beefsteak', 250000, N'Sốt tiêu', 0);
+
+    -- 10
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/soup.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Súp Cua', 45000, N'Trứng bắc thảo', 0);
+
+
+    -- ==================== 10 ĐỒ UỐNG (DRINKS) ====================
+    -- ID Drink sẽ tự nhảy: 1, 2, 3...
+
+    -- 1
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/coke.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Coca Cola', 20000, 330);
+
+    -- 2
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/pepsi.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Pepsi', 20000, 330);
+
+    -- 3
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/water.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Lavie', 15000, 500);
+
+    -- 4
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/tiger.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Tiger Beer', 30000, 330);
+
+    -- 5
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/heineken.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Heineken', 35000, 330);
+
+    -- 6
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/coffee.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Cà Phê Đen', 25000, 200);
+
+    -- 7
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/bacxiu.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Bạc Xỉu', 35000, 200);
+
+    -- 8
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/orange.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Cam Vắt', 45000, 300);
+
+    -- 9
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/sinhto.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Sinh Tố Dâu', 50000, 350);
+
+    -- 10
+    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/tea.jpg', 1);
+    SET @NewServiceID = SCOPE_IDENTITY();
+    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Trà Đào', 40000, 400);
+END
+GO
+
+/* ============================================================
+   PHẦN 3: KIỂM TRA LẠI (SẼ THẤY FOOD/DRINK BẮT ĐẦU TỪ 1)
+============================================================ */
+-- Xem bảng Foods: food_id sẽ là 1, 2, 3...
+SELECT * FROM Foods;
+
+-- Xem bảng Drinks: drink_id sẽ là 1, 2, 3...
+SELECT * FROM Drinks;
+
+-- Xem bảng Services: service_id vẫn tăng nối tiếp xe đạp
+SELECT * FROM Services;
