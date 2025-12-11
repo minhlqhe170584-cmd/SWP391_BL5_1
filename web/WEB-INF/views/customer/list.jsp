@@ -105,13 +105,13 @@
                                                     <c:choose>
                                                         <c:when test="${c.isActive}">
                                                             <button type="submit" name="action" value="deactive" class="btn btn-danger btn-sm" 
-                                                                    onclick="return confirm('Are you sure you want to active this customer?')" title="Deactive">
+                                                                    onclick="return confirm('Are you sure you want to deactive this customer?')" title="Deactive">
                                                                 <i class="fas fa-lock"></i>
                                                             </button>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <button type="submit" name="action" value="active" class="btn btn-success btn-sm" 
-                                                                    onclick="return confirm('Are you sure you want to deactive this customer?')" title="Active">
+                                                                    onclick="return confirm('Are you sure you want to active this customer?')" title="Active">
                                                                 <i class="fas fa-unlock"></i>
                                                             </button>
                                                         </c:otherwise>

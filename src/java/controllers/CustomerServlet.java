@@ -165,11 +165,13 @@ private final CustomerDAO customerDAO = new CustomerDAO(); // Or use Dependency 
                 errors.add(errorMessage);
             }
         }
+        Customer cus = customerDAO.getCustomerById(Integer.parseInt(id));
+        if(customerDAO.checkEmailExist(email) && !cus.getEmail().equals(email)){
+            errors.add("Provided email has already existed in the system");
+        }
          
         if (!errors.isEmpty()) {
         request.getSession().setAttribute("errorMessage", String.join(", ", errors));
-        
-        // Preserve form data
         Customer customer = new Customer();
         customer.setCustomerId(customerId);
         customer.setFullName(fullName);
@@ -188,13 +190,6 @@ private final CustomerDAO customerDAO = new CustomerDAO(); // Or use Dependency 
         customer.setEmail(email);
         customer.setPhone(phone);
         customer.setPassword(password);
-        
-//        if (!errors.isEmpty()) {
-//        request.setAttribute("customer", customer);
-//        request.getSession().setAttribute("errorMessage", String.join(", ", errors));
-//        request.getRequestDispatcher("/WEB-INF/views/customer/detail.jsp").forward(request, response);  
-//        return;
-//        }
         
         try{
         customerDAO.updateCustomer(customer);
