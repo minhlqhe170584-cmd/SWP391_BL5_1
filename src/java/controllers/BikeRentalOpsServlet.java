@@ -50,10 +50,9 @@ public class BikeRentalOpsServlet extends HttpServlet {
                     response.sendRedirect("bike-ops?view=pending&error=NoBikeSelected");
                 }
             } else if ("return".equals(action)) {
-                // Nhận thêm payment method từ form
                 String paymentMethod = request.getParameter("paymentMethod");
                 if (paymentMethod == null || paymentMethod.isEmpty()) {
-                    paymentMethod = "Cash"; // Mặc định nếu lỗi
+                    paymentMethod = "Cash";
                 }
                 
                 dao.returnBikesAndPay(orderId, paymentMethod);

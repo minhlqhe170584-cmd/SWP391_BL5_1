@@ -198,7 +198,6 @@ public class BikeTransactionDAO extends DBContext {
             psRental.executeBatch();
             psBike.executeBatch();
 
-            // TẠO HÓA ĐƠN LÚC GIAO XE (UNPAID)
             PreparedStatement psInv = conn.prepareStatement("INSERT INTO ServiceInvoices (order_id, created_at, final_amount, status) VALUES (?, GETDATE(), ?, 'Unpaid')");
             psInv.setInt(1, orderId);
             psInv.setDouble(2, amount);
@@ -216,7 +215,6 @@ public class BikeTransactionDAO extends DBContext {
         }
     }
 
-    // UPDATE LẠI HÀM NÀY ĐỂ NHẬN PAYMENT METHOD
     public void returnBikesAndPay(int orderId, String paymentMethod) {
         Connection conn = null;
         try {
@@ -231,7 +229,6 @@ public class BikeTransactionDAO extends DBContext {
             psBike.setInt(1, orderId);
             psBike.executeUpdate();
 
-            // UPDATE INVOICE: THÀNH PAID VÀ LƯU PHƯƠNG THỨC THANH TOÁN
             PreparedStatement psInv = conn.prepareStatement("UPDATE ServiceInvoices SET status = 'Paid', payment_method = ? WHERE order_id = ?");
             psInv.setString(1, paymentMethod);
             psInv.setInt(2, orderId);
