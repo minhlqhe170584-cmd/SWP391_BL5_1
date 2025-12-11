@@ -1,35 +1,12 @@
 <%-- 
     Document   : navbar
-    Description: Menu chuẩn (Sử dụng URL /listRooms)
+    Description: Menu PC (Đã sửa: Dịch chuyển sang phía bên Phải)
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<div class="offcanvas-menu-overlay"></div>
-<div class="canvas-open"><i class="icon_menu"></i></div>
-<div class="offcanvas-menu-wrapper">
-    <div class="canvas-close"><i class="icon_close"></i></div>
-    <div class="header-configure-area">
-        <a href="${pageContext.request.contextPath}/listRooms" class="bk-btn">Đặt Phòng Ngay</a>
-    </div>
-    <nav class="mainmenu mobile-menu">
-        <ul id="mobile-nav-list">
-            <li><a href="${pageContext.request.contextPath}/home">Trang chủ</a></li>
-            
-            <li><a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a></li>
-            
-            <li><a href="${pageContext.request.contextPath}/service">Dịch Vụ</a></li>
-            <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
-            
-            <c:if test="${sessionScope.USER == null}">
-                <li><a href="${pageContext.request.contextPath}/login">Đăng nhập</a></li>
-            </c:if>
-        </ul>
-    </nav>
-    <div id="mobile-menu-wrap"></div>
-</div>
-
 <header class="header-section header-normal">
+    
     <div class="top-nav">
         <div class="container">
             <div class="row">
@@ -45,11 +22,12 @@
                             <a href="#"><i class="fa fa-facebook"></i></a>
                             <a href="#"><i class="fa fa-instagram"></i></a>
                         </div>
+                        
                         <a href="${pageContext.request.contextPath}/listRooms" class="bk-btn">Đặt Phòng Ngay</a>
                         
                         <div class="language-option">
                             <c:choose>
-                                <c:when test="${sessionScope.USER == null && sessionScope.CURRENT_ROOM == null}">
+                                <c:when test="${sessionScope.USER == null}">
                                     <span class="text-dark" onclick="window.location.href='${pageContext.request.contextPath}/login'" style="cursor: pointer;">
                                         <i class="fa fa-user"></i> Đăng nhập
                                     </span>
@@ -57,8 +35,9 @@
                                 <c:otherwise>
                                     <span class="text-warning font-weight-bold">
                                         <i class="fa fa-user-circle"></i> 
-                                        <c:if test="${sessionScope.USER != null}">${sessionScope.USER.fullName}</c:if>
-                                        <c:if test="${sessionScope.CURRENT_ROOM != null}">Phòng ${sessionScope.CURRENT_ROOM.roomNumber}</c:if>
+                                        <c:if test="${sessionScope.ROLE == 'CUSTOMER'}">${sessionScope.USER.fullName}</c:if>
+                                        <c:if test="${sessionScope.ROLE == 'STAFF'}">${sessionScope.USER.fullName} (NV)</c:if>
+                                        <c:if test="${sessionScope.ROLE == 'ROOM'}">Phòng ${sessionScope.USER.roomNumber}</c:if>
                                     </span>
                                     <div class="flag-dropdown">
                                         <ul>
@@ -87,13 +66,24 @@
                 <div class="col-lg-10">
                     <div class="nav-menu">
                         <nav class="mainmenu">
-                            <ul class="text-right" id="pc-nav-list">
+                            
+                            <ul class="text-right" id="pc-nav-list"> 
+                                
                                 <li><a href="${pageContext.request.contextPath}/home">Trang chủ</a></li>
-                                
                                 <li><a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a></li>
-                                
                                 <li><a href="${pageContext.request.contextPath}/services">Dịch Vụ</a></li>
                                 <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
+
+                                <c:if test="${sessionScope.USER != null}">
+                                    <c:choose>
+                                        <c:when test="${sessionScope.ROLE == 'STAFF'}">
+                                            <li><a href="${pageContext.request.contextPath}/staffs">Quản Trị</a></li>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <li><a href="${pageContext.request.contextPath}/profile">Hồ Sơ</a></li>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:if>
                             </ul>
                         </nav>
                     </div>
@@ -106,21 +96,16 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var currentUrl = window.location.pathname; 
+        var menuItems = document.querySelectorAll('#pc-nav-list li a');
         
-        function setActiveMenu(listId) {
-            var menuItems = document.querySelectorAll('#' + listId + ' li a');
-            menuItems.forEach(function(link) {
-                var linkHref = link.getAttribute('href');
-                // Nếu URL chứa link (ví dụ URL /SWP/listRooms chứa link /SWP/listRooms)
-                if (linkHref && currentUrl.includes(linkHref) && linkHref.length > 2) {
-                    link.parentElement.classList.add('active');
-                }
-                else if (currentUrl.endsWith('/home') && linkHref.endsWith('/home')) {
-                    link.parentElement.classList.add('active');
-                }
-            });
-        }
-        setActiveMenu('pc-nav-list');
-        setActiveMenu('mobile-nav-list');
+        menuItems.forEach(function(link) {
+            var linkHref = link.getAttribute('href');
+            if (linkHref && currentUrl.includes(linkHref) && linkHref.length > 2) {
+                link.parentElement.classList.add('active');
+            } 
+            else if (currentUrl.endsWith('/home') && linkHref.endsWith('/home')) {
+                link.parentElement.classList.add('active');
+            }
+        });
     });
 </script>
