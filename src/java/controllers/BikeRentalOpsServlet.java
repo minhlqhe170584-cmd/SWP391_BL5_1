@@ -67,11 +67,7 @@ public class BikeRentalOpsServlet extends HttpServlet {
             } else if ("return".equals(action)) {
                 String paymentMethod = request.getParameter("paymentMethod");
                 if (paymentMethod == null || paymentMethod.isEmpty()) {
-<<<<<<< Updated upstream
-                    paymentMethod = "Cash";
-=======
                     paymentMethod = "Cash"; 
->>>>>>> Stashed changes
                 }
                 
                 dao.returnBikesAndPay(orderId, paymentMethod);
