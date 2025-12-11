@@ -90,10 +90,10 @@ public class RoomServlet extends HttpServlet {
                                 String msg;
                                 if ("Maintenance".equals(room.getStatus())) {
                                     newStatus = "Available"; 
-                                    msg = "Unbanned room " + room.getRoomNumber() + ". Status set to Available.";
+                                    msg = "Unlocked room " + room.getRoomNumber() + ". Status set to Available.";
                                 } else {
                                     newStatus = "Maintenance"; 
-                                    msg = "Banned room " + room.getRoomNumber() + ". Status set to Maintenance.";
+                                    msg = "Locked room " + room.getRoomNumber() + ". Status set to Maintenance.";
                                 }
                                 roomDAO.updateRoomStatus(id, newStatus);
                                 request.getSession().setAttribute("successMessage", msg);
@@ -116,7 +116,7 @@ public class RoomServlet extends HttpServlet {
                             
                             request.setAttribute("room", room); 
                             request.setAttribute("listType", listType); 
-                            request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
+                            request.getRequestDispatcher("/WEB-INF/views/room/room-edit.jsp").forward(request, response);
                         } catch (NumberFormatException e) {
                             response.sendRedirect("rooms?action=LIST");
                         }
@@ -130,7 +130,7 @@ public class RoomServlet extends HttpServlet {
                     List<models.RoomType> listTypeNew = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listTypeNew);
                     // Chuyển sang form rỗng
-                    request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
                     break;    
 
                 // === 4. CHỨC NĂNG XEM CHI TIẾT ===
@@ -325,7 +325,7 @@ public class RoomServlet extends HttpServlet {
                         request.setAttribute("error", error);
                         request.setAttribute("room", room); // Gửi lại dữ liệu vừa nhập để user không phải nhập lại
                         request.setAttribute("listType", roomDAO.getAllRoomTypes()); // Gửi lại dropdown
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
+                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit.jsp").forward(request, response);
                         return; // Dừng xử lý, không chạy code update bên dưới
                     }
                     // ----------------------------
@@ -381,7 +381,7 @@ public class RoomServlet extends HttpServlet {
                         request.setAttribute("error", errorCreate);
                         request.setAttribute("room", roomError); // Giữ lại dữ liệu đã nhập
                         request.setAttribute("listType", roomDAO.getAllRoomTypes()); // Gửi lại dropdown
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
+                        request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
                         return;
                     }
                     // ----------------------------

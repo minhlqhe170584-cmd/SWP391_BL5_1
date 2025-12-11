@@ -10,10 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import models.Room;
 import models.RoomType;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal; 
 
 /**
  *
@@ -54,7 +52,7 @@ public class RoomDAO extends DBContext {
     public List<Room> getAllRooms() {
         List<Room> roomList = new ArrayList<>();
 
-        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, "
+        String sql = "SELECT r.room_id, r.room_number, r.room_status, r.room_password, r.is_active_login, r.type_id, "
                 + "t.type_name "
                 + "FROM Rooms r "
                 + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
@@ -68,7 +66,7 @@ public class RoomDAO extends DBContext {
                 Room room = new Room();
                 room.setRoomId(rs.getInt("room_id"));
                 room.setRoomNumber(rs.getString("room_number"));
-                room.setStatus(rs.getString("status"));
+                room.setStatus(rs.getString("room_status"));
                 room.setRoomPassword(rs.getString("room_password"));
                 room.setActiveLogin(rs.getBoolean("is_active_login"));
                 room.setTypeId(rs.getInt("type_id"));
@@ -105,7 +103,7 @@ public class RoomDAO extends DBContext {
     // 2. Hàm lấy danh sách phòng theo trang (Mỗi trang 5 phòng)
     public List<Room> pagingRooms(int index) {
         List<Room> list = new ArrayList<>();
-        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name "
+        String sql = "SELECT r.room_id, r.room_number, r.room_status, r.room_password, r.is_active_login, r.type_id, t.type_name "
                 + "FROM Rooms r "
                 + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
                 + "ORDER BY r.room_number ASC "
@@ -120,7 +118,7 @@ public class RoomDAO extends DBContext {
                 Room room = new Room();
                 room.setRoomId(rs.getInt("room_id"));
                 room.setRoomNumber(rs.getString("room_number"));
-                room.setStatus(rs.getString("status"));
+                room.setStatus(rs.getString("room_status"));
                 room.setActiveLogin(rs.getBoolean("is_active_login"));
                 room.setTypeId(rs.getInt("type_id"));
 
@@ -140,7 +138,7 @@ public class RoomDAO extends DBContext {
     // Hàm tìm kiếm theo số phòng
     public List<Room> searchRoomsByNumber(String keyword) {
         List<Room> list = new ArrayList<>();
-        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, t.type_name "
+        String sql = "SELECT r.room_id, r.room_number, r.room_status, r.room_password, r.is_active_login, r.type_id, t.type_name "
                 + "FROM Rooms r "
                 + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
                 + "WHERE r.room_number LIKE ? "
@@ -155,7 +153,7 @@ public class RoomDAO extends DBContext {
                 Room room = new Room();
                 room.setRoomId(rs.getInt("room_id"));
                 room.setRoomNumber(rs.getString("room_number"));
-                room.setStatus(rs.getString("status"));
+                room.setStatus(rs.getString("room_status"));
                 room.setActiveLogin(rs.getBoolean("is_active_login"));
                 room.setTypeId(rs.getInt("type_id"));
 
@@ -177,7 +175,7 @@ public class RoomDAO extends DBContext {
         List<Room> list = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder(
-                "SELECT r.room_id, r.room_number, r.status, r.is_active_login, r.type_id, t.type_name "
+                "SELECT r.room_id, r.room_number, r.room_status, r.is_active_login, r.type_id, t.type_name "
                 + "FROM Rooms r "
                 + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
                 + "WHERE 1=1 ");
@@ -196,7 +194,7 @@ public class RoomDAO extends DBContext {
         }
         // 3. Status
         if (status != null && !status.isEmpty()) {
-            sql.append(" AND r.status = ? ");
+            sql.append(" AND r.room_status = ? ");
             params.add(status);
         }
         // 4. Active
@@ -204,7 +202,7 @@ public class RoomDAO extends DBContext {
             sql.append(" AND r.is_active_login = ? ");
             params.add(Boolean.parseBoolean(active));
         }
-
+        
         // 5. Logic lọc tầng (ĐÃ SỬA: Dùng SUBSTRING thay vì LIKE để tránh lỗi 1 -> 10, 11)
         if (floor != null && !floor.isEmpty()) {
             // Logic: Cắt bỏ 2 ký tự cuối để lấy số tầng, so sánh chính xác
@@ -225,7 +223,7 @@ public class RoomDAO extends DBContext {
                     Room room = new Room();
                     room.setRoomId(rs.getInt("room_id"));
                     room.setRoomNumber(rs.getString("room_number"));
-                    room.setStatus(rs.getString("status"));
+                    room.setStatus(rs.getString("room_status"));
                     room.setActiveLogin(rs.getBoolean("is_active_login"));
                     room.setTypeId(rs.getInt("type_id"));
 
@@ -285,7 +283,7 @@ public class RoomDAO extends DBContext {
 
     //Phần xử lý Room Details
     public Room getRoomById(int id) {
-        String sql = "SELECT r.room_id, r.room_number, r.status, r.room_password, r.is_active_login, r.type_id, "
+        String sql = "SELECT r.room_id, r.room_number, r.room_status, r.room_password, r.is_active_login, r.type_id, "
                 + "t.type_name, t.capacity, t.base_price_weekday, t.base_price_weekend, t.description "
                 + "FROM Rooms r "
                 + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
@@ -298,7 +296,7 @@ public class RoomDAO extends DBContext {
                     Room room = new Room();
                     room.setRoomId(rs.getInt("room_id"));
                     room.setRoomNumber(rs.getString("room_number"));
-                    room.setStatus(rs.getString("status"));
+                    room.setStatus(rs.getString("room_status"));
                     room.setRoomPassword(rs.getString("room_password"));
                     room.setActiveLogin(rs.getBoolean("is_active_login"));
                     room.setTypeId(rs.getInt("type_id"));
@@ -324,7 +322,7 @@ public class RoomDAO extends DBContext {
 
     //Phần xử lý Update Room
     public void updateRoom(Room room) {
-        String sql = "UPDATE Rooms SET room_number = ?, type_id = ?, status = ?, room_password = ?, is_active_login = ? WHERE room_id = ?";
+        String sql = "UPDATE Rooms SET room_number = ?, type_id = ?, room_status = ?, room_password = ?, is_active_login = ? WHERE room_id = ?";
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setString(1, room.getRoomNumber());
@@ -359,7 +357,7 @@ public class RoomDAO extends DBContext {
 
     //Phần Ban Room cấm phòng
     public void updateRoomStatus(int roomId, String newStatus) {
-        String sql = "UPDATE Rooms SET status = ? WHERE room_id = ?";
+        String sql = "UPDATE Rooms SET room_status = ? WHERE room_id = ?";
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setString(1, newStatus);
             st.setInt(2, roomId);
@@ -371,7 +369,7 @@ public class RoomDAO extends DBContext {
 
     //Phần xử lý Insert phòng(Thêm phòng mới)
     public void insertRoom(Room room) {
-        String sql = "INSERT INTO Rooms (room_number, type_id, status, room_password, is_active_login) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Rooms (room_number, type_id, room_status, room_password, is_active_login) VALUES (?, ?, ?, ?, ?)";
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setString(1, room.getRoomNumber());

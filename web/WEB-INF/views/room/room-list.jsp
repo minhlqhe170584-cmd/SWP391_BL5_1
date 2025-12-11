@@ -81,16 +81,7 @@
                                 </select>
                             </div>
 
-                            <div class="form-group col-md-2">
-                                <label>Status</label>
-                                <select name="status" class="form-control">
-                                    <option value="">All Status</option>
-                                    <option value="Available" ${currentStatus == 'Available' ? 'selected' : ''}>Available</option>
-                                    <option value="Occupied" ${currentStatus == 'Occupied' ? 'selected' : ''}>Occupied</option>
-                                    <option value="Dirty" ${currentStatus == 'Dirty' ? 'selected' : ''}>Dirty</option>
-                                    <option value="Maintenance" ${currentStatus == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
-                                </select>
-                            </div>
+
 
                             <div class="form-group col-md-2">
                                 <label>Active Login</label>
@@ -115,7 +106,6 @@
                                 <tr>
                                     <th>Room No.</th>
                                     <th>Room Type</th>
-                                    <th hidden="">Status</th>
                                     <th class="text-center">Active Login</th>
                                     <th hidden="">Price (Day)</th>
                                     <th>Action</th>
@@ -132,25 +122,7 @@
                                     <tr>
                                         <td><strong>${room.roomNumber}</strong></td>
                                         <td>${room.roomType.typeName}</td>
-                                        <td hidden="">
-                                            <c:choose>
-                                                <c:when test="${room.status == 'Available'}">
-                                                    <div class="badge badge-success">Available</div>
-                                                </c:when>
-                                                <c:when test="${room.status == 'Occupied'}">
-                                                    <div class="badge badge-danger">Occupied</div>
-                                                </c:when>
-                                                <c:when test="${room.status == 'Maintenance'}">
-                                                    <div class="badge badge-warning">Maintenance</div>
-                                                </c:when>
-                                                <c:when test="${room.status == 'Dirty'}">
-                                                    <div class="badge badge-dark">Dirty</div>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="badge badge-secondary">${room.status}</div>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </td>
+
 
                                         <td class="text-center">
                                             <c:choose>
@@ -180,7 +152,7 @@
                                                         <a href="rooms?action=BAN&id=${room.roomId}" 
                                                            class="btn btn-success btn-sm mr-2" 
                                                            onclick="confirmBan(event, '${room.roomNumber}', 'unban', this.href)"
-                                                           title="Unban">
+                                                           title="Unlock">
                                                             <i class="fas fa-unlock"></i>
                                                         </a>
                                                     </c:when>
@@ -188,18 +160,13 @@
                                                         <a href="rooms?action=BAN&id=${room.roomId}" 
                                                            class="btn btn-secondary btn-sm mr-2" 
                                                            onclick="confirmBan(event, '${room.roomNumber}', 'ban', this.href)"
-                                                           title="Ban">
-                                                            <i class="fas fa-ban"></i>
+                                                           title="Lock">
+                                                            <i class="fas fa-lock"></i>
                                                         </a>
                                                     </c:otherwise>
                                                 </c:choose>
 
-                                                <a href="rooms?action=DELETE&id=${room.roomId}" 
-                                                   class="btn btn-danger btn-sm" 
-                                                   onclick="confirmDelete(event, '${room.roomNumber}', this.href)"
-                                                   title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+
                                             </div>
                                         </td>
                                     </tr>
@@ -265,12 +232,12 @@
                                                            let confirmColor = "";
 
                                                            if (action === 'ban') {
-                                                               titleInfo = "Ban Room " + roomNumber + "?";
+                                                               titleInfo = "Lock Room " + roomNumber + "?";
                                                                textInfo = "The status will be changed to Maintenance!";
                                                                iconType = "warning";
                                                                confirmColor = "#6c757d";
                                                            } else {
-                                                               titleInfo = "Unban Room " + roomNumber + "?";
+                                                               titleInfo = "Unlock Room " + roomNumber + "?";
                                                                textInfo = "The room will become Available again!";
                                                                iconType = "question";
                                                                confirmColor = "#28a745";
@@ -292,20 +259,5 @@
                                                            });
                                                        }
 
-                                                       function confirmDelete(event, roomNumber, link) {
-                                                           event.preventDefault();
-                                                           Swal.fire({
-                                                               title: 'Are you sure?',
-                                                               text: "Delete Room " + roomNumber + "? You won't be able to revert this!",
-                                                               icon: 'warning',
-                                                               showCancelButton: true,
-                                                               confirmButtonColor: '#d33',
-                                                               cancelButtonColor: '#3085d6',
-                                                               confirmButtonText: 'Yes, delete it!'
-                                                           }).then((result) => {
-                                                               if (result.isConfirmed) {
-                                                                   window.location.href = link;
-                                                               }
-                                                           });
-                                                       }
+
 </script>
