@@ -80,7 +80,7 @@ public class RoomServlet extends HttpServlet {
                 case "NEW":
                     List<models.RoomType> listTypeNew = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listTypeNew);
-                    request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
                     break;    
 
                 case "VIEW":
@@ -216,7 +216,7 @@ public class RoomServlet extends HttpServlet {
                         request.setAttribute("error", error);
                         request.setAttribute("room", room); 
                         request.setAttribute("listType", roomDAO.getAllRoomTypes()); 
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
+                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit.jsp").forward(request, response);
                         return; 
                     }
                     
@@ -255,7 +255,7 @@ public class RoomServlet extends HttpServlet {
                         request.setAttribute("error", errorCreate);
                         request.setAttribute("room", roomError); 
                         request.setAttribute("listType", roomDAO.getAllRoomTypes()); 
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
+                        request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
                         return;
                     }
 
