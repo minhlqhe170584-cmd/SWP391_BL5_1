@@ -80,7 +80,7 @@ public class RoomServlet extends HttpServlet {
                 case "NEW":
                     List<models.RoomType> listTypeNew = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listTypeNew);
-                    request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
                     break;    
 
                 case "VIEW":
