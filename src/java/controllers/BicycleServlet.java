@@ -48,6 +48,7 @@ public class BicycleServlet extends HttpServlet {
         String sort = request.getParameter("sort");
         String statusFilter = request.getParameter("status");
         String pageRaw = request.getParameter("page");
+        String view = request.getParameter("view");
 
         int pageIndex = 1;
         int pageSize = 10;
@@ -61,14 +62,15 @@ public class BicycleServlet extends HttpServlet {
             }
         }
 
-        ArrayList<Bicycle> list = bicycleDAO.search(search, statusFilter, sort, pageIndex, pageSize);
-        int totalRecords = bicycleDAO.countSearch(search, statusFilter);
+        ArrayList<Bicycle> list = bicycleDAO.search(search, statusFilter, view, sort, pageIndex, pageSize);
+        int totalRecords = bicycleDAO.countSearch(search, statusFilter, view);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
         request.setAttribute("list", list);
         request.setAttribute("search", search);
         request.setAttribute("sort", sort);
         request.setAttribute("status", statusFilter);
+        request.setAttribute("view", view);
         request.setAttribute("page", pageIndex);
         request.setAttribute("totalPages", totalPages);
 
@@ -108,12 +110,13 @@ public class BicycleServlet extends HttpServlet {
             try {
                 int id = Integer.parseInt(idRaw);
                 bicycleDAO.toggleDeleteStatus(id);
-                session.setAttribute("message", "Bicycle status toggled successfully.");
+                session.setAttribute("message", "Bicycle status changed successfully.");
             } catch (Exception e) {
                 session.setAttribute("message", "Error updating bicycle status: " + e.getMessage());
             }
         }
-        response.sendRedirect("bicycle");
+        String currentView = request.getParameter("view");
+        response.sendRedirect("bicycle" + (currentView != null ? "?view=" + currentView : ""));
     }
 
     @Override

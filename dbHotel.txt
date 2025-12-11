@@ -48,9 +48,6 @@ CREATE TABLE Customers (
  II. PHÒNG & BOOKING
 ============================================================ */
 
-DROP TABLE IF EXISTS RoomTypes;
-GO
-
 CREATE TABLE RoomTypes (
     type_id INT IDENTITY(1,1) PRIMARY KEY,
     type_name NVARCHAR(50) NOT NULL,
@@ -146,7 +143,10 @@ CREATE TABLE ServiceOrders (
     order_date DATETIME DEFAULT GETDATE(),
     total_amount DECIMAL(18,0) DEFAULT 0,
     status NVARCHAR(20) DEFAULT 'Pending',
-    note NVARCHAR(MAX)
+    note NVARCHAR(MAX),
+    
+    booking_start_date DATETIME NULL,
+    booking_end_date DATETIME NULL
 );
 
 CREATE TABLE OrderDetails (

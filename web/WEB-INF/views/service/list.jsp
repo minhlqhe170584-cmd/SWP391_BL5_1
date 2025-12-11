@@ -72,7 +72,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link ${view == 'deleted' ? 'active' : ''} text-danger" href="service?view=deleted">
-                                <i class="fas fa-trash-alt"></i> Trash Bin
+                                <i class="fas fa-trash-alt"></i> Soft Deleted
                             </a>
                         </li>
                     </ul>
