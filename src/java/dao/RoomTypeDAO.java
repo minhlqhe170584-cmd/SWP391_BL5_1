@@ -73,26 +73,40 @@ public class RoomTypeDAO extends DBContext { // Giả sử bạn kế thừa DBC
         return null;
     }
 
+
+
     // 3. THÊM MỚI LOẠI PHÒNG (Cho chức năng Add)
     public void insertRoomType(RoomType rt) {
         String sql = "INSERT INTO RoomTypes (type_name, capacity, description, image_url, base_price_weekday, base_price_weekend, is_active) "
                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            st.setString(1, rt.getTypeName());
+        
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            
+            // 1. type_name (NVARCHAR) - Lưu tiếng Việt
+            st.setString(1, rt.getTypeName()); 
+            
+            // 2. capacity (INT)
             st.setInt(2, rt.getCapacity());
+            
+            // 3. description (NVARCHAR) - Có thể null
             st.setString(3, rt.getDescription());
+            
+            // 4. image_url (VARCHAR/NVARCHAR) - Có thể null
             st.setString(4, rt.getImageUrl());
+            
+            // 5. Giá (DECIMAL)
             st.setBigDecimal(5, rt.getBasePriceWeekday());
             st.setBigDecimal(6, rt.getBasePriceWeekend());
-            st.setBoolean(7, rt.isIsActive()); // Lưu ý getter của bạn là isIsActive
+            
+            // 6. Trạng thái (BIT)
+            st.setBoolean(7, rt.isIsActive()); 
             
             st.executeUpdate();
+            
         } catch (SQLException e) {
             System.out.println("Error insertRoomType: " + e.getMessage());
         }
     }
-
     // 4. CẬP NHẬT LOẠI PHÒNG (Cho chức năng Update)
     public void updateRoomType(RoomType rt) {
         String sql = "UPDATE RoomTypes SET type_name=?, capacity=?, description=?, image_url=?, "
@@ -114,16 +128,28 @@ public class RoomTypeDAO extends DBContext { // Giả sử bạn kế thừa DBC
         }
     }
     
-    // 5. XÓA (Hoặc ẩn) LOẠI PHÒNG
-    // Tùy logic, ở đây mình viết hàm Delete cứng, nếu bạn muốn Soft Delete (đổi active=0) thì bảo mình sửa nhé.
+    // 5. XÓA MỀM (Chuyển is_active = 0)
     public void deleteRoomType(int id) {
-        String sql = "DELETE FROM RoomTypes WHERE type_id = ?";
+        // Cũ: DELETE FROM... -> Mới: UPDATE is_active = 0
+        String sql = "UPDATE RoomTypes SET is_active = 0 WHERE type_id = ?";
         try {
              PreparedStatement st = connection.prepareStatement(sql);
              st.setInt(1, id);
              st.executeUpdate();
         } catch (SQLException e) {
              System.out.println("Error deleteRoomType: " + e.getMessage());
+        }
+    }
+
+    // 6. KHÔI PHỤC (Chuyển is_active = 1) - Thêm hàm này vào DAO
+    public void restoreRoomType(int id) {
+        String sql = "UPDATE RoomTypes SET is_active = 1 WHERE type_id = ?";
+        try {
+             PreparedStatement st = connection.prepareStatement(sql);
+             st.setInt(1, id);
+             st.executeUpdate();
+        } catch (SQLException e) {
+             System.out.println("Error restoreRoomType: " + e.getMessage());
         }
     }
 }

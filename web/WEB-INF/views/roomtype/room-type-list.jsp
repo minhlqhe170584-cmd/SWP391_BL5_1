@@ -1,9 +1,3 @@
-<%-- 
-    Document   : room-type-list
-    Created on : Dec 11, 2025, 2:11:15 PM
-    Author     : My Lap
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -112,10 +106,27 @@
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     
-                                                    <a href="room-types?action=DELETE&id=${rt.typeId}" class="btn btn-danger btn-sm" title="Delete"
-                                                       onclick="return confirm('Are you sure you want to delete this room type?');">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
+                                                    <c:choose>
+                                                        <%-- CASE 1: Đang Active -> Hiện nút Xóa mềm --%>
+                                                        <c:when test="${rt.isActive}">
+                                                            <a href="room-types?action=DELETE&id=${rt.typeId}" 
+                                                               class="btn btn-danger btn-sm" 
+                                                               title="Deactivate (Soft Delete)"
+                                                               onclick="confirmRoomTypeAction(event, '${rt.typeName}', 'delete', this.href)">
+                                                                <i class="fas fa-lock"></i>
+                                                            </a>
+                                                        </c:when>
+                                                        
+                                                        <%-- CASE 2: Đang Inactive -> Hiện nút Khôi phục --%>
+                                                        <c:otherwise>
+                                                            <a href="room-types?action=RESTORE&id=${rt.typeId}" 
+                                                               class="btn btn-success btn-sm" 
+                                                               title="Restore (Activate)"
+                                                               onclick="confirmRoomTypeAction(event, '${rt.typeName}', 'restore', this.href)">
+                                                                <i class="fas fa-unlock"></i>
+                                                            </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -138,5 +149,50 @@
         </div>
     </section>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function confirmRoomTypeAction(event, typeName, actionType, link) {
+        event.preventDefault(); // Ngăn chuyển trang ngay lập tức
+
+        let titleInfo = "";
+        let textInfo = "";
+        let iconType = "";
+        let confirmColor = "";
+        let btnText = "";
+
+        if (actionType === 'delete') {
+            // Cấu hình cho hành động XÓA (Deactivate)
+            titleInfo = "Deactivate " + typeName + "?";
+            textInfo = "This room type will be hidden from new bookings!";
+            iconType = "warning";
+            confirmColor = "#d33"; // Màu đỏ
+            btnText = "Yes";
+        } else {
+            // Cấu hình cho hành động KHÔI PHỤC (Restore)
+            titleInfo = "Restore " + typeName + "?";
+            textInfo = "This room type will be available for booking again!";
+            iconType = "question";
+            confirmColor = "#28a745"; // Màu xanh
+            btnText = "Yes";
+        }
+
+        Swal.fire({
+            title: titleInfo,
+            text: textInfo,
+            icon: iconType,
+            showCancelButton: true,
+            confirmButtonColor: confirmColor,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: btnText,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = link; // Chuyển trang nếu người dùng bấm Yes
+            }
+        });
+    }
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
