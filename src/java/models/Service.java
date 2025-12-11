@@ -23,7 +23,10 @@ public class Service {
         this.categoryId = categoryId;
         this.isDeleted = isDeleted;
     }
-
+    public Service(int serviceId, String serviceName) {
+        this.serviceId = serviceId;
+        this.serviceName = serviceName;
+    }
     public int getServiceId() {
         return serviceId;
     }
