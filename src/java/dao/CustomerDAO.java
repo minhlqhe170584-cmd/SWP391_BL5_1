@@ -312,35 +312,6 @@ public class CustomerDAO extends DBContext{
 
         return 0;
     }
-    
-    
-    public Customer checkLogin(String email, String password) {
-        // SQL: Tìm khách hàng có email, pass đúng và đang hoạt động (is_active = 1)
-        String sql = "SELECT * FROM Customers WHERE email = ? AND password = ? AND is_active = 1";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            st.setString(1, email);
-            st.setString(2, password);
-            ResultSet rs = st.executeQuery();
-            
-            if (rs.next()) {
-                Customer c = new Customer();
-                // Map đúng tên cột trong Database sang Model
-                c.setCustomerId(rs.getInt("customer_id"));
-                c.setFullName(rs.getString("full_name"));
-                c.setEmail(rs.getString("email"));
-                c.setPassword(rs.getString("password"));
-                c.setPhone(rs.getString("phone"));
-                // Các trường khác nếu cần
-                // c.setIsActive(rs.getBoolean("is_active"));
-                
-                return c;
-            }
-        } catch (SQLException e) {
-            System.out.println("Lỗi CustomerDAO: " + e.getMessage());
-        }
-        return null;
-    }
     /**
      * Kiểm tra xem Email đã tồn tại trong Database chưa
      * @param email Email cần kiểm tra
@@ -394,5 +365,65 @@ public class CustomerDAO extends DBContext{
         } catch (Exception e) {
             System.out.println("Error updatePassword: " + e.getMessage());
         }
+    }// --- 1. HÀM LOGIN (Trả về đối tượng Customer để lưu Session) ---
+    public Customer login(String email, String password) {
+        String sql = "SELECT * FROM Customers WHERE email = ? AND password = ?";
+        try {
+            // Dùng biến 'connection' có sẵn từ DBContext cũ
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, password);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                Customer c = new Customer();
+                c.setCustomerId(rs.getInt("customer_id"));
+                c.setFullName(rs.getString("full_name"));
+                c.setEmail(rs.getString("email"));
+                c.setPassword(rs.getString("password"));
+                c.setPhone(rs.getString("phone"));
+                
+                c.setIsActive(rs.getBoolean("is_active"));
+                // Quan trọng: Đóng kết nối sau khi lấy xong
+                connection.close();
+                return c;
+            }
+            
+            // Nếu không tìm thấy, cũng phải đóng kết nối
+            connection.close();
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
+
+    // --- 2. HÀM UPDATE PROFILE (Cho chức năng cập nhật) ---
+    public boolean updateProfile(Customer c) {
+        String sql = "UPDATE Customers SET full_name = ?, phone = ?, password = ? WHERE customer_id = ?";
+        
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            
+            // Dùng setNString cho tiếng Việt
+            ps.setNString(1, c.getFullName()); 
+            ps.setString(2, c.getPhone());
+            ps.setString(3, c.getPassword());
+            ps.setInt(4, c.getCustomerId());
+            
+            int rowsAffected = ps.executeUpdate();
+            
+            // Đóng kết nối
+            connection.close();
+            
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    // Nếu bạn có hàm checkLogin cũ trả về boolean, bạn có thể xóa nó đi 
+    // và dùng hàm login() ở trên thay thế là tốt nhất.
 }
