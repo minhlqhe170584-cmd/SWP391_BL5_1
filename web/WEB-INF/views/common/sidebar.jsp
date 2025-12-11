@@ -52,7 +52,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="drink-manager" class="nav-link">
+                <a href="drinks" class="nav-link">
                     <i class="fas fa-cocktail nav-icon"></i> <p>Drink</p>
                 </a>
             </li>
