@@ -7,6 +7,9 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import models.Bicycle;
+import models.ServiceOrder;
 
 @WebServlet(name = "BikeRentalOpsServlet", urlPatterns = {"/bike-ops"})
 public class BikeRentalOpsServlet extends HttpServlet {
@@ -21,8 +24,20 @@ public class BikeRentalOpsServlet extends HttpServlet {
         if (view == null) view = "pending";
 
         if ("pending".equals(view)) {
-            request.setAttribute("orders", dao.getOrdersByStatus("Pending"));
-            request.setAttribute("bikes", dao.getPhysicalBikesForHandover());
+            ArrayList<ServiceOrder> orders = dao.getOrdersByStatus("Pending");
+            request.setAttribute("orders", orders);
+            
+            if (!orders.isEmpty()) {
+                int firstServiceId = dao.getServiceIdByOrderId(orders.get(0).getOrderId());
+                if(firstServiceId > 0) {
+                    request.setAttribute("bikes", dao.getPhysicalBikesForHandover(firstServiceId));
+                } else {
+                    request.setAttribute("bikes", new ArrayList<Bicycle>());
+                }
+            } else {
+                request.setAttribute("bikes", new ArrayList<Bicycle>());
+            }
+            
         } else if ("active".equals(view)) {
             request.setAttribute("orders", dao.getOrdersByStatus("Confirmed"));
         }
@@ -52,7 +67,11 @@ public class BikeRentalOpsServlet extends HttpServlet {
             } else if ("return".equals(action)) {
                 String paymentMethod = request.getParameter("paymentMethod");
                 if (paymentMethod == null || paymentMethod.isEmpty()) {
+<<<<<<< Updated upstream
                     paymentMethod = "Cash";
+=======
+                    paymentMethod = "Cash"; 
+>>>>>>> Stashed changes
                 }
                 
                 dao.returnBikesAndPay(orderId, paymentMethod);

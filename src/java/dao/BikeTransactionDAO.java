@@ -10,20 +10,31 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import models.Bicycle;
 import models.BikeRentalOption;
+import models.Service;
 import models.ServiceOrder;
 
 public class BikeTransactionDAO extends DBContext {
 
-    public int getBikeServiceId() {
-        String sql = "SELECT service_id FROM Services WHERE service_name LIKE '%Bike%' OR service_name LIKE '%Xe đạp%'";
+    public ArrayList<Service> getAllBikeServices() {
+        ArrayList<Service> list = new ArrayList<>();
+        String sql = "SELECT * FROM Services WHERE (service_name LIKE '%Xe đạp%' OR service_name LIKE '%Bike%') AND is_active = 1 AND is_deleted = 0";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            while (rs.next()) {
+                list.add(new Service(
+                    rs.getInt("service_id"), 
+                    rs.getString("service_name"), 
+                    rs.getString("image_url"), 
+                    rs.getBoolean("is_active"), 
+                    rs.getInt("category_id"), 
+                    rs.getBoolean("is_deleted")
+                ));
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 1;
+        return list;
     }
 
     public ArrayList<BikeRentalOption> getBikeOptions(int serviceId) {
@@ -113,7 +124,7 @@ public class BikeTransactionDAO extends DBContext {
             String sqlDetail = "INSERT INTO OrderDetails (order_id, service_id, item_name, quantity, unit_price) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement psDetail = conn.prepareStatement(sqlDetail);
             psDetail.setInt(1, orderId);
-            psDetail.setInt(2, serviceId);
+            psDetail.setInt(2, serviceId); 
             psDetail.setString(3, option.getOptionName());
             psDetail.setInt(4, quantity);
             psDetail.setDouble(5, option.getPrice());
@@ -131,13 +142,13 @@ public class BikeTransactionDAO extends DBContext {
 
     public ArrayList<ServiceOrder> getOrdersByStatus(String status) {
         ArrayList<ServiceOrder> list = new ArrayList<>();
-        int bikeServiceId = getBikeServiceId();
         String sql = "SELECT o.*, r.room_number FROM ServiceOrders o LEFT JOIN Rooms r ON o.room_id = r.room_id " +
-                     "JOIN OrderDetails d ON o.order_id = d.order_id WHERE d.service_id = ? AND o.status = ?";
+                     "JOIN OrderDetails d ON o.order_id = d.order_id " + 
+                     "LEFT JOIN Services s ON d.service_id = s.service_id " +
+                     "WHERE (s.service_name LIKE '%Xe đạp%' OR s.service_name LIKE '%Bike%') AND o.status = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, bikeServiceId);
-            st.setString(2, status);
+            st.setString(1, status);
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 list.add(new ServiceOrder(
@@ -152,14 +163,13 @@ public class BikeTransactionDAO extends DBContext {
         return list;
     }
 
-    public ArrayList<Bicycle> getPhysicalBikesForHandover() {
+    public ArrayList<Bicycle> getPhysicalBikesForHandover(int serviceId) {
         ArrayList<Bicycle> list = new ArrayList<>();
-        int bikeServiceId = getBikeServiceId();
         String sql = "SELECT b.*, s.service_name FROM Bicycles b LEFT JOIN Services s ON b.service_id = s.service_id " +
                      "WHERE b.status = 'Available' AND b.service_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
-            st.setInt(1, bikeServiceId);
+            st.setInt(1, serviceId);
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 list.add(new Bicycle(
@@ -171,6 +181,19 @@ public class BikeTransactionDAO extends DBContext {
             e.printStackTrace();
         }
         return list;
+    }
+    
+    public int getServiceIdByOrderId(int orderId) {
+        String sql = "SELECT service_id FROM OrderDetails WHERE order_id = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, orderId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public void handoverBikes(int orderId, String[] bikeIds) {

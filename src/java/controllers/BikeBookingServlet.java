@@ -1,8 +1,10 @@
 package controllers;
 
 import dao.BikeTransactionDAO;
+import dao.ServiceDAO;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,27 +12,40 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import models.BikeRentalOption;
-import models.Customer; 
+import models.Service;
 
 @WebServlet(name = "BikeBookingServlet", urlPatterns = {"/book-bike"})
 public class BikeBookingServlet extends HttpServlet {
 
     private final BikeTransactionDAO dao = new BikeTransactionDAO();
+    private final ServiceDAO serviceDAO = new ServiceDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        int serviceId = 1;
-        try {
-            String serviceIdRaw = request.getParameter("serviceId");
-            if(serviceIdRaw != null) serviceId = Integer.parseInt(serviceIdRaw);
-            else serviceId = dao.getBikeServiceId(); 
-        } catch(Exception e) { serviceId = dao.getBikeServiceId(); }
+        String serviceIdRaw = request.getParameter("serviceId");
 
-        request.setAttribute("serviceId", serviceId); 
-        request.setAttribute("options", dao.getBikeOptions(serviceId));
-        request.getRequestDispatcher("/WEB-INF/views/client/bike_booking.jsp").forward(request, response);
+        if (serviceIdRaw == null || serviceIdRaw.trim().isEmpty()) {
+            ArrayList<Service> bikeServices = dao.getAllBikeServices();
+            request.setAttribute("bikeServices", bikeServices);
+            request.getRequestDispatcher("/WEB-INF/views/client/bike_list.jsp").forward(request, response);
+        } else {
+            try {
+                int serviceId = Integer.parseInt(serviceIdRaw);
+                Service service = serviceDAO.getById(serviceId);
+                
+                if (service != null) {
+                    request.setAttribute("service", service);
+                    request.setAttribute("options", dao.getBikeOptions(serviceId));
+                    request.getRequestDispatcher("/WEB-INF/views/client/bike_booking.jsp").forward(request, response);
+                } else {
+                    response.sendRedirect("book-bike"); 
+                }
+            } catch (NumberFormatException e) {
+                response.sendRedirect("book-bike");
+            }
+        }
     }
 
     @Override
@@ -39,14 +54,8 @@ public class BikeBookingServlet extends HttpServlet {
         
         HttpSession session = request.getSession();
         
-        Integer roomIdObj = (Integer) session.getAttribute("ROOM_ID");
-        
-        if (roomIdObj == null) {
-            response.sendRedirect("login.jsp");
-            return;
-        }
-        
-        int roomId = roomIdObj;
+        Integer roomId = (Integer) session.getAttribute("ROOM_ID");
+        if (roomId == null) roomId = 1; 
 
         String serviceIdRaw = request.getParameter("serviceId");
         String optionIdRaw = request.getParameter("optionId");
@@ -69,11 +78,14 @@ public class BikeBookingServlet extends HttpServlet {
             boolean success = dao.createBikeBooking(roomId, serviceId, optionId, quantity, note, start, end);
 
             if (success) {
-                request.setAttribute("message", "Booking successful!");
+                request.setAttribute("message", "Booking successful! Please come to lobby to pick up your bike.");
                 request.getRequestDispatcher("/WEB-INF/views/client/success.jsp").forward(request, response);
             } else {
+                Service service = serviceDAO.getById(serviceId);
+                request.setAttribute("service", service);
+                request.setAttribute("options", dao.getBikeOptions(serviceId));
                 request.setAttribute("errorMessage", "Not enough bikes available for this time slot.");
-                doGet(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/client/bike_booking.jsp").forward(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
