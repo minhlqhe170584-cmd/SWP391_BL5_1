@@ -27,9 +27,7 @@
                     <c:if test="${not empty sessionScope.successMessage}">
                         <div class="alert alert-success alert-dismissible show fade">
                             <div class="alert-body">
-                                <button class="close" data-dismiss="alert">
-                                    <span>&times;</span>
-                                </button>
+                                <button class="close" data-dismiss="alert"><span>&times;</span></button>
                                 <i class="fas fa-check-circle"></i> ${sessionScope.successMessage}
                             </div>
                         </div>
@@ -39,9 +37,7 @@
                     <c:if test="${not empty errorMessage}">
                         <div class="alert alert-danger alert-dismissible show fade">
                             <div class="alert-body">
-                                <button class="close" data-dismiss="alert">
-                                    <span>&times;</span>
-                                </button>
+                                <button class="close" data-dismiss="alert"><span>&times;</span></button>
                                 <i class="fas fa-exclamation-triangle"></i> ${errorMessage}
                             </div>
                         </div>
@@ -50,7 +46,7 @@
                     <form action="rooms" method="GET" class="mb-4">
                         <input type="hidden" name="action" value="LIST">
                         <div class="form-row align-items-end">
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-4">
                                 <label>Search Keyword</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -60,18 +56,17 @@
                                 </div>
                             </div>
 
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>Floor</label>
                                 <select name="floor" class="form-control">
                                     <option value="">-- All Floors --</option>
-
                                     <c:forEach var="f" items="${listFloors}">
                                         <option value="${f}" ${currentFloor == f ? 'selected' : ''}>Floor ${f}</option>
                                     </c:forEach>
                                 </select>
                             </div>
 
-                            <div class="form-group col-md-2">
+                            <div class="form-group col-md-3">
                                 <label>Type</label>
                                 <select name="typeId" class="form-control">
                                     <option value="">All Types</option>
@@ -82,29 +77,21 @@
                             </div>
 
                             <div class="form-group col-md-2">
-                                <label>Status</label>
-                                <select name="status" class="form-control">
-                                    <option value="">All Status</option>
-                                    <option value="Available" ${currentStatus == 'Available' ? 'selected' : ''}>Available</option>
-                                    <option value="Occupied" ${currentStatus == 'Occupied' ? 'selected' : ''}>Occupied</option>
-                                    <option value="Dirty" ${currentStatus == 'Dirty' ? 'selected' : ''}>Dirty</option>
-                                    <option value="Maintenance" ${currentStatus == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group col-md-2">
-                                <label>Active Login</label>
+                                <label>Login Status</label>
                                 <select name="active" class="form-control">
                                     <option value="">All</option>
-                                    <option value="true" ${currentActive == 'true' ? 'selected' : ''}>Active (Yes)</option>
-                                    <option value="false" ${currentActive == 'false' ? 'selected' : ''}>Inactive (No)</option>
+                                    <option value="true" ${currentActive == 'true' ? 'selected' : ''}>Unlocked (Active)</option>
+                                    <option value="false" ${currentActive == 'false' ? 'selected' : ''}>Locked (Inactive)</option>
                                 </select>
                             </div>
 
-                            <div class="form-group col-md-1">
-                                <button type="submit" class="btn btn-info btn-block" title="Filter Results">
-                                    <i class="fas fa-filter"></i>
+                            <div class="form-group col-md-12 text-right">
+                                <button type="submit" class="btn btn-info" title="Filter Results">
+                                    <i class="fas fa-filter"></i> Filter
                                 </button>
+                                <c:if test="${isFiltering}">
+                                    <a href="rooms?action=LIST" class="btn btn-secondary ml-2">Reset</a>
+                                </c:if>
                             </div>
                         </div>
                     </form>
@@ -115,16 +102,14 @@
                                 <tr>
                                     <th>Room No.</th>
                                     <th>Room Type</th>
-                                    <th hidden="">Status</th>
-                                    <th class="text-center">Active Login</th>
-                                    <th hidden="">Price (Day)</th>
+                                    <th class="text-center">Login Access</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:if test="${empty roomsList}">
                                     <tr>
-                                        <td colspan="6" class="text-center">No rooms found matching your criteria.</td>
+                                        <td colspan="4" class="text-center">No rooms found matching your criteria.</td>
                                     </tr>
                                 </c:if>
 
@@ -132,42 +117,21 @@
                                     <tr>
                                         <td><strong>${room.roomNumber}</strong></td>
                                         <td>${room.roomType.typeName}</td>
-                                        <td hidden="">
+                                        
+                                        <td class="text-center">
                                             <c:choose>
-                                                <c:when test="${room.status == 'Available'}">
-                                                    <div class="badge badge-success">Available</div>
-                                                </c:when>
-                                                <c:when test="${room.status == 'Occupied'}">
-                                                    <div class="badge badge-danger">Occupied</div>
-                                                </c:when>
-                                                <c:when test="${room.status == 'Maintenance'}">
-                                                    <div class="badge badge-warning">Maintenance</div>
-                                                </c:when>
-                                                <c:when test="${room.status == 'Dirty'}">
-                                                    <div class="badge badge-dark">Dirty</div>
+                                                <c:when test="${room.activeLogin}">
+                                                    <div class="badge badge-success"><i class="fas fa-check"></i> Allowed</div>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <div class="badge badge-secondary">${room.status}</div>
+                                                    <div class="badge badge-danger"><i class="fas fa-lock"></i> Locked</div>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
 
-                                        <td class="text-center">
-                                            <c:choose>
-                                                <c:when test="${room.activeLogin}">
-                                                    <div class="badge badge-primary">Yes</div>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="badge badge-light">No</div>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                        <td hidden="">
-                                            <fmt:formatNumber value="${room.roomType.basePriceWeekday}" type="currency" currencySymbol="$" />
-                                        </td>
                                         <td>
                                             <div class="d-flex">
-                                                <a href="rooms?action=VIEW&id=${room.roomId}" class="btn btn-info btn-sm mr-2" title="View">
+                                                <a href="rooms?action=VIEW&id=${room.roomId}" class="btn btn-info btn-sm mr-2" title="View Details">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
 
@@ -176,31 +140,25 @@
                                                 </a>
 
                                                 <c:choose>
-                                                    <c:when test="${room.status == 'Maintenance'}">
-                                                        <a href="rooms?action=BAN&id=${room.roomId}" 
-                                                           class="btn btn-success btn-sm mr-2" 
-                                                           onclick="confirmBan(event, '${room.roomNumber}', 'unban', this.href)"
-                                                           title="Unban">
-                                                            <i class="fas fa-unlock"></i>
+                                                    <c:when test="${room.activeLogin}">
+                                                        <a href="rooms?action=LOCK&id=${room.roomId}" 
+                                                           class="btn btn-secondary btn-sm" 
+                                                           onclick="confirmLock(event, '${room.roomNumber}', 'lock', this.href)"
+                                                           title="Lock Room (Disable Login)">
+                                                            <i class="fas fa-lock"></i>
                                                         </a>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <a href="rooms?action=BAN&id=${room.roomId}" 
-                                                           class="btn btn-secondary btn-sm mr-2" 
-                                                           onclick="confirmBan(event, '${room.roomNumber}', 'ban', this.href)"
-                                                           title="Ban">
-                                                            <i class="fas fa-ban"></i>
+                                                        <a href="rooms?action=LOCK&id=${room.roomId}" 
+                                                           class="btn btn-success btn-sm" 
+                                                           onclick="confirmLock(event, '${room.roomNumber}', 'unlock', this.href)"
+                                                           title="Unlock Room (Enable Login)">
+                                                            <i class="fas fa-unlock"></i>
                                                         </a>
                                                     </c:otherwise>
                                                 </c:choose>
-
-                                                <a href="rooms?action=DELETE&id=${room.roomId}" 
-                                                   class="btn btn-danger btn-sm" 
-                                                   onclick="confirmDelete(event, '${room.roomNumber}', this.href)"
-                                                   title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
-                                            </div>
+                                                
+                                                </div>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -214,7 +172,7 @@
                                 <ul class="pagination mb-0">
                                     <c:if test="${tag > 1}">
                                         <li class="page-item">
-                                            <a class="page-link" href="rooms?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">
+                                            <a class="page-link" href="rooms?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
                                                 <i class="fas fa-chevron-left"></i>
                                             </a>
                                         </li>
@@ -222,7 +180,7 @@
 
                                     <c:forEach begin="1" end="${endPage}" var="i">
                                         <li class="page-item ${tag == i ? 'active' : ''}">
-                                            <a class="page-link" href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">
+                                            <a class="page-link" href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
                                                 ${i}
                                             </a>
                                         </li>
@@ -230,19 +188,13 @@
 
                                     <c:if test="${tag < endPage}">
                                         <li class="page-item">
-                                            <a class="page-link" href="rooms?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&status=${currentStatus}&active=${currentActive}">
+                                            <a class="page-link" href="rooms?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
                                                 <i class="fas fa-chevron-right"></i>
                                             </a>
                                         </li>
                                     </c:if>
                                 </ul>
                             </nav>
-                        </div>
-                    </c:if>
-
-                    <c:if test="${isFiltering}">
-                        <div class="text-center mt-3">
-                            <a href="rooms?action=LIST" class="btn btn-link text-muted">Back to Full List</a>
                         </div>
                     </c:if>
 
@@ -256,56 +208,42 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-                                                       function confirmBan(event, roomNumber, action, link) {
-                                                           event.preventDefault();
+    function confirmLock(event, roomNumber, action, link) {
+        event.preventDefault();
 
-                                                           let titleInfo = "";
-                                                           let textInfo = "";
-                                                           let iconType = "";
-                                                           let confirmColor = "";
+        let titleInfo = "";
+        let textInfo = "";
+        let iconType = "";
+        let confirmColor = "";
+        let btnText = "";
 
-                                                           if (action === 'ban') {
-                                                               titleInfo = "Ban Room " + roomNumber + "?";
-                                                               textInfo = "The status will be changed to Maintenance!";
-                                                               iconType = "warning";
-                                                               confirmColor = "#6c757d";
-                                                           } else {
-                                                               titleInfo = "Unban Room " + roomNumber + "?";
-                                                               textInfo = "The room will become Available again!";
-                                                               iconType = "question";
-                                                               confirmColor = "#28a745";
-                                                           }
+        if (action === 'lock') {
+            titleInfo = "Lock Room " + roomNumber + "?";
+            textInfo = "Room account will NOT be able to login!";
+            iconType = "warning";
+            confirmColor = "#6c757d"; // Màu xám cho nút khóa
+            btnText = "Yes, Lock it!";
+        } else {
+            titleInfo = "Unlock Room " + roomNumber + "?";
+            textInfo = "Room account will be able to login again!";
+            iconType = "question";
+            confirmColor = "#28a745"; // Màu xanh cho nút mở
+            btnText = "Yes, Unlock it!";
+        }
 
-                                                           Swal.fire({
-                                                               title: titleInfo,
-                                                               text: textInfo,
-                                                               icon: iconType,
-                                                               showCancelButton: true,
-                                                               confirmButtonColor: confirmColor,
-                                                               cancelButtonColor: '#d33',
-                                                               confirmButtonText: 'Yes',
-                                                               cancelButtonText: 'No'
-                                                           }).then((result) => {
-                                                               if (result.isConfirmed) {
-                                                                   window.location.href = link;
-                                                               }
-                                                           });
-                                                       }
-
-                                                       function confirmDelete(event, roomNumber, link) {
-                                                           event.preventDefault();
-                                                           Swal.fire({
-                                                               title: 'Are you sure?',
-                                                               text: "Delete Room " + roomNumber + "? You won't be able to revert this!",
-                                                               icon: 'warning',
-                                                               showCancelButton: true,
-                                                               confirmButtonColor: '#d33',
-                                                               cancelButtonColor: '#3085d6',
-                                                               confirmButtonText: 'Yes, delete it!'
-                                                           }).then((result) => {
-                                                               if (result.isConfirmed) {
-                                                                   window.location.href = link;
-                                                               }
-                                                           });
-                                                       }
+        Swal.fire({
+            title: titleInfo,
+            text: textInfo,
+            icon: iconType,
+            showCancelButton: true,
+            confirmButtonColor: confirmColor,
+            cancelButtonColor: '#d33',
+            confirmButtonText: btnText,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = link;
+            }
+        });
+    }
 </script>
