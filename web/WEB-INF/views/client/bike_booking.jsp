@@ -11,10 +11,6 @@
 </head>
 
 <body>
-    <div id="preloder">
-        <div class="loader"></div>
-    </div>
-
     <jsp:include page="../components/navbar.jsp"></jsp:include>
 
     <div class="breadcrumb-section">
@@ -40,7 +36,11 @@
                     
                     <div class="row mb-5">
                         <div class="col-lg-4">
-                            <img src="${service.imageUrl}" class="rounded shadow-sm" alt="Bike Img" 
+                            <c:set var="imgUrl" value="${service.imageUrl}" />
+                            <c:if test="${empty imgUrl}">
+                                <c:set var="imgUrl" value="https://via.placeholder.com/150?text=No+Image" />
+                            </c:if>
+                            <img src="${imgUrl}" class="rounded shadow-sm" alt="Bike Img" 
                                  style="width: 100%; height: 150px; object-fit: cover;" 
                                  onerror="this.src='https://via.placeholder.com/150'">
                         </div>

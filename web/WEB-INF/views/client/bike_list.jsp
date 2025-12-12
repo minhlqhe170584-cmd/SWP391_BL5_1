@@ -10,10 +10,6 @@
 </head>
 
 <body>
-    <div id="preloder">
-        <div class="loader"></div>
-    </div>
-
     <jsp:include page="../components/navbar.jsp"></jsp:include>
 
     <div class="breadcrumb-section">
@@ -52,11 +48,16 @@
                 </c:if>
 
                 <c:forEach var="s" items="${bikeServices}">
+                    <c:set var="imgUrl" value="${s.imageUrl}" />
+                    <c:if test="${empty imgUrl}">
+                        <c:set var="imgUrl" value="https://via.placeholder.com/300x200?text=No+Image" />
+                    </c:if>
+
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="room-item">
-                            <img src="${s.imageUrl}" alt="${s.serviceName}" 
+                            <img src="${imgUrl}" alt="${s.serviceName}" 
                                  style="height: 240px; object-fit: cover; width: 100%;" 
-                                 onerror="this.src='https://via.placeholder.com/300x200?text=Bike+Image'">
+                                 onerror="this.src='https://via.placeholder.com/300x200?text=Error'">
                             <div class="ri-text">
                                 <h4>${s.serviceName}</h4>
                                 <h3>Giá ưu đãi<span>/giờ</span></h3>

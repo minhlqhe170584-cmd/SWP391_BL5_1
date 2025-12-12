@@ -57,14 +57,15 @@ public class BikeTransactionDAO extends DBContext {
 
     public ArrayList<BikeRentalOption> getBikeOptions(int serviceId) {
         ArrayList<BikeRentalOption> list = new ArrayList<>();
-        String sql = "SELECT * FROM BikeRentalOptions WHERE service_id = ?";
+        String sql = "SELECT * FROM BikeRentalOptions WHERE service_id = ? AND is_active = 1";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, serviceId);
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 list.add(new BikeRentalOption(
-                        rs.getInt("item_id"), rs.getInt("service_id"), rs.getString("option_name"), rs.getInt("duration_minutes"), rs.getDouble("price")
+                        rs.getInt("item_id"), rs.getInt("service_id"), rs.getString("option_name"), 
+                        rs.getInt("duration_minutes"), rs.getDouble("price"), rs.getBoolean("is_active")
                 ));
             }
         } catch (SQLException e) {
@@ -81,7 +82,8 @@ public class BikeTransactionDAO extends DBContext {
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
                 return new BikeRentalOption(
-                        rs.getInt("item_id"), rs.getInt("service_id"), rs.getString("option_name"), rs.getInt("duration_minutes"), rs.getDouble("price")
+                        rs.getInt("item_id"), rs.getInt("service_id"), rs.getString("option_name"), 
+                        rs.getInt("duration_minutes"), rs.getDouble("price"), rs.getBoolean("is_active")
                 );
             }
         } catch (SQLException e) {
