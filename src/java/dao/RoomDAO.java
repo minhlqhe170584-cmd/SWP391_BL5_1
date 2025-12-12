@@ -271,4 +271,55 @@ public class RoomDAO extends DBContext {
         } catch (SQLException e) {}
         return list;
     }
+    // 1. Hàm đếm tổng số phòng (Để tính tổng số trang)
+    public int countTotalRooms() {
+        String sql = "SELECT COUNT(*) FROM Rooms";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // 2. Hàm lấy phòng theo trang (Mỗi trang lấy pageSize phòng)
+    public List<Room> getRoomsByPage(int pageIndex, int pageSize) {
+        List<Room> list = new ArrayList<>();
+        // Logic SQL Server: Bỏ qua (page-1)*size dòng, lấy tiếp size dòng
+        String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
+                   + "FROM Rooms r INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "ORDER BY r.room_number ASC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, (pageIndex - 1) * pageSize); // Vị trí bắt đầu
+            st.setInt(2, pageSize);                   // Số lượng lấy
+            
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                // Tận dụng hàm mapRoom cũ nếu có, hoặc set thủ công như dưới
+                Room r = new Room();
+                r.setRoomId(rs.getInt("room_id"));
+                r.setRoomNumber(rs.getString("room_number"));
+                r.setStatus(rs.getString("room_status"));
+                r.setActiveLogin(rs.getBoolean("is_active_login"));
+                
+                models.RoomType rt = new models.RoomType();
+                rt.setTypeName(rs.getString("type_name"));
+                rt.setCapacity(rs.getInt("capacity"));
+                rt.setDescription(rs.getString("description"));
+                rt.setBasePriceWeekday(rs.getBigDecimal("base_price_weekday"));
+                
+                r.setRoomType(rt);
+                list.add(r);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
