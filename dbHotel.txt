@@ -118,7 +118,8 @@ CREATE TABLE BikeRentalOptions (
     service_id INT FOREIGN KEY REFERENCES Services(service_id),
     option_name NVARCHAR(50) NOT NULL,
     duration_minutes INT,
-    price DECIMAL(18,0) NOT NULL
+    price DECIMAL(18,0) NOT NULL,
+    is_active BIT DEFAULT 1
 );
 
 /* ============================================================
