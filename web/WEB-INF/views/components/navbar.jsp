@@ -86,9 +86,6 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </c:if>
-                                <c:if test="${sessionScope.ROLE == 'ROOM'}">
-                                     <li><a href="${pageContext.request.contextPath}/my-orders">Đơn Hàng</a></li>
-                                </c:if>
                             </ul>
                         </nav>
                     </div>
