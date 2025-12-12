@@ -6,16 +6,20 @@ public class BikeRentalOption {
     private String optionName;
     private int durationMinutes;
     private double price;
+    private boolean isActive;
+    
+    private String serviceName;
 
     public BikeRentalOption() {
     }
 
-    public BikeRentalOption(int itemId, int serviceId, String optionName, int durationMinutes, double price) {
+    public BikeRentalOption(int itemId, int serviceId, String optionName, int durationMinutes, double price, boolean isActive) {
         this.itemId = itemId;
         this.serviceId = serviceId;
         this.optionName = optionName;
         this.durationMinutes = durationMinutes;
         this.price = price;
+        this.isActive = isActive;
     }
 
     public int getItemId() {
@@ -56,6 +60,22 @@ public class BikeRentalOption {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
     
     

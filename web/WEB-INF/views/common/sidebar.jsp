@@ -45,6 +45,10 @@
             <li class="nav-item">
                 <a href="bicycle" class="nav-link">Bicycle</a>
             </li>
+            
+            <li class="nav-item">
+                <a href="bike-options" class="nav-link">Bicycle Rental option</a>
+            </li>
 
             <li class="nav-item">
                 <a href="foods" class="nav-link">
