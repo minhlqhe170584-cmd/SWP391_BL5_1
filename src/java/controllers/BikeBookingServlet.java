@@ -55,7 +55,9 @@ public class BikeBookingServlet extends HttpServlet {
         HttpSession session = request.getSession();
         
         Integer roomId = (Integer) session.getAttribute("ROOM_ID");
-        if (roomId == null) roomId = 1; 
+        if (roomId == null) {
+            roomId = 1; 
+        }
 
         String serviceIdRaw = request.getParameter("serviceId");
         String optionIdRaw = request.getParameter("optionId");

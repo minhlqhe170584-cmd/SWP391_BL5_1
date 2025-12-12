@@ -1,22 +1,49 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html>
+<html lang="zxx">
+
 <head>
-    <title>Order Success</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>Đặt Thành Công | Smart Hotel</title>
+    <jsp:include page="../components/head.jsp"></jsp:include>
 </head>
-<body class="text-center mt-5 bg-light">
-    <div class="container">
-        <div class="card p-5 shadow-sm mx-auto" style="max-width: 500px;">
-            <div class="card-body">
-                <h1 class="text-success display-4 mb-3">✓</h1>
-                <h2 class="card-title">Thank You!</h2>
-                <p class="card-text text-muted">${message}</p>
-                <hr>
-                <a href="service-order?serviceId=1" class="btn btn-primary">Order More</a>
-                <a href="home" class="btn btn-outline-secondary">Back to Home</a>
+
+<body>
+    <jsp:include page="../components/navbar.jsp"></jsp:include>
+
+    <div class="breadcrumb-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb-text">
+                        <h2>Hoàn Tất</h2>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <section class="about-us-page spad">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <div class="about-text">
+                        <div class="section-title">
+                            <span class="text-success" style="font-size: 80px;"><i class="fa fa-check-circle"></i></span>
+                            <h2>Cảm Ơn Quý Khách!</h2>
+                        </div>
+                        <p class="f-para">${message}</p>
+                        <p class="s-para">Yêu cầu của quý khách đã được gửi đến bộ phận lễ tân. Vui lòng xuống sảnh nhận xe đúng giờ.</p>
+                        
+                        <div class="mt-5">
+                            <a href="book-bike" class="primary-btn mr-3">Đặt Thêm Xe</a>
+                            <a href="${pageContext.request.contextPath}/home" class="primary-btn" style="background: #333;">Về Trang Chủ</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <jsp:include page="../components/footer.jsp"></jsp:include>
 </body>
 </html>

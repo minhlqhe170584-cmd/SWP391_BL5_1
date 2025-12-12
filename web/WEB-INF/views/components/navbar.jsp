@@ -1,7 +1,3 @@
-<%-- 
-    Document   : navbar
-    Description: Menu PC (Đã sửa: Dịch chuyển sang phía bên Phải)
---%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -27,7 +23,7 @@
                         
                         <div class="language-option">
                             <c:choose>
-                                <c:when test="${sessionScope.USER == null}">
+                                <c:when test="${sessionScope.USER == null && sessionScope.CURRENT_ROOM == null}">
                                     <span class="text-dark" onclick="window.location.href='${pageContext.request.contextPath}/login'" style="cursor: pointer;">
                                         <i class="fa fa-user"></i> Đăng nhập
                                     </span>
@@ -35,9 +31,15 @@
                                 <c:otherwise>
                                     <span class="text-warning font-weight-bold">
                                         <i class="fa fa-user-circle"></i> 
-                                        <c:if test="${sessionScope.ROLE == 'CUSTOMER'}">${sessionScope.USER.fullName}</c:if>
-                                        <c:if test="${sessionScope.ROLE == 'STAFF'}">${sessionScope.USER.fullName} (NV)</c:if>
-                                        <c:if test="${sessionScope.ROLE == 'ROOM'}">Phòng ${sessionScope.USER.roomNumber}</c:if>
+                                        <c:choose>
+                                            <c:when test="${sessionScope.ROLE == 'ROOM'}">
+                                                Phòng ${sessionScope.CURRENT_ROOM.roomNumber}
+                                            </c:when>
+                                            <c:otherwise>
+                                                ${sessionScope.USER.fullName}
+                                                <c:if test="${sessionScope.ROLE == 'STAFF'}"> (NV)</c:if>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </span>
                                     <div class="flag-dropdown">
                                         <ul>
@@ -83,6 +85,9 @@
                                             <li><a href="${pageContext.request.contextPath}/profile">Hồ Sơ</a></li>
                                         </c:otherwise>
                                     </c:choose>
+                                </c:if>
+                                <c:if test="${sessionScope.ROLE == 'ROOM'}">
+                                     <li><a href="${pageContext.request.contextPath}/my-orders">Đơn Hàng</a></li>
                                 </c:if>
                             </ul>
                         </nav>

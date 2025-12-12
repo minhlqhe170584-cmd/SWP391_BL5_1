@@ -17,7 +17,10 @@ public class BikeTransactionDAO extends DBContext {
 
     public ArrayList<Service> getAllBikeServices() {
         ArrayList<Service> list = new ArrayList<>();
-        String sql = "SELECT * FROM Services WHERE (service_name LIKE '%Xe đạp%' OR service_name LIKE '%Bike%') AND is_active = 1 AND is_deleted = 0";
+        String sql = "SELECT s.* FROM Services s " +
+                     "JOIN ServiceCategories c ON s.category_id = c.category_id " +
+                     "WHERE (c.category_name LIKE N'%Xe đạp%' OR c.category_name LIKE '%Bike%' OR c.category_name LIKE '%Rental%') " +
+                     "AND s.is_active = 1 AND s.is_deleted = 0";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
@@ -35,6 +38,21 @@ public class BikeTransactionDAO extends DBContext {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public int getBikeServiceId() {
+        String sql = "SELECT TOP 1 s.service_id FROM Services s " +
+                     "JOIN ServiceCategories c ON s.category_id = c.category_id " +
+                     "WHERE (c.category_name LIKE N'%Xe đạp%' OR c.category_name LIKE '%Bike%') " +
+                     "AND s.is_active = 1";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; 
     }
 
     public ArrayList<BikeRentalOption> getBikeOptions(int serviceId) {
@@ -124,7 +142,7 @@ public class BikeTransactionDAO extends DBContext {
             String sqlDetail = "INSERT INTO OrderDetails (order_id, service_id, item_name, quantity, unit_price) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement psDetail = conn.prepareStatement(sqlDetail);
             psDetail.setInt(1, orderId);
-            psDetail.setInt(2, serviceId); 
+            psDetail.setInt(2, serviceId);
             psDetail.setString(3, option.getOptionName());
             psDetail.setInt(4, quantity);
             psDetail.setDouble(5, option.getPrice());
@@ -145,7 +163,8 @@ public class BikeTransactionDAO extends DBContext {
         String sql = "SELECT o.*, r.room_number FROM ServiceOrders o LEFT JOIN Rooms r ON o.room_id = r.room_id " +
                      "JOIN OrderDetails d ON o.order_id = d.order_id " + 
                      "LEFT JOIN Services s ON d.service_id = s.service_id " +
-                     "WHERE (s.service_name LIKE '%Xe đạp%' OR s.service_name LIKE '%Bike%') AND o.status = ?";
+                     "LEFT JOIN ServiceCategories c ON s.category_id = c.category_id " +
+                     "WHERE (c.category_name LIKE N'%Xe đạp%' OR c.category_name LIKE '%Bike%') AND o.status = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, status);

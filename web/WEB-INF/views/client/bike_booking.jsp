@@ -2,39 +2,68 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<jsp:include page="/WEB-INF/views/common/header.jsp" />
+<!DOCTYPE html>
+<html lang="zxx">
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow border-0">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0 text-primary">
-                        <i class="fas fa-calendar-check mr-2"></i> Book: ${service.serviceName}
-                    </h4>
+<head>
+    <title>Đặt Xe: ${service.serviceName} | Smart Hotel</title>
+    <jsp:include page="../components/head.jsp"></jsp:include>
+</head>
+
+<body>
+    <div id="preloder">
+        <div class="loader"></div>
+    </div>
+
+    <jsp:include page="../components/navbar.jsp"></jsp:include>
+
+    <div class="breadcrumb-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="breadcrumb-text">
+                        <h2>Xác Nhận Đặt Xe</h2>
+                        <div class="bt-option">
+                            <a href="${pageContext.request.contextPath}/book-bike">Danh sách xe</a>
+                            <span>${service.serviceName}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+            </div>
+        </div>
+    </div>
+
+    <section class="contact-section spad">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
                     
-                    <div class="media mb-4">
-                        <img src="${service.imageUrl}" class="mr-3 rounded shadow-sm" alt="Bike Img" width="120" height="80" 
-                             style="object-fit: cover;" onerror="this.src='https://via.placeholder.com/120'">
-                        <div class="media-body align-self-center">
-                            <h5 class="mt-0">${service.serviceName}</h5>
-                            <a href="book-bike" class="text-muted small"><i class="fas fa-exchange-alt"></i> Change bike type</a>
+                    <div class="row mb-5">
+                        <div class="col-lg-4">
+                            <img src="${service.imageUrl}" class="rounded shadow-sm" alt="Bike Img" 
+                                 style="width: 100%; height: 150px; object-fit: cover;" 
+                                 onerror="this.src='https://via.placeholder.com/150'">
+                        </div>
+                        <div class="col-lg-8 d-flex flex-column justify-content-center">
+                            <h3 class="text-warning font-weight-bold">${service.serviceName}</h3>
+                            <p class="text-muted">Vui lòng điền thông tin bên dưới để nhân viên chuẩn bị xe cho bạn.</p>
+                            <a href="book-bike" class="text-primary"><i class="fa fa-exchange"></i> Đổi loại xe khác</a>
                         </div>
                     </div>
 
                     <c:if test="${not empty errorMessage}">
-                        <div class="alert alert-danger shadow-sm">${errorMessage}</div>
+                        <div class="alert alert-danger shadow-sm text-center mb-4">
+                            <i class="fa fa-exclamation-circle"></i> ${errorMessage}
+                        </div>
                     </c:if>
 
-                    <form action="book-bike" method="POST">
+                    <form action="book-bike" method="POST" class="contact-form">
                         <input type="hidden" name="serviceId" value="${service.serviceId}">
 
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label class="font-weight-bold">Select Package</label>
-                                <select class="form-control" name="optionId" required>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <label class="font-weight-bold">Chọn Gói Thuê:</label>
+                                <select class="form-control" name="optionId" required style="height: 50px;">
                                     <c:forEach var="opt" items="${options}">
                                         <option value="${opt.itemId}">
                                             ${opt.optionName} - <fmt:formatNumber value="${opt.price}" type="currency" currencySymbol="VND"/>
@@ -42,30 +71,33 @@
                                     </c:forEach>
                                 </select>
                             </div>
-                            <div class="form-group col-md-6">
-                                <label class="font-weight-bold">Quantity</label>
-                                <input type="number" class="form-control" name="quantity" value="1" min="1" max="5" required>
+                            <div class="col-lg-6">
+                                <label class="font-weight-bold">Số Lượng Xe:</label>
+                                <input type="number" name="quantity" value="1" min="1" max="5" required>
+                            </div>
+                            
+                            <div class="col-lg-12 mt-3">
+                                <label class="font-weight-bold">Thời Gian Nhận Xe (Dự kiến):</label>
+                                <input type="datetime-local" name="startTime" required>
+                            </div>
+                            
+                            <div class="col-lg-12 mt-3">
+                                <label class="font-weight-bold">Ghi Chú Cho Nhân Viên (Tùy chọn):</label>
+                                <textarea name="note" placeholder="Ví dụ: Cần xe có giỏ, mũ bảo hiểm trẻ em..."></textarea>
+                            </div>
+                            
+                            <div class="col-lg-12 text-center mt-4">
+                                <button type="submit" class="primary-btn" style="width: 100%; border-radius: 5px;">
+                                    <i class="fa fa-check-circle"></i> Xác Nhận Đặt Xe
+                                </button>
                             </div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold">Start Time (Giờ nhận xe)</label>
-                            <input type="datetime-local" class="form-control" name="startTime" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Note to Staff</label>
-                            <textarea class="form-control" name="note" rows="2" placeholder="E.g: Prepare 2 helmets for kids..."></textarea>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-block btn-lg shadow-sm mt-4">
-                            Check Availability & Confirm
-                        </button>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+    <jsp:include page="../components/footer.jsp"></jsp:include>
+</body>
+</html>
