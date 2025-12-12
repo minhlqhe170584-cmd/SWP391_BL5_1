@@ -2,8 +2,8 @@ package models;
 
 
 public class LaundryOrderDetail {
-    private Long laundryId;
-    private Long laundryItemId;
+    private int laundryId;
+    private int laundryItemId;
     private Integer quantity;
     private Double unitPrice;
     private Double subtotal;
@@ -17,7 +17,7 @@ public class LaundryOrderDetail {
     // Constructors
     public LaundryOrderDetail() {}
     
-    public LaundryOrderDetail(Long laundryId, Long laundryItemId, Integer quantity, Double unitPrice) {
+    public LaundryOrderDetail(int laundryId, int laundryItemId, Integer quantity, Double unitPrice) {
         this.laundryId = laundryId;
         this.laundryItemId = laundryItemId;
         this.quantity = quantity;
@@ -26,11 +26,11 @@ public class LaundryOrderDetail {
     }
     
     // Getters and Setters
-    public Long getLaundryId() { return laundryId; }
-    public void setLaundryId(Long laundryId) { this.laundryId = laundryId; }
+    public int getLaundryId() { return laundryId; }
+    public void setLaundryId(int laundryId) { this.laundryId = laundryId; }
     
-    public Long getLaundryItemId() { return laundryItemId; }
-    public void setLaundryItemId(Long laundryItemId) { this.laundryItemId = laundryItemId; }
+    public int getLaundryItemId() { return laundryItemId; }
+    public void setLaundryItemId(int laundryItemId) { this.laundryItemId = laundryItemId; }
     
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { 

@@ -3,13 +3,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LaundryItem {
-    private Long laundryItemId;
-    private Long serviceId;
+    private int laundryItemId;
+    private int serviceId;
     private String itemName;
     private String description;
     private Double defaultPrice;
     private String unit;
     private Boolean isActive;
+    
+    private Service service;
     
     // One-to-Many relationship with LaundryOrderDetails
     private List<LaundryOrderDetail> orderDetails = new ArrayList<>();
@@ -17,7 +19,7 @@ public class LaundryItem {
     // Constructors
     public LaundryItem() {}
     
-    public LaundryItem(Long laundryItemId, String itemName, Double defaultPrice) {
+    public LaundryItem(int laundryItemId, String itemName, Double defaultPrice) {
         this.laundryItemId = laundryItemId;
         this.itemName = itemName;
         this.defaultPrice = defaultPrice;
@@ -25,11 +27,11 @@ public class LaundryItem {
     }
     
     // Getters and Setters
-    public Long getLaundryItemId() { return laundryItemId; }
-    public void setLaundryItemId(Long laundryItemId) { this.laundryItemId = laundryItemId; }
+    public int getLaundryItemId() { return laundryItemId; }
+    public void setLaundryItemId(int laundryItemId) { this.laundryItemId = laundryItemId; }
     
-    public Long getServiceId() { return serviceId; }
-    public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
+    public int getServiceId() { return serviceId; }
+    public void setServiceId(int serviceId) { this.serviceId = serviceId; }
     
     public String getItemName() { return itemName; }
     public void setItemName(String itemName) { this.itemName = itemName; }
@@ -45,6 +47,9 @@ public class LaundryItem {
     
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    
+     public Service getService() { return service; }
+    public void setService(Service service) { this.service = service; }
     
     public List<LaundryOrderDetail> getOrderDetails() { return orderDetails; }
     public void setOrderDetails(List<LaundryOrderDetail> orderDetails) { this.orderDetails = orderDetails; }

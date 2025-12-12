@@ -6,8 +6,8 @@ import java.util.List;
 
 
 public class LaundryOrder {
-    private Long laundryId;
-    private Long orderId;
+    private int laundryId;
+    private int orderId;
     private LocalDateTime pickupTime;
     private LocalDateTime expectedDeliveryTime;
     private LocalDateTime expectedReturnTime;
@@ -23,18 +23,18 @@ public class LaundryOrder {
     // Constructors
     public LaundryOrder() {}
     
-    public LaundryOrder(Long laundryId, Long orderId) {
+    public LaundryOrder(int laundryId, int orderId) {
         this.laundryId = laundryId;
         this.orderId = orderId;
         this.status = "PENDING";
     }
     
     // Getters and Setters
-    public Long getLaundryId() { return laundryId; }
-    public void setLaundryId(Long laundryId) { this.laundryId = laundryId; }
+    public int getLaundryId() { return laundryId; }
+    public void setLaundryId(int laundryId) { this.laundryId = laundryId; }
     
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
+    public int getOrderId() { return orderId; }
+    public void setOrderId(int orderId) { this.orderId = orderId; }
     
     public LocalDateTime getPickupTime() { return pickupTime; }
     public void setPickupTime(LocalDateTime pickupTime) { this.pickupTime = pickupTime; }

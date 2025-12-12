@@ -58,8 +58,8 @@ public class LaundryOrderDAO extends DBContext {
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 LaundryOrder order = new LaundryOrder();
-                order.setLaundryId(rs.getLong("laundry_id"));
-                order.setOrderId(rs.getLong("order_id"));
+                order.setLaundryId(rs.getInt("laundry_id"));
+                order.setOrderId(rs.getInt("order_id"));
                 
                 Timestamp pickup = rs.getTimestamp("pickup_time");
                 if (pickup != null) order.setPickupTime(pickup.toLocalDateTime());
@@ -91,17 +91,17 @@ public class LaundryOrderDAO extends DBContext {
     }
     
     // Get order by ID with details
-    public LaundryOrder getOrderById(Long laundryId) {
+    public LaundryOrder getOrderById(int laundryId) {
         LaundryOrder order = null;
         try {
             PreparedStatement st = connection.prepareStatement(GET_ORDER_BY_ID);
-            st.setLong(1, laundryId);
+            st.setInt(1, laundryId);
             ResultSet rs = st.executeQuery();
             
             if (rs.next()) {
                 order = new LaundryOrder();
-                order.setLaundryId(rs.getLong("laundry_id"));
-                order.setOrderId(rs.getLong("order_id"));
+                order.setLaundryId(rs.getInt("laundry_id"));
+                order.setOrderId(rs.getInt("order_id"));
                 
                 Timestamp pickup = rs.getTimestamp("pickup_time");
                 if (pickup != null) order.setPickupTime(pickup.toLocalDateTime());
@@ -134,24 +134,24 @@ public class LaundryOrderDAO extends DBContext {
     }
     
     // Get order details
-    public ArrayList<LaundryOrderDetail> getOrderDetails(Long laundryId) {
+    public ArrayList<LaundryOrderDetail> getOrderDetails(int laundryId) {
         ArrayList<LaundryOrderDetail> details = new ArrayList<>();
         try {
             PreparedStatement st = connection.prepareStatement(GET_ORDER_DETAILS);
-            st.setLong(1, laundryId);
+            st.setInt(1, laundryId);
             ResultSet rs = st.executeQuery();
             
             while (rs.next()) {
                 LaundryOrderDetail detail = new LaundryOrderDetail();
-                detail.setLaundryId(rs.getLong("laundry_id"));
-                detail.setLaundryItemId(rs.getLong("laundry_item_id"));
+                detail.setLaundryId(rs.getInt("laundry_id"));
+                detail.setLaundryItemId(rs.getInt("laundry_item_id"));
                 detail.setQuantity(rs.getInt("quantity"));
                 detail.setUnitPrice(rs.getDouble("unit_price"));
                 detail.setSubtotal(rs.getDouble("subtotal"));
                 
                 // Set LaundryItem info
                 LaundryItem item = new LaundryItem();
-                item.setLaundryItemId(rs.getLong("laundry_item_id"));
+                item.setLaundryItemId(rs.getInt("laundry_item_id"));
                 item.setItemName(rs.getString("item_name"));
                 item.setDescription(rs.getString("description"));
                 item.setUnit(rs.getString("unit"));
@@ -166,8 +166,8 @@ public class LaundryOrderDAO extends DBContext {
     }
     
     // Insert new order with details
-    public Long insertOrder(LaundryOrder order) {
-        Long generatedId = null;
+    public int insertOrder(LaundryOrder order) {
+        int generatedId = 0 ;
         try {
             connection.setAutoCommit(false);
             
@@ -185,7 +185,7 @@ public class LaundryOrderDAO extends DBContext {
             if (rowsAffected > 0) {
                 ResultSet rs = st.getGeneratedKeys();
                 if (rs.next()) {
-                    generatedId = rs.getLong(1);
+                    generatedId = rs.getInt(1);
                     
                     // Insert order details
                     if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
@@ -215,11 +215,11 @@ public class LaundryOrderDAO extends DBContext {
     }
     
     // Insert order detail
-    private boolean insertOrderDetail(Long laundryId, LaundryOrderDetail detail) {
+    private boolean insertOrderDetail(int laundryId, LaundryOrderDetail detail) {
         try {
             PreparedStatement st = connection.prepareStatement(INSERT_ORDER_DETAIL);
-            st.setLong(1, laundryId);
-            st.setLong(2, detail.getLaundryItemId());
+            st.setInt(1, laundryId);
+            st.setInt(2, detail.getLaundryItemId());
             st.setInt(3, detail.getQuantity());
             st.setDouble(4, detail.getUnitPrice());
             st.setDouble(5, detail.getSubtotal());
@@ -244,7 +244,7 @@ public class LaundryOrderDAO extends DBContext {
             st.setTimestamp(3, order.getExpectedReturnTime() != null ? Timestamp.valueOf(order.getExpectedReturnTime()) : null);
             st.setString(4, order.getStatus());
             st.setString(5, order.getNote());
-            st.setLong(6, order.getLaundryId());
+            st.setInt(6, order.getLaundryId());
             
             int rowsAffected = st.executeUpdate();
             
@@ -280,11 +280,11 @@ public class LaundryOrderDAO extends DBContext {
     }
     
     // Update order status
-    public boolean updateOrderStatus(Long laundryId, String status) {
+    public boolean updateOrderStatus(int laundryId, String status) {
         try {
             PreparedStatement st = connection.prepareStatement(UPDATE_ORDER_STATUS);
             st.setString(1, status);
-            st.setLong(2, laundryId);
+            st.setInt(2, laundryId);
             
             int rowsAffected = st.executeUpdate();
             return rowsAffected > 0;
@@ -295,10 +295,10 @@ public class LaundryOrderDAO extends DBContext {
     }
     
     // Delete order details
-    private boolean deleteOrderDetails(Long laundryId) {
+    private boolean deleteOrderDetails(int laundryId) {
         try {
             PreparedStatement st = connection.prepareStatement(DELETE_ORDER_DETAILS);
-            st.setLong(1, laundryId);
+            st.setInt(1, laundryId);
             st.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -308,7 +308,7 @@ public class LaundryOrderDAO extends DBContext {
     }
     
     // Delete order
-    public boolean deleteOrder(Long laundryId) {
+    public boolean deleteOrder(int laundryId) {
         try {
             connection.setAutoCommit(false);
             
@@ -317,7 +317,7 @@ public class LaundryOrderDAO extends DBContext {
             
             // Delete order
             PreparedStatement st = connection.prepareStatement(DELETE_ORDER);
-            st.setLong(1, laundryId);
+            st.setInt(1, laundryId);
             int rowsAffected = st.executeUpdate();
             
             connection.commit();
@@ -416,8 +416,8 @@ public class LaundryOrderDAO extends DBContext {
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 LaundryOrder order = new LaundryOrder();
-                order.setLaundryId(rs.getLong("laundry_id"));
-                order.setOrderId(rs.getLong("order_id"));
+                order.setLaundryId(rs.getInt("laundry_id"));
+                order.setOrderId(rs.getInt("order_id"));
                 
                 Timestamp pickup = rs.getTimestamp("pickup_time");
                 if (pickup != null) order.setPickupTime(pickup.toLocalDateTime());
