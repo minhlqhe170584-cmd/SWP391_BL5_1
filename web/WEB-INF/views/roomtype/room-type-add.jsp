@@ -1,0 +1,221 @@
+<%-- 
+    Document   : room-type-add
+    Created on : Dec 11, 2025, 3:44:22 PM
+    Author     : My Lap
+--%>
+
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<jsp:include page="/WEB-INF/views/common/header.jsp" />
+<jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
+
+<div class="main-content">
+    <section class="section">
+        <div class="section-header">
+            <div class="section-header-back">
+                <a href="room-types?action=LIST" class="btn btn-icon">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <h1>Add New Room Type</h1>
+            <div class="section-header-breadcrumb">
+                <div class="breadcrumb-item active"><a href="#">Dashboard</a></div>
+                <div class="breadcrumb-item"><a href="room-types?action=LIST">Room Types</a></div>
+                <div class="breadcrumb-item">Add New</div>
+            </div>
+        </div>
+
+        <div class="section-body">
+            <h2 class="section-title">Create New Type</h2>
+            <p class="section-lead">
+                Create a new room category for your hotel.
+            </p>
+
+            <div class="row">
+                <div class="col-12 col-md-8 col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-plus-circle"></i> New Room Type Form</h4>
+                        </div>
+                        <div class="card-body">
+                            
+                            <c:if test="${not empty error}">
+                                <div class="alert alert-danger">
+                                    ${error}
+                                </div>
+                            </c:if>
+
+                            <form id="addForm" action="room-types" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+                                <input type="hidden" name="action" value="CREATE">
+
+                                <div class="form-group">
+                                    <label>Type Name <span class="text-danger">*</span></label>
+                                    <input type="text" id="typeName" name="typeName" class="form-control" placeholder="Ex: Deluxe Ocean View">
+                                    <small id="errorName" class="text-danger" style="display:none;">Type Name cannot be empty!</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Capacity (Person) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text"><i class="fas fa-users"></i></div>
+                                        </div>
+                                        <input type="number" id="capacity" name="capacity" class="form-control" placeholder="Ex: 2">
+                                    </div>
+                                    <small id="errorCapacity" class="text-danger" style="display:none;">Capacity must be greater than 0!</small>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Base Price (Weekday) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">₫</div>
+                                                </div>
+                                                <input type="number" id="priceWeekday" name="basePriceWeekday" class="form-control" placeholder="Ex: 500000">
+                                            </div>
+                                            <small id="errorPrice1" class="text-danger" style="display:none;">Price must be valid!</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Base Price (Weekend) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">₫</div>
+                                                </div>
+                                                <input type="number" id="priceWeekend" name="basePriceWeekend" class="form-control" placeholder="Ex: 700000">
+                                            </div>
+                                            <small id="errorPrice2" class="text-danger" style="display:none;">Price must be valid!</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Room Image</label>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div style="width: 100px; height: 100px; border: 1px dashed #ddd; padding: 5px; display: flex; align-items: center; justify-content: center;">
+                                                <img id="imagePreview" src="https://placehold.co/100x100?text=Preview" 
+                                                     style="max-width: 100%; max-height: 100%; object-fit: cover;">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="custom-file mt-3">
+                                                <input type="file" class="custom-file-input" id="customFile" name="imageFile" accept="image/*" onchange="previewImage(this)">
+                                                <label class="custom-file-label" for="customFile">Choose file...</label>
+                                            </div>
+                                            <small class="form-text text-muted">Max size: 2MB.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea name="description" class="form-control" style="height: 100px;" placeholder="Room details..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="control-label">Status</div>
+                                    <label class="custom-switch mt-2">
+                                        <input type="checkbox" name="isActive" class="custom-switch-input" checked>
+                                        <span class="custom-switch-indicator"></span>
+                                        <span class="custom-switch-description">Active (Ready to use)</span>
+                                    </label>
+                                </div>
+
+                                <div class="form-group text-right">
+                                    <a href="room-types?action=LIST" class="btn btn-secondary mr-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-save"></i> Save New Type
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+            var fileName = input.files[0].name;
+            input.nextElementSibling.innerText = fileName;
+        }
+    }
+
+    function validateForm() {
+        let isValid = true;
+
+        // Elements
+        let nameInput = document.getElementById("typeName");
+        let capInput = document.getElementById("capacity");
+        let p1Input = document.getElementById("priceWeekday");
+        let p2Input = document.getElementById("priceWeekend");
+
+        // Reset
+        resetError(nameInput, "errorName");
+        resetError(capInput, "errorCapacity");
+        resetError(p1Input, "errorPrice1");
+        resetError(p2Input, "errorPrice2");
+
+        // Validate Type Name
+        if (nameInput.value.trim() === "") {
+            showError(nameInput, "errorName", "Type Name cannot be empty!");
+            isValid = false;
+        }
+
+        // Validate Capacity (Integer > 0)
+        let capVal = capInput.value;
+        if (capVal === "" || isNaN(capVal)) {
+            showError(capInput, "errorCapacity", "Must be a valid number!");
+            isValid = false;
+        } else if (!Number.isInteger(Number(capVal))) {
+            showError(capInput, "errorCapacity", "Must be an integer!");
+            isValid = false;
+        } else if (parseInt(capVal) <= 0) {
+            showError(capInput, "errorCapacity", "Must be greater than 0!");
+            isValid = false;
+        }
+
+        // Validate Prices (Number >= 0)
+        let p1Val = p1Input.value;
+        if (p1Val === "" || isNaN(p1Val) || parseFloat(p1Val) < 0) {
+            showError(p1Input, "errorPrice1", "Invalid price!");
+            isValid = false;
+        }
+        
+        let p2Val = p2Input.value;
+        if (p2Val === "" || isNaN(p2Val) || parseFloat(p2Val) < 0) {
+            showError(p2Input, "errorPrice2", "Invalid price!");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    function showError(input, errorId, message) {
+        input.classList.add("is-invalid");
+        let errorTag = document.getElementById(errorId);
+        errorTag.innerText = message;
+        errorTag.style.display = "block";
+    }
+
+    function resetError(input, errorId) {
+        input.classList.remove("is-invalid");
+        document.getElementById(errorId).style.display = "none";
+    }
+</script>
+
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />
