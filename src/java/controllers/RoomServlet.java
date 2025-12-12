@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ */
 package controllers;
 
 import dao.RoomDAO;
@@ -17,6 +21,17 @@ public class RoomServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
+        try (PrintWriter out = response.getWriter()) {
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head>");
+            out.println("<title>Servlet RoomServlet</title>");
+            out.println("</head>");
+            out.println("<body>");
+            out.println("<h1>Servlet RoomServlet</h1>");
+            out.println("</body>");
+            out.println("</html>");
+        }
     }
 
     private RoomDAO roomDAO;
@@ -35,30 +50,35 @@ public class RoomServlet extends HttpServlet {
 
         try {
             switch (action.toUpperCase()) {
-                case "BAN":
-                    String idBanStr = request.getParameter("id");
-                    if (idBanStr != null) {
+                
+                // === 1. ĐỔI TỪ BAN (STATUS) SANG LOCK (ACTIVE LOGIN) ===
+                case "LOCK":
+                    String idLockStr = request.getParameter("id");
+                    if (idLockStr != null) {
                         try {
-                            int id = Integer.parseInt(idBanStr);
+                            int id = Integer.parseInt(idLockStr);
+                            // Lấy thông tin phòng hiện tại
                             Room room = roomDAO.getRoomById(id);
+                            
                             if (room != null) {
-                                String newStatus;
-                                String msg;
-                                if ("Maintenance".equals(room.getStatus())) {
-                                    newStatus = "Available"; 
-                                    msg = "Unbanned room " + room.getRoomNumber() + ". Status set to Available.";
-                                } else {
-                                    newStatus = "Maintenance"; 
-                                    msg = "Banned room " + room.getRoomNumber() + ". Status set to Maintenance.";
-                                }
-                                roomDAO.updateRoomStatus(id, newStatus);
+                                // Logic: Đảo ngược trạng thái Active Login (True <-> False)
+                                boolean newLockState = !room.isActiveLogin();
+                                room.setActiveLogin(newLockState);
+                                
+                                // Cập nhật lại vào DB (Dùng hàm updateRoom chung để lưu thay đổi)
+                                roomDAO.updateRoom(room);
+                                
+                                String msg = newLockState ? "Unlocked room (Login Allowed)" : "Locked room (Login Disabled)";
                                 request.getSession().setAttribute("successMessage", msg);
                             }
-                        } catch (NumberFormatException e) {}
+                        } catch (NumberFormatException e) {
+                            // Bỏ qua lỗi ID
+                        }
                     }
                     response.sendRedirect("rooms?action=LIST");
                     break;
 
+                // === 2. HIỂN THỊ FORM SỬA ===
                 case "EDIT":
                     String idEdit = request.getParameter("id");
                     if (idEdit != null) {
@@ -66,6 +86,7 @@ public class RoomServlet extends HttpServlet {
                             int id = Integer.parseInt(idEdit);
                             Room room = roomDAO.getRoomById(id);
                             List<models.RoomType> listType = roomDAO.getAllRoomTypes();
+                            
                             request.setAttribute("room", room); 
                             request.setAttribute("listType", listType); 
                             request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
@@ -77,12 +98,14 @@ public class RoomServlet extends HttpServlet {
                     }
                     break;
 
+                // === 3. HIỂN THỊ FORM TẠO MỚI ===
                 case "NEW":
                     List<models.RoomType> listTypeNew = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listTypeNew);
                     request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
                     break;    
 
+                // === 4. XEM CHI TIẾT ===
                 case "VIEW":
                     String idView = request.getParameter("id");
                     if (idView != null) {
@@ -104,46 +127,32 @@ public class RoomServlet extends HttpServlet {
                     }
                     break;
                 
-                case "DELETE":
-                    String idDel = request.getParameter("id");
-                    if (idDel != null) {
-                        try {
-                            int id = Integer.parseInt(idDel);
-                            Room roomToDelete = roomDAO.getRoomById(id);
-                            if (roomToDelete != null) {
-                                String roomNum = roomToDelete.getRoomNumber(); 
-                                roomDAO.deleteRoom(id);
-                                request.getSession().setAttribute("successMessage", "Deleted room " + roomNum + " successfully!");
-                            } else {
-                                request.getSession().setAttribute("errorMessage", "Room not found to delete!");
-                            }
-                        } catch (Exception e) {}
-                    }
-                    response.sendRedirect("rooms?action=LIST");
-                    break;
+                // === ĐÃ BỎ CASE DELETE ===
 
+                // === 5. DANH SÁCH (ĐÃ BỎ LỌC STATUS) ===
                 case "LIST":
                 default:
                     List<models.RoomType> listType = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listType);
                     request.setAttribute("listFloors", roomDAO.getExistingFloors());
 
+                    // Lấy tham số Filter (Đã bỏ status)
                     String keyword = request.getParameter("keyword");
                     String typeId = request.getParameter("typeId");
-                    String status = request.getParameter("status");
                     String active = request.getParameter("active");
                     String floor = request.getParameter("floor");
 
                     boolean isFiltering = (keyword != null && !keyword.trim().isEmpty()) ||
                                           (typeId != null && !typeId.isEmpty()) ||
-                                          (status != null && !status.isEmpty()) ||
                                           (active != null && !active.isEmpty()) ||
                                           (floor != null && !floor.isEmpty());
                     
                     request.setAttribute("isFiltering", isFiltering);
 
                     if (isFiltering) {
-                        List<Room> fullList = roomDAO.findRooms(keyword, typeId, status, active, floor);
+                        // Truyền null vào vị trí status
+                        List<Room> fullList = roomDAO.findRooms(keyword, typeId, null, active, floor);
+                        
                         int count = fullList.size();
                         int endPage = count / 5; if (count % 5 != 0) endPage++;
                         String indexPage = request.getParameter("index");
@@ -160,7 +169,6 @@ public class RoomServlet extends HttpServlet {
                         
                         request.setAttribute("keyword", keyword);
                         request.setAttribute("currentType", typeId);
-                        request.setAttribute("currentStatus", status);
                         request.setAttribute("currentActive", active);
                         request.setAttribute("currentFloor", floor);
                     } else {
@@ -193,10 +201,10 @@ public class RoomServlet extends HttpServlet {
         try {
             switch (action.toUpperCase()) {
                 case "UPDATE":
+                    // 1. Nhận dữ liệu (Đã bỏ status)
                     int roomId = Integer.parseInt(request.getParameter("roomId"));
                     String roomNumber = request.getParameter("roomNumber");
                     int typeId = Integer.parseInt(request.getParameter("typeId"));
-                    String status = request.getParameter("status");
                     String password = request.getParameter("roomPassword");
                     boolean isActive = request.getParameter("activeLogin") != null;
 
@@ -209,22 +217,25 @@ public class RoomServlet extends HttpServlet {
                         room.setRoomId(roomId);
                         room.setRoomNumber(roomNumber);
                         room.setTypeId(typeId);
-                        room.setStatus(status);
                         room.setRoomPassword(password);
                         room.setActiveLogin(isActive);
                         
                         request.setAttribute("error", error);
                         request.setAttribute("room", room); 
                         request.setAttribute("listType", roomDAO.getAllRoomTypes()); 
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit.jsp").forward(request, response);
+                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
                         return; 
                     }
                     
+                    // Lấy phòng cũ để giữ lại Status cũ (vì form không còn gửi lên)
+                    Room oldRoom = roomDAO.getRoomById(roomId);
+                    String currentStatus = (oldRoom != null) ? oldRoom.getStatus() : "Available";
+
                     Room updateRoom = new Room();
                     updateRoom.setRoomId(roomId);
                     updateRoom.setRoomNumber(roomNumber);
                     updateRoom.setTypeId(typeId);
-                    updateRoom.setStatus(status);
+                    updateRoom.setStatus(currentStatus); // Giữ nguyên status cũ
                     updateRoom.setRoomPassword(password);
                     updateRoom.setActiveLogin(isActive);
 
@@ -234,9 +245,9 @@ public class RoomServlet extends HttpServlet {
                     break;
                     
                 case "CREATE":
+                    // 1. Nhận dữ liệu (Đã bỏ status)
                     String newRoomNumber = request.getParameter("roomNumber");
                     int newTypeId = Integer.parseInt(request.getParameter("typeId"));
-                    String newStatus = request.getParameter("status");
                     String newPassword = request.getParameter("roomPassword");
                     boolean newIsActive = request.getParameter("activeLogin") != null;
 
@@ -248,21 +259,20 @@ public class RoomServlet extends HttpServlet {
                         Room roomError = new Room();
                         roomError.setRoomNumber(newRoomNumber);
                         roomError.setTypeId(newTypeId);
-                        roomError.setStatus(newStatus);
                         roomError.setRoomPassword(newPassword);
                         roomError.setActiveLogin(newIsActive);
                         
                         request.setAttribute("error", errorCreate);
                         request.setAttribute("room", roomError); 
                         request.setAttribute("listType", roomDAO.getAllRoomTypes()); 
-                        request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
+                        request.getRequestDispatcher("/WEB-INF/views/room/room-edit&add.jsp").forward(request, response);
                         return;
                     }
 
                     Room newRoom = new Room();
                     newRoom.setRoomNumber(newRoomNumber);
                     newRoom.setTypeId(newTypeId);
-                    newRoom.setStatus(newStatus);
+                    newRoom.setStatus("Available"); // Mặc định status là Available
                     newRoom.setRoomPassword(newPassword);
                     newRoom.setActiveLogin(newIsActive);
 
@@ -281,6 +291,7 @@ public class RoomServlet extends HttpServlet {
             try (PrintWriter out = response.getWriter()) {
                 out.println("<h1>ERROR</h1>");
                 out.println("<pre>" + ex.getMessage() + "</pre>");
+                ex.printStackTrace();
             }
         }
     }
