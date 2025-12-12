@@ -1,8 +1,3 @@
-<%-- 
-    Document   : services
-    Description: Trang Dịch vụ (Đã thêm Full Ảnh Minh Họa Online)
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -67,9 +62,7 @@
                         <h4>Phục Vụ Đồ Ăn</h4>
                         <p>Thực đơn đa dạng từ Á sang Âu phục vụ 24/7. Thưởng thức bữa ăn nóng hổi, ngon miệng ngay tại phòng.</p>
                         
-                        <c:if test="${sessionScope.ROLE == 'ROOM'}">
-                            <a href="${pageContext.request.contextPath}/order" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Gọi Món Ngay</a>
-                        </c:if>
+                        <a href="${pageContext.request.contextPath}/order" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Gọi Món Ngay</a>
                     </div>
                 </div>
 
@@ -80,6 +73,8 @@
                         <i class="fa fa-bicycle" style="font-size: 60px; color: #e67e22; margin-bottom: 20px;"></i>
                         <h4>Thuê Xe Đạp</h4>
                         <p>Khám phá khuôn viên khách sạn và khu vực lân cận với dịch vụ thuê xe đạp địa hình, xe đạp đôi.</p>
+                        
+                        <a href="${pageContext.request.contextPath}/book-bike" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Thuê Xe Ngay</a>
                     </div>
                 </div>
 

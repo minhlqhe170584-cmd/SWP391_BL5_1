@@ -96,11 +96,19 @@
                                                 </c:when>
                                                 
                                                 <c:when test="${view == 'active'}">
-                                                    <form action="bike-ops" method="POST">
+                                                    <form action="bike-ops" method="POST" class="form-inline">
                                                         <input type="hidden" name="action" value="return">
                                                         <input type="hidden" name="orderId" value="${o.orderId}">
+                                                        
+                                                        <select name="paymentMethod" class="form-control form-control-sm mr-2" required>
+                                                            <option value="Cash">Cash</option>
+                                                            <option value="Transfer">Transfer</option>
+                                                            <option value="Credit Card">Credit Card</option>
+                                                            <option value="Charge to Room">Charge to Room</option>
+                                                        </select>
+
                                                         <button type="submit" class="btn btn-success btn-sm" 
-                                                                onclick="return confirm('Confirm that guest has returned the bike and paid?');">
+                                                                onclick="return confirm('Confirm Return & Payment?');">
                                                             <i class="fas fa-check-double"></i> Return & Pay
                                                         </button>
                                                     </form>

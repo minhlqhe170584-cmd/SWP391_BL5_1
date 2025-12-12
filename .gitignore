@@ -251,3 +251,4 @@ nbdist/
 src/java/dbContext/
 src/java/dbContext/DBContext.java
 .gitignore
+nbproject/project.properties
