@@ -28,11 +28,15 @@ public class RoomDAO extends DBContext {
         return null;
     }
 
-    // 2. Lấy tất cả
+    // 2. Lấy tất cả (Chỉ lấy phòng thường, không lấy phòng sự kiện)
     public List<Room> getAllRooms() {
         List<Room> roomList = new ArrayList<>();
+        // THÊM: WHERE r.isEventRoom = 0
         String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
-                   + "FROM Rooms r INNER JOIN RoomTypes t ON r.type_id = t.type_id ORDER BY r.room_number ASC";
+                   + "FROM Rooms r "
+                   + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "WHERE r.isEventRoom = 0 " 
+                   + "ORDER BY r.room_number ASC";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
@@ -45,12 +49,16 @@ public class RoomDAO extends DBContext {
         return roomList;
     }
 
-    // 3. Phân trang
+    // 3. Phân trang (Chỉ lấy phòng thường)
     public List<Room> pagingRooms(int index) {
         List<Room> list = new ArrayList<>();
+        // THÊM: WHERE r.isEventRoom = 0
         String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
-                   + "FROM Rooms r INNER JOIN RoomTypes t ON r.type_id = t.type_id "
-                   + "ORDER BY r.room_number ASC OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
+                   + "FROM Rooms r "
+                   + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "WHERE r.isEventRoom = 0 "
+                   + "ORDER BY r.room_number ASC "
+                   + "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, (index - 1) * 5);
@@ -86,9 +94,12 @@ public class RoomDAO extends DBContext {
     // 5. Tìm kiếm nâng cao (Filter)
     public List<Room> findRooms(String keyword, String typeId, String status, String active, String floor) {
         List<Room> list = new ArrayList<>();
+        // THÊM: AND r.isEventRoom = 0 ngay sau WHERE 1=1
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
-              + "FROM Rooms r INNER JOIN RoomTypes t ON r.type_id = t.type_id WHERE 1=1 ");
+              + "FROM Rooms r "
+              + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+              + "WHERE 1=1 AND r.isEventRoom = 0 "); 
 
         List<Object> params = new ArrayList<>();
 
@@ -216,8 +227,10 @@ public class RoomDAO extends DBContext {
     }
 
     // Các hàm phụ khác
+    // Đếm tổng số phòng (Chỉ đếm phòng thường)
     public int getTotalRooms() {
-        String sql = "SELECT COUNT(*) FROM Rooms";
+        // THÊM: WHERE isEventRoom = 0
+        String sql = "SELECT COUNT(*) FROM Rooms WHERE isEventRoom = 0";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
@@ -289,11 +302,14 @@ public class RoomDAO extends DBContext {
     // 2. Hàm lấy phòng theo trang (Mỗi trang lấy pageSize phòng)
     public List<Room> getRoomsByPage(int pageIndex, int pageSize) {
         List<Room> list = new ArrayList<>();
-        // Logic SQL Server: Bỏ qua (page-1)*size dòng, lấy tiếp size dòng
+        
+        // Cập nhật SQL: Thêm WHERE r.isEventRoom = 0 trước ORDER BY
         String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
                    + "FROM Rooms r INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "WHERE r.isEventRoom = 0 " // <-- ĐIỀU KIỆN QUAN TRỌNG
                    + "ORDER BY r.room_number ASC "
                    + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                   
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, (pageIndex - 1) * pageSize); // Vị trí bắt đầu
@@ -301,7 +317,8 @@ public class RoomDAO extends DBContext {
             
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                // Tận dụng hàm mapRoom cũ nếu có, hoặc set thủ công như dưới
+                // Nếu bạn đã có hàm mapRoom(rs) thì dùng cho gọn: list.add(mapRoom(rs));
+                // Còn không thì giữ nguyên code map thủ công dưới đây:
                 Room r = new Room();
                 r.setRoomId(rs.getInt("room_id"));
                 r.setRoomNumber(rs.getString("room_number"));
