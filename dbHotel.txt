@@ -259,6 +259,109 @@ BEGIN
 END;
 GO
 
+USE [SmartHotelDB]
+GO
+
+/* ============================================================
+   1. CHỈNH SỬA BẢNG ROOMS (THÊM CỘT isEventRoom)
+============================================================ */
+-- Thêm cột isEventRoom, mặc định là 0 (Không phải phòng sự kiện)
+-- 1 = Phòng chuyên tổ chức sự kiện, 0 = Phòng ngủ thường
+IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'isEventRoom' AND Object_ID = Object_ID(N'Rooms'))
+BEGIN
+    ALTER TABLE Rooms ADD isEventRoom INT DEFAULT 0;
+END
+GO
+
+-- Cập nhật một vài phòng làm mẫu thành phòng sự kiện (Ví dụ phòng có ID 1 và 2)
+-- Lưu ý: Bạn cần đảm bảo Rooms đã có dữ liệu, nếu chưa thì chạy phần Insert dữ liệu cũ trước.
+UPDATE Rooms SET isEventRoom = 1 WHERE room_number IN ('101', '102'); 
+GO
+
+/* ============================================================
+   2. TẠO BẢNG EVENTS (DANH SÁCH GÓI SỰ KIỆN)
+============================================================ */
+IF OBJECT_ID('Events', 'U') IS NOT NULL DROP TABLE Events; -- Xóa nếu trùng tên cũ (lưu ý backup nếu cần)
+
+CREATE TABLE Events (
+    eventId INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(255) NOT NULL,            -- Tên gói sự kiện
+    price DECIMAL(18, 0) DEFAULT 0,         -- Giá
+    serviceCategoryId INT,                  -- Thuộc loại dịch vụ nào (Ví dụ: Hội nghị, Tiệc cưới)
+    roomIds NVARCHAR(MAX),                  -- Lưu chuỗi ID các phòng áp dụng (VD: "1,2,5")
+    created_date DATETIME DEFAULT GETDATE(),
+    updated_date DATETIME DEFAULT GETDATE(),
+
+    -- Khóa ngoại trỏ về bảng ServiceCategories có sẵn
+    CONSTRAINT FK_Events_ServiceCategories FOREIGN KEY (serviceCategoryId) REFERENCES ServiceCategories(category_id)
+);
+GO
+
+/* ============================================================
+   3. TẠO BẢNG EVENTREQUEST (YÊU CẦU ĐẶT SỰ KIỆN)
+============================================================ */
+IF OBJECT_ID('EventRequest', 'U') IS NOT NULL DROP TABLE EventRequest;
+
+CREATE TABLE EventRequest (
+    requestId INT IDENTITY(1,1) PRIMARY KEY,
+    eventId INT NOT NULL,                   -- Khách chọn gói sự kiện nào
+    status NVARCHAR(50) DEFAULT 'PENDING',  -- ACCEPT, PENDING, DECLINE
+    
+    roomIds NVARCHAR(MAX),                  -- Các phòng cụ thể được chốt cho request này
+    
+    check_in_date DATETIME NOT NULL,        -- Ngày giờ dự kiến bắt đầu
+    check_out_date DATETIME NOT NULL,       -- Ngày giờ dự kiến kết thúc
+    
+    real_check_in_date DATETIME NULL,       -- Ngày giờ thực tế bắt đầu
+    real_check_out_date DATETIME NULL,      -- Ngày giờ thực tế kết thúc
+    
+    message NVARCHAR(MAX),                  -- Ghi chú của khách hàng
+    
+    created_date DATETIME DEFAULT GETDATE(),
+    updated_date DATETIME DEFAULT GETDATE(),
+
+    CONSTRAINT FK_EventRequest_Events FOREIGN KEY (eventId) REFERENCES Events(eventId)
+);
+GO
+
+/* ============================================================
+   4. INSERT DỮ LIỆU MẪU (SAMPLE DATA)
+============================================================ */
+
+-- Bước A: Đảm bảo có Category cho Event
+IF NOT EXISTS (SELECT * FROM ServiceCategories WHERE category_name = 'EventPackage')
+    INSERT INTO ServiceCategories(category_name, description) VALUES ('EventPackage', N'Các gói tổ chức sự kiện');
+
+DECLARE @EventCatID INT = (SELECT category_id FROM ServiceCategories WHERE category_name = 'EventPackage');
+
+-- Bước B: Insert vào bảng Events
+-- Giả sử phòng 101 (id=1) và 102 (id=2) là phòng sự kiện
+INSERT INTO Events (name, price, serviceCategoryId, roomIds, created_date, updated_date)
+VALUES 
+(N'Gói Tiệc Cưới', 5000000, @EventCatID, '1,2', GETDATE(), GETDATE()),
+(N'Tiệc Sinh Nhật Trọn Gói', 3000000, @EventCatID, '1', GETDATE(), GETDATE());
+
+-- Bước C: Insert vào bảng EventRequest
+-- Lấy ID của Event vừa tạo
+DECLARE @EventID_1 INT = (SELECT TOP 1 eventId FROM Events WHERE name = N'Gói Tiệc Cưới');
+
+INSERT INTO EventRequest (eventId, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
+VALUES 
+(@EventID_1, 'PENDING', '1,2', DATEADD(DAY, 5, GETDATE()), DATEADD(HOUR, 4, DATEADD(DAY, 5, GETDATE())), N'Yêu cầu chuẩn bị thêm máy chiếu và nước suối.', GETDATE(), GETDATE());
+
+INSERT INTO EventRequest (eventId, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
+VALUES 
+(@EventID_1, 'ACCEPT', '1', DATEADD(DAY, 10, GETDATE()), DATEADD(HOUR, 5, DATEADD(DAY, 10, GETDATE())), N'Đã đặt cọc 50%.', GETDATE(), GETDATE());
+
+GO
+
+/* ============================================================
+   KIỂM TRA DỮ LIỆU
+============================================================ */
+SELECT * FROM Rooms;
+SELECT * FROM Events;
+SELECT * FROM EventRequest;
+
 
 /* ============================================================
  VIII. DỮ LIỆU MẪU
