@@ -9,7 +9,7 @@ public class LaundryOrder {
     private int laundryId;
     private int orderId;
     private LocalDateTime pickupTime;
-    private LocalDateTime expectedDeliveryTime;
+    private LocalDateTime expectedPickupTime;
     private LocalDateTime expectedReturnTime;
     private String status;
     private String note;
@@ -39,14 +39,27 @@ public class LaundryOrder {
     public LocalDateTime getPickupTime() { return pickupTime; }
     public void setPickupTime(LocalDateTime pickupTime) { this.pickupTime = pickupTime; }
     
-    public LocalDateTime getExpectedDeliveryTime() { return expectedDeliveryTime; }
-    public void setExpectedDeliveryTime(LocalDateTime expectedDeliveryTime) { 
-        this.expectedDeliveryTime = expectedDeliveryTime; 
+    public String getFormattedPickupTime() {
+    if (this.pickupTime == null) return "";
+    return this.pickupTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+}
+    
+    public LocalDateTime getExpectedPickupTime() { return expectedPickupTime; }
+    public void setExpectedPickupTime(LocalDateTime expectedPickupTime) { 
+        this.expectedPickupTime = expectedPickupTime; 
+    }
+    public String getFormattedExpectedPickupTime() {
+    if (this.expectedPickupTime == null) return "";
+    return this.expectedPickupTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
     }
     
     public LocalDateTime getExpectedReturnTime() { return expectedReturnTime; }
     public void setExpectedReturnTime(LocalDateTime expectedReturnTime) { 
         this.expectedReturnTime = expectedReturnTime; 
+    }
+    public String getFormattedExpectedReturnTime() {
+    if (this.expectedReturnTime == null) return "";
+    return this.expectedReturnTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
     }
     
     public String getStatus() { return status; }

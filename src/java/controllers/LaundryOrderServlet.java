@@ -125,7 +125,7 @@ public class LaundryOrderServlet extends HttpServlet {
         request.setAttribute("status", status);
         request.setAttribute("sort", sort);
         
-        request.getRequestDispatcher("/views/laundry/list.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/laundry/list.jsp").forward(request, response);
     }
     
     // View single order details
@@ -140,7 +140,7 @@ public class LaundryOrderServlet extends HttpServlet {
                 
                 if (order != null) {
                     request.setAttribute("order", order);
-                    request.getRequestDispatcher("/views/laundry/view.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/laundry/view.jsp").forward(request, response);
                 } else {
                     request.setAttribute("error", "Order not found");
                     listOrders(request, response);
@@ -159,14 +159,14 @@ public class LaundryOrderServlet extends HttpServlet {
             throws ServletException, IOException {
         ArrayList<LaundryItem> items = itemDAO.getAllActiveItems();
         request.setAttribute("items", items);
-        request.getRequestDispatcher("/views/laundry/add.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/laundry/add.jsp").forward(request, response);
     }
     
     // Add new order
     private void addOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            Long orderId = Long.parseLong(request.getParameter("orderId"));
+            Integer orderId = Integer.valueOf(request.getParameter("orderId"));
             String pickupTimeStr = request.getParameter("pickupTime");
             String deliveryTimeStr = request.getParameter("deliveryTime");
             String returnTimeStr = request.getParameter("returnTime");
@@ -184,7 +184,7 @@ public class LaundryOrderServlet extends HttpServlet {
                 order.setPickupTime(LocalDateTime.parse(pickupTimeStr, formatter));
             }
             if (deliveryTimeStr != null && !deliveryTimeStr.isEmpty()) {
-                order.setExpectedDeliveryTime(LocalDateTime.parse(deliveryTimeStr, formatter));
+                order.setExpectedPickupTime(LocalDateTime.parse(deliveryTimeStr, formatter));
             }
             if (returnTimeStr != null && !returnTimeStr.isEmpty()) {
                 order.setExpectedReturnTime(LocalDateTime.parse(returnTimeStr, formatter));
@@ -203,7 +203,7 @@ public class LaundryOrderServlet extends HttpServlet {
                         quantities[i] != null && !quantities[i].isEmpty()) {
                         
                         LaundryOrderDetail detail = new LaundryOrderDetail();
-                        detail.setLaundryItemId(Long.valueOf(itemIds[i]));
+                        detail.setLaundryItemId(Integer.valueOf(itemIds[i]));
                         detail.setQuantity(Integer.valueOf(quantities[i]));
                         detail.setUnitPrice(Double.valueOf(prices[i]));
                         detail.setSubtotal(detail.getQuantity() * detail.getUnitPrice());
@@ -215,11 +215,11 @@ public class LaundryOrderServlet extends HttpServlet {
             
             order.setOrderDetails(details);
             
-            Long newId = orderDAO.insertOrder(order);
+            Integer newId = orderDAO.insertOrder(order);
             
             if (newId != null) {
                 request.setAttribute("success", "Order added successfully!");
-                response.sendRedirect("laundry-orders?action=view&id=" + newId);
+                response.sendRedirect("laundry-order?action=view&id=" + newId);
             } else {
                 request.setAttribute("error", "Failed to add order");
                 showAddForm(request, response);
@@ -238,14 +238,14 @@ public class LaundryOrderServlet extends HttpServlet {
         
         if (idStr != null && !idStr.isEmpty()) {
             try {
-                Long laundryId = Long.parseLong(idStr);
+                int laundryId = Integer.parseInt(idStr);
                 LaundryOrder order = orderDAO.getOrderById(laundryId);
                 ArrayList<LaundryItem> items = itemDAO.getAllActiveItems();
                 
                 if (order != null) {
                     request.setAttribute("order", order);
                     request.setAttribute("items", items);
-                    request.getRequestDispatcher("/views/laundry/edit.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/laundry/edit.jsp").forward(request, response);
                 } else {
                     request.setAttribute("error", "Order not found");
                     listOrders(request, response);
@@ -263,10 +263,10 @@ public class LaundryOrderServlet extends HttpServlet {
     private void updateOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            Long laundryId = Long.parseLong(request.getParameter("laundryId"));
-            Long orderId = Long.parseLong(request.getParameter("orderId"));
+            int laundryId = Integer.parseInt(request.getParameter("laundryId"));
+            int orderId = Integer.parseInt(request.getParameter("orderId"));
             String pickupTimeStr = request.getParameter("pickupTime");
-            String deliveryTimeStr = request.getParameter("deliveryTime");
+            String expectedPickupTimeStr = request.getParameter("deliveryTime");
             String returnTimeStr = request.getParameter("returnTime");
             String status = request.getParameter("status");
             String note = request.getParameter("note");
@@ -282,8 +282,8 @@ public class LaundryOrderServlet extends HttpServlet {
             if (pickupTimeStr != null && !pickupTimeStr.isEmpty()) {
                 order.setPickupTime(LocalDateTime.parse(pickupTimeStr, formatter));
             }
-            if (deliveryTimeStr != null && !deliveryTimeStr.isEmpty()) {
-                order.setExpectedDeliveryTime(LocalDateTime.parse(deliveryTimeStr, formatter));
+            if (expectedPickupTimeStr != null && !expectedPickupTimeStr.isEmpty()) {
+                order.setExpectedPickupTime(LocalDateTime.parse(expectedPickupTimeStr, formatter));
             }
             if (returnTimeStr != null && !returnTimeStr.isEmpty()) {
                 order.setExpectedReturnTime(LocalDateTime.parse(returnTimeStr, formatter));
@@ -302,9 +302,9 @@ public class LaundryOrderServlet extends HttpServlet {
                         quantities[i] != null && !quantities[i].isEmpty()) {
                         
                         LaundryOrderDetail detail = new LaundryOrderDetail();
-                        detail.setLaundryItemId(Long.parseLong(itemIds[i]));
-                        detail.setQuantity(Integer.parseInt(quantities[i]));
-                        detail.setUnitPrice(Double.parseDouble(prices[i]));
+                        detail.setLaundryItemId(Integer.parseInt(itemIds[i]));
+                        detail.setQuantity(Integer.valueOf(quantities[i]));
+                        detail.setUnitPrice(Double.valueOf(prices[i]));
                         detail.setSubtotal(detail.getQuantity() * detail.getUnitPrice());
                         
                         details.add(detail);
@@ -317,7 +317,7 @@ public class LaundryOrderServlet extends HttpServlet {
             boolean success = orderDAO.updateOrder(order);
             
             if (success) {
-                response.sendRedirect("laundry-orders?action=view&id=" + laundryId + "&success=updated");
+                response.sendRedirect("laundry-order?action=view&id=" + laundryId + "&success=updated");
             } else {
                 request.setAttribute("error", "Failed to update order");
                 showEditForm(request, response);
@@ -336,19 +336,19 @@ public class LaundryOrderServlet extends HttpServlet {
         
         if (idStr != null && !idStr.isEmpty()) {
             try {
-                Long laundryId = Long.parseLong(idStr);
+                int laundryId = Integer.parseInt(idStr);
                 boolean success = orderDAO.deleteOrder(laundryId);
                 
                 if (success) {
-                    response.sendRedirect("laundry-orders?success=deleted");
+                    response.sendRedirect("laundry-order?success=deleted");
                 } else {
-                    response.sendRedirect("laundry-orders?error=delete_failed");
+                    response.sendRedirect("laundry-order?error=delete_failed");
                 }
             } catch (NumberFormatException e) {
-                response.sendRedirect("laundry-orders?error=invalid_id");
+                response.sendRedirect("laundry-order?error=invalid_id");
             }
         } else {
-            response.sendRedirect("laundry-orders");
+            response.sendRedirect("laundry-order");
         }
     }
     
@@ -359,12 +359,12 @@ public class LaundryOrderServlet extends HttpServlet {
         
         if (idStr != null && !idStr.isEmpty()) {
             try {
-                Long laundryId = Long.parseLong(idStr);
+                int laundryId = Integer.parseInt(idStr);
                 LaundryOrder order = orderDAO.getOrderById(laundryId);
                 
                 if (order != null) {
                     request.setAttribute("order", order);
-                    request.getRequestDispatcher("/views/laundry/update-status.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/laundry/update-status.jsp").forward(request, response);
                 } else {
                     request.setAttribute("error", "Order not found");
                     listOrders(request, response);
@@ -382,13 +382,13 @@ public class LaundryOrderServlet extends HttpServlet {
     private void updateStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            Long laundryId = Long.parseLong(request.getParameter("laundryId"));
+            int laundryId = Integer.parseInt(request.getParameter("laundryId"));
             String status = request.getParameter("status");
             
             boolean success = orderDAO.updateOrderStatus(laundryId, status);
             
             if (success) {
-                response.sendRedirect("laundry-orders?action=view&id=" + laundryId + "&success=status_updated");
+                response.sendRedirect("laundry-order?action=view&id=" + laundryId + "&success=status_updated");
             } else {
                 request.setAttribute("error", "Failed to update status");
                 showUpdateStatusForm(request, response);
