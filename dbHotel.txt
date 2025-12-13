@@ -497,3 +497,90 @@ SELECT * FROM Drinks;
 
 -- Xem bảng Services: service_id vẫn tăng nối tiếp xe đạp
 SELECT * FROM Services;
+
+/* ============================================================
+   TẠO BẢNG CHO LAUNDRY SERVICES
+============================================================ */
+-- 1) Mỗi dòng = 1 loại dịch vụ giặt cụ thể (tương ứng 1 checkbox)
+CREATE TABLE LaundryItems (
+    laundry_item_id INT IDENTITY(1,1) PRIMARY KEY,
+    service_id      INT NOT NULL
+        FOREIGN KEY REFERENCES Services(service_id), -- dịch vụ Giặt là
+
+    item_name       NVARCHAR(100) NOT NULL,  -- Laundry Shirt Service, Jean Service,...
+    description     NVARCHAR(MAX) NULL,
+    default_price   DECIMAL(18,0) NOT NULL,  -- giá / 1 đơn vị
+    unit            NVARCHAR(20) NOT NULL,   -- 'cái', 'kg',...
+    is_active       BIT DEFAULT 1
+);
+
+-- 2) 1 phiếu giặt – gắn với 1 ServiceOrder (của phòng đó)
+CREATE TABLE LaundryOrders (
+    laundry_id           INT IDENTITY(1,1) PRIMARY KEY,
+    order_id             INT NOT NULL
+        FOREIGN KEY REFERENCES ServiceOrders(order_id),
+
+    pickup_time          DATETIME DEFAULT GETDATE(),
+    expected_pickup_time DATETIME NULL,
+    expected_return_time   DATETIME NULL,
+    status               NVARCHAR(20) DEFAULT N'Pending',
+    note                 NVARCHAR(MAX) NULL
+);
+
+-- 3) Chi tiết các loại trong 1 phiếu giặt
+CREATE TABLE LaundryOrderDetails (
+    laundry_detail_id INT IDENTITY(1,1) PRIMARY KEY,
+    laundry_id        INT NOT NULL
+        FOREIGN KEY REFERENCES LaundryOrders(laundry_id),
+    laundry_item_id   INT NOT NULL
+        FOREIGN KEY REFERENCES LaundryItems(laundry_item_id),
+
+    quantity          INT NOT NULL DEFAULT 1,
+    unit_price        DECIMAL(18,0) NOT NULL,  -- giá dùng thực tế
+    subtotal          AS (quantity * unit_price)
+);
+
+INSERT INTO ServiceCategories (category_name, description)
+VALUES (N'Giặt là', N'Dịch vụ giặt ủi');
+
+INSERT INTO Services (service_name, category_id, image_url, is_active, is_deleted)
+VALUES (
+    N'Dịch vụ giặt là',
+    (SELECT category_id FROM ServiceCategories WHERE category_name = N'Giặt là'),
+    NULL, 1, 0
+);
+
+DECLARE @laundryServiceId INT =
+    (SELECT service_id FROM Services WHERE service_name = N'Dịch vụ giặt là');
+
+INSERT INTO LaundryItems (service_id, item_name, default_price, unit)
+VALUES
+(@laundryServiceId, N'Laundry Shirt Service',                  20000, N'cái'),
+(@laundryServiceId, N'Laundry Jean Service',                   25000, N'cái'),
+(@laundryServiceId, N'Leather and Suede Cleaning',             80000, N'cái'),
+(@laundryServiceId, N'Wash/Dry/Fold Laundry Service',          30000, N'kg'),
+(@laundryServiceId, N'Flat Work Laundry Service',              40000, N'kg'),
+(@laundryServiceId, N'Designer Purse/Handbag Cleaning',       100000, N'cái'),
+(@laundryServiceId, N'Wedding Dress Cleaning and Preservation',300000, N'cái');
+
+-- 1. Tạo ServiceOrder cho phòng 101
+INSERT INTO ServiceOrders (room_id, status)
+VALUES ( (SELECT room_id FROM Rooms WHERE room_number = '101'), N'Pending');
+
+DECLARE @orderId INT = SCOPE_IDENTITY();
+
+-- 2. Tạo LaundryOrder cho ServiceOrder này
+INSERT INTO LaundryOrders (order_id, status)
+VALUES (@orderId, N'Pending');
+
+DECLARE @laundryId INT = SCOPE_IDENTITY();
+
+-- 3. Thêm chi tiết
+INSERT INTO LaundryOrderDetails (laundry_id, laundry_item_id, quantity, unit_price)
+VALUES
+(@laundryId,
+ (SELECT laundry_item_id FROM LaundryItems WHERE item_name = N'Laundry Shirt Service'),
+ 3, 20000),
+(@laundryId,
+ (SELECT laundry_item_id FROM LaundryItems WHERE item_name = N'Laundry Jean Service'),
+ 2, 25000);
