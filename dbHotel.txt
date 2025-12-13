@@ -590,6 +590,26 @@ END
 GO
 
 /* ============================================================
+   CẬP NHẬT BẢNG ROOMTYPES
+============================================================ */
+
+-- 1. Thêm cột isEventRoom (0 = Loại phòng ngủ, 1 = Loại sảnh sự kiện)
+IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'isEventRoom' AND Object_ID = Object_ID(N'RoomTypes'))
+BEGIN
+    ALTER TABLE RoomTypes ADD isEventRoom INT DEFAULT 0;
+END
+GO
+
+-- 2. Cập nhật dữ liệu cũ (Set các loại Sảnh thành 1)
+-- Lưu ý: Dựa vào tên để đoán, hoặc bạn có thể update theo ID cụ thể
+UPDATE RoomTypes 
+SET isEventRoom = 1 
+WHERE type_name LIKE N'%Sảnh%' 
+   OR type_name LIKE N'%Hội Nghị%' 
+   OR type_name LIKE N'%Tiệc%';
+GO
+
+/* ============================================================
    PHẦN 3: KIỂM TRA LẠI (SẼ THẤY FOOD/DRINK BẮT ĐẦU TỪ 1)
 ============================================================ */
 -- Xem bảng Foods: food_id sẽ là 1, 2, 3...
