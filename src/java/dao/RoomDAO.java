@@ -11,7 +11,7 @@ import java.util.List;
 
 public class RoomDAO extends DBContext {
 
-    // 1. Check Login
+    // 1. Check Login (Cho phép cả phòng ngủ & phòng sự kiện đăng nhập để order dịch vụ)
     public Room checkRoomLogin(String roomNumber, String password) {
         String sql = "SELECT * FROM Rooms WHERE room_number = ? AND room_password = ? AND is_active_login = 1";
         try {
@@ -20,7 +20,17 @@ public class RoomDAO extends DBContext {
             st.setString(2, password);
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
-                return mapRoom(rs);
+                // Lưu ý: Hàm này trả về Room basic, chưa join RoomType
+                Room r = new Room();
+                r.setRoomId(rs.getInt("room_id"));
+                r.setRoomNumber(rs.getString("room_number"));
+                r.setTypeId(rs.getInt("type_id"));
+                r.setStatus(rs.getString("room_status"));
+                r.setRoomPassword(rs.getString("room_password"));
+                r.setActiveLogin(rs.getBoolean("is_active_login"));
+                // Lấy thêm cột isEventRoom nếu cần phân biệt sau khi login
+                try { r.setIsEventRoom(rs.getInt("isEventRoom") == 1); } catch (Exception e) {} 
+                return r;
             }
         } catch (SQLException e) {
             System.out.println("Error checkRoomLogin: " + e.getMessage());
@@ -48,17 +58,38 @@ public class RoomDAO extends DBContext {
         }
         return roomList;
     }
-
-    // 3. Phân trang (Chỉ lấy phòng thường)
-    public List<Room> pagingRooms(int index) {
-        List<Room> list = new ArrayList<>();
+    
+    // 2.2 Lấy tất cả (Chỉ lấy phòng sự kiện)
+    public List<Room> getAllEventRooms() {
+        List<Room> roomList = new ArrayList<>();
         // THÊM: WHERE r.isEventRoom = 0
         String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
                    + "FROM Rooms r "
                    + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
-                   + "WHERE r.isEventRoom = 0 "
+                   + "WHERE r.isEventRoom = 1 " 
+                   + "ORDER BY r.room_number ASC";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                roomList.add(mapRoom(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getAllRooms: " + e.getMessage());
+        }
+        return roomList;
+    }
+
+    // 3. Phân trang (CHỈ LẤY PHÒNG THƯỜNG)
+    // pageSize mặc định là 5 trong Servlet, hoặc truyền vào đây
+    public List<Room> pagingRooms(int index) {
+        List<Room> list = new ArrayList<>();
+        String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
+                   + "FROM Rooms r "
+                   + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "WHERE r.isEventRoom = 0 " // <-- CHỈ LẤY PHÒNG NGỦ
                    + "ORDER BY r.room_number ASC "
-                   + "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
+                   + "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY"; // Hardcode 5 row
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, (index - 1) * 5);
@@ -94,12 +125,11 @@ public class RoomDAO extends DBContext {
     // 5. Tìm kiếm nâng cao (Filter)
     public List<Room> findRooms(String keyword, String typeId, String status, String active, String floor) {
         List<Room> list = new ArrayList<>();
-        // THÊM: AND r.isEventRoom = 0 ngay sau WHERE 1=1
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
               + "FROM Rooms r "
               + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
-              + "WHERE 1=1 AND r.isEventRoom = 0 "); 
+              + "WHERE 1=1 AND r.isEventRoom = 0 "); // <-- CHỈ LẤY PHÒNG NGỦ
 
         List<Object> params = new ArrayList<>();
 
@@ -112,7 +142,7 @@ public class RoomDAO extends DBContext {
             params.add(Integer.parseInt(typeId));
         }
         if (status != null && !status.isEmpty()) {
-            sql.append(" AND r.room_status = ? "); // SỬA: room_status
+            sql.append(" AND r.room_status = ? ");
             params.add(status);
         }
         if (active != null && !active.isEmpty()) {
@@ -123,6 +153,7 @@ public class RoomDAO extends DBContext {
             sql.append(" AND SUBSTRING(r.room_number, 1, LEN(r.room_number)-2) = ? ");
             params.add(floor);
         }
+        
         sql.append(" ORDER BY r.room_number ASC");
 
         try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
@@ -241,12 +272,22 @@ public class RoomDAO extends DBContext {
 
     public List<Integer> getExistingFloors() {
         List<Integer> floors = new ArrayList<>();
-        String sql = "SELECT DISTINCT CAST(SUBSTRING(room_number, 1, LEN(room_number)-2) AS INT) as floor_num FROM Rooms WHERE LEN(room_number) > 2 ORDER BY floor_num";
+        // CẬP NHẬT: Thêm điều kiện 'AND isEventRoom = 0'
+        // Mục đích: Chỉ lấy tầng của phòng khách (vd: 101, 205). 
+        // Tránh lỗi khi gặp phòng sự kiện tên chữ (vd: HALL-A) không thể ép kiểu sang số (INT) được.
+        String sql = "SELECT DISTINCT CAST(SUBSTRING(room_number, 1, LEN(room_number)-2) AS INT) as floor_num "
+                   + "FROM Rooms "
+                   + "WHERE LEN(room_number) > 2 AND isEventRoom = 0 " // <-- QUAN TRỌNG
+                   + "ORDER BY floor_num";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
-            while (rs.next()) floors.add(rs.getInt("floor_num"));
-        } catch (SQLException e) {}
+            while (rs.next()) {
+                floors.add(rs.getInt("floor_num"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getExistingFloors: " + e.getMessage());
+        }
         return floors;
     }
 
@@ -269,9 +310,12 @@ public class RoomDAO extends DBContext {
         } catch (SQLException e) {}
     }
 
+    // Lấy danh sách Loại phòng (CHỈ LẤY LOẠI PHÒNG NGỦ - isEventRoom = 0)
     public List<RoomType> getAllRoomTypes() {
         List<RoomType> list = new ArrayList<>();
-        String sql = "SELECT * FROM RoomTypes";
+        // SỬA: Thêm điều kiện WHERE isEventRoom = 0
+        String sql = "SELECT * FROM RoomTypes WHERE isEventRoom = 0"; 
+        
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
@@ -279,9 +323,13 @@ public class RoomDAO extends DBContext {
                 RoomType rt = new RoomType();
                 rt.setTypeId(rs.getInt("type_id"));
                 rt.setTypeName(rs.getString("type_name"));
+                rt.setCapacity(rs.getInt("capacity"));
+                // ... (các set khác nếu cần)
                 list.add(rt);
             }
-        } catch (SQLException e) {}
+        } catch (SQLException e) {
+            System.err.println("Lỗi getAllRoomTypes: " + e.getMessage());
+        }
         return list;
     }
     // 1. Hàm đếm tổng số phòng (Để tính tổng số trang)
@@ -337,6 +385,110 @@ public class RoomDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return list;
+    }
+    
+    
+    // --- [NEW] CÁC HÀM DÀNH CHO EVENT ROOM (isEventRoom = 1) ---
+
+    // 11. Đếm tổng số phòng SỰ KIỆN
+    public int getTotalEventRooms() {
+        String sql = "SELECT COUNT(*) FROM Rooms WHERE isEventRoom = 1";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {}
+        return 0;
+    }
+
+    // 12. Phân trang phòng SỰ KIỆN
+    public List<Room> pagingEventRooms(int index) {
+        List<Room> list = new ArrayList<>();
+        String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
+                   + "FROM Rooms r INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "WHERE r.isEventRoom = 1 " // <-- CHỈ LẤY PHÒNG SỰ KIỆN
+                   + "ORDER BY r.room_number ASC "
+                   + "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, (index - 1) * 5);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) list.add(mapRoom(rs));
+        } catch (SQLException e) {
+            System.out.println("Error pagingEventRooms: " + e.getMessage());
+        }
+        return list;
+    }
+
+    // 13. Tìm kiếm nâng cao phòng SỰ KIỆN (Thêm tham số keyword)
+    // Lưu ý: Đã sửa lại signature của hàm để nhận thêm keyword
+    public List<Room> findEventRooms(String keyword, String typeId, String minCap, String maxCap) {
+        List<Room> list = new ArrayList<>();
+        
+        StringBuilder sql = new StringBuilder(
+                "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
+              + "FROM Rooms r "
+              + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+              + "WHERE r.isEventRoom = 1 "); 
+
+        List<Object> params = new ArrayList<>();
+
+        // 1. [MỚI] Lọc theo Tên Sảnh (keyword)
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND r.room_number LIKE ? ");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        // 2. Lọc theo Loại phòng
+        if (typeId != null && !typeId.trim().isEmpty()) {
+            sql.append(" AND r.type_id = ? ");
+            params.add(Integer.parseInt(typeId));
+        }
+
+        // 3. Lọc theo Sức chứa (Min)
+        if (minCap != null && !minCap.trim().isEmpty()) {
+            sql.append(" AND t.capacity >= ? ");
+            params.add(Integer.parseInt(minCap));
+        }
+
+        // 4. Lọc theo Sức chứa (Max)
+        if (maxCap != null && !maxCap.trim().isEmpty()) {
+            sql.append(" AND t.capacity <= ? ");
+            params.add(Integer.parseInt(maxCap));
+        }
+        
+        sql.append(" ORDER BY t.capacity ASC, r.room_number ASC");
+
+        try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                st.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRoom(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error findEventRooms: " + e.getMessage());
+        }
+        return list;
+    }
+    
+    // 14. Lấy danh sách Loại phòng SỰ KIỆN (Cho Dropdown Filter bên Event Room)
+    public List<RoomType> getAllEventRoomTypes() {
+        List<RoomType> list = new ArrayList<>();
+        String sql = "SELECT * FROM RoomTypes WHERE isEventRoom = 1"; // Chỉ lấy loại sảnh tiệc
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                RoomType rt = new RoomType();
+                rt.setTypeId(rs.getInt("type_id"));
+                rt.setTypeName(rs.getString("type_name"));
+                list.add(rt);
+            }
+        } catch (SQLException e) {}
         return list;
     }
 }
