@@ -26,7 +26,12 @@
             <li class="menu-header">Room Management</li>
             <li>
                 <a class="nav-link" href="${pageContext.request.contextPath}/admin/rooms">
-                    <i class="fas fa-bed"></i> <span>Room</span>
+                    <i class="fas fa-bed"></i> <span>Guest Rooms</span> </a>
+            </li>
+            
+            <li>
+                <a class="nav-link" href="${pageContext.request.contextPath}/admin/event-rooms">
+                    <i class="fas fa-place-of-worship"></i> <span>Event Rooms</span>
                 </a>
             </li>
             <li>
@@ -42,6 +47,13 @@
             <li class="nav-item">
                 <a href="service-category" class="nav-link">Service Category</a>
             </li>
+            
+            <li class="nav-item">
+                <a href="${pageContext.request.contextPath}/admin/events" class="nav-link">
+                    <i class="fas fa-place-of-worship"></i> <span>Event Packages</span>
+                </a>
+            </li>
+            
             <li class="nav-item">
                 <a href="bicycle" class="nav-link">Bicycle</a>
             </li>

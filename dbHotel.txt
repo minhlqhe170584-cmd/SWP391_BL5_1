@@ -620,6 +620,14 @@ VALUES
 ('HALL-A', 2, 'Available', 'event123', 0, 1),
 ('HALL-B', 2, 'Available', 'event123', 0, 1);
 
+-- 1. Thêm cột status
+ALTER TABLE Events ADD [status] NVARCHAR(50) DEFAULT 'Active';
+GO
+
+-- 2. Cập nhật dữ liệu cũ để không bị Null
+UPDATE Events SET [status] = 'Active' WHERE [status] IS NULL;
+GO
+
 /* ============================================================
    PHẦN 3: KIỂM TRA LẠI (SẼ THẤY FOOD/DRINK BẮT ĐẦU TỪ 1)
 ============================================================ */
