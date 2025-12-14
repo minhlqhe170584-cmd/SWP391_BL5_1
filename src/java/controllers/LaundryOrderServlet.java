@@ -57,7 +57,7 @@ public class LaundryOrderServlet extends HttpServlet {
             case "edit":
                 showEditForm(request, response);
                 break;
-            case "delete":
+            case "cancel":
                 deleteOrder(request, response);
                 break;
             case "updateStatus":
@@ -99,6 +99,7 @@ public class LaundryOrderServlet extends HttpServlet {
             throws ServletException, IOException {
         String search = request.getParameter("search");
         String status = request.getParameter("status");
+        String view = request.getParameter("view"); 
         String sort = request.getParameter("sort");
         String pageStr = request.getParameter("page");
         
@@ -113,8 +114,8 @@ public class LaundryOrderServlet extends HttpServlet {
             }
         }
         
-        ArrayList<LaundryOrder> orders = orderDAO.search(search, status, sort, page, pageSize);
-        int totalRecords = orderDAO.countSearch(search, status);
+        ArrayList<LaundryOrder> orders = orderDAO.search(search, status, view, sort, page, pageSize);
+        int totalRecords = orderDAO.countSearch(search, status, view);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
         
         request.setAttribute("orders", orders);
@@ -124,6 +125,7 @@ public class LaundryOrderServlet extends HttpServlet {
         request.setAttribute("search", search);
         request.setAttribute("status", status);
         request.setAttribute("sort", sort);
+        request.setAttribute("view", view);
         
         request.getRequestDispatcher("/WEB-INF/views/laundry/list.jsp").forward(request, response);
     }
@@ -337,12 +339,12 @@ public class LaundryOrderServlet extends HttpServlet {
         if (idStr != null && !idStr.isEmpty()) {
             try {
                 int laundryId = Integer.parseInt(idStr);
-                boolean success = orderDAO.deleteOrder(laundryId);
+                boolean success = orderDAO.cancelOrder(laundryId);
                 
                 if (success) {
-                    response.sendRedirect("laundry-order?success=deleted");
+                    response.sendRedirect("laundry-order?success=canceled");
                 } else {
-                    response.sendRedirect("laundry-order?error=delete_failed");
+                    response.sendRedirect("laundry-order?error=cancel_failed");
                 }
             } catch (NumberFormatException e) {
                 response.sendRedirect("laundry-order?error=invalid_id");

@@ -77,10 +77,23 @@
                     </div>
                 </div>
             </c:if>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>Order List</h4>
+                    <div class="card-header-action">
+                        <a href="laundry-order?action=add" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> New Order
+                        </a>
+                    </div>
+                </div>
+            <div class="card-body p-0">
+            
 
             <div class="search-box">
                 <form action="laundry-order" method="get">
                     <input type="hidden" name="action" value="list">
+                    <input type="hidden" name="view" value="${view}">
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label>Search</label>
@@ -124,18 +137,31 @@
                     </div>
                 </form>
             </div>
-
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4>Order List</h4>
-                    <div class="card-header-action">
-                        <a href="laundry-order?action=add" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> New Order
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
+                            
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link ${empty view ? 'active' : ''}" 
+                   href="laundry-order?status=Pending&search=${param.search}">
+                    <i class="fas fa-clock"></i> Pending
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link ${view == 'Completed' ? 'active' : ''}" 
+                   href="laundry-order?view=Completed">
+                    <i class="fas fa-check-circle"></i> Completed
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link ${view == 'Canceled' ? 'active' : ''}" 
+                   href="laundry-order?view=Canceled">
+                    <i class="fas fa-times-circle"></i> Canceled
+                </a>
+            </li>
+        </ul>                
+                            
+            <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
@@ -199,7 +225,7 @@
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <button type="button" class="btn btn-danger btn-sm" 
-                                                        onclick="confirmDelete(${order.laundryId})" data-toggle="tooltip" title="Delete">
+                                                        onclick="confirmDelete(${order.laundryId})" data-toggle="tooltip" title="Cancel">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -232,7 +258,7 @@
                         <nav class="d-inline-block">
                             <ul class="pagination mb-0">
                                 <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                    <a class="page-link" href="laundry-order?action=list&page=${currentPage - 1}&search=${search}&status=${status}&sort=${sort}">
+                                    <a class="page-link" href="laundry-order?action=list&page=${currentPage - 1}&search=${search}&status=${status}&view=${view}&sort=${sort}">
                                         <i class="fas fa-chevron-left"></i>
                                     </a>
                                 </li>
@@ -240,7 +266,7 @@
                                 <c:forEach begin="1" end="${totalPages}" var="i">
                                     <c:if test="${i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2)}">
                                         <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                            <a class="page-link" href="laundry-order?action=list&page=${i}&search=${search}&status=${status}&sort=${sort}">
+                                            <a class="page-link" href="laundry-order?action=list&page=${i}&search=${search}&status=${status}&view=${view}&sort=${sort}">
                                                 ${i}
                                             </a>
                                         </li>
@@ -248,7 +274,7 @@
                                 </c:forEach>
                                 
                                 <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                    <a class="page-link" href="laundry-order?action=list&page=${currentPage + 1}&search=${search}&status=${status}&sort=${sort}">
+                                    <a class="page-link" href="laundry-order?action=list&page=${currentPage + 1}&search=${search}&status=${status}&view=${view}&sort=${sort}">
                                         <i class="fas fa-chevron-right"></i>
                                     </a>
                                 </li>
@@ -272,7 +298,7 @@
     function confirmDelete(id) {
         // Stisla often comes with SweetAlert, you can upgrade this if you have it
         if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-            window.location.href = 'laundry-order?action=delete&id=' + id;
+            window.location.href = 'laundry-order?action=cancel&id=' + id;
         }
     }
     
