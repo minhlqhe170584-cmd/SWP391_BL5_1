@@ -86,7 +86,7 @@
                         <h4>Tổ chức sự kiện</h4>
                         <p>Tổ chức trọn gói Tiệc cưới, Sinh nhật và Hội nghị. Sảnh tiệc sang trọng, thực đơn đa dạng và kịch bản chuyên nghiệp.</p>
                         
-                        <a href="${pageContext.request.contextPath}/book-bike" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Đặt Phòng Ngay</a>
+                        <a href="${pageContext.request.contextPath}/event-booking" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Đặt Phòng Ngay</a>
                     </div>
                 </div>
 

@@ -49,8 +49,14 @@
             </li>
             
             <li class="nav-item">
-                <a href="${pageContext.request.contextPath}/admin/events" class="nav-link">
+                <a href="${pageContext.request.contextPath}/admin/event-packages" class="nav-link">
                     <i class="fas fa-place-of-worship"></i> <span>Event Packages</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="${pageContext.request.contextPath}/admin/event-booking-list" class="nav-link">
+                    <i class="fas fa-place-of-worship"></i> <span>Event Booking</span>
                 </a>
             </li>
             
