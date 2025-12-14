@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package models;
 
 import java.math.BigDecimal;
@@ -9,26 +5,42 @@ import java.sql.Timestamp;
 
 public class Event {
 
+    // --- 1. Các trường khớp 100% với Database (Bảng Events) ---
     private int eventId;
-    private int serviceId;      // Link sang bảng Services
-    private int eventCatId;     // Link sang EventCategory
-    private String eventName;
-    private Timestamp startTime;
-    private Timestamp endTime;
-    private String location;    // Ví dụ: HALL-A
-    private int numberOfGuests;
-    private BigDecimal pricePerTable;
-    private BigDecimal totalCost;
-    private String setupRequirements;
-    private String status;      // Planned, Ongoing, Completed...
+    private String eventName;         // DB: name
+    private BigDecimal pricePerTable; // DB: price
+    private int eventCatId;           // DB: serviceCategoryId
+    private String location;          // DB: roomIds (Lưu chuỗi ID phòng, vd: "1,2")
+    private Timestamp createdDate;    // DB: created_date
+    private Timestamp updatedDate;    // DB: updated_date (Bổ sung thêm cái này)
 
-    // Relation (Để hiển thị tên loại sự kiện dễ dàng)
-    private EventCategory eventCategory;
+    // --- 2. Các trường phụ (Relation - Dùng để hiển thị khi Join bảng) ---
+    private EventCategory eventCategory; // Để lấy categoryName
 
-    // Relation (Để hiển thị ảnh từ bảng Services nếu cần)
-    private String imageUrl;
+    private String status;
 
+    // Constructor rỗng
     public Event() {
+    }
+
+    public Event(int eventId, String eventName, BigDecimal pricePerTable, int eventCatId, String location, Timestamp createdDate, Timestamp updatedDate, EventCategory eventCategory, String status) {
+        this.eventId = eventId;
+        this.eventName = eventName;
+        this.pricePerTable = pricePerTable;
+        this.eventCatId = eventCatId;
+        this.location = location;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
+        this.eventCategory = eventCategory;
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     // --- Getters & Setters ---
@@ -40,60 +52,12 @@ public class Event {
         this.eventId = eventId;
     }
 
-    public int getServiceId() {
-        return serviceId;
-    }
-
-    public void setServiceId(int serviceId) {
-        this.serviceId = serviceId;
-    }
-
-    public int getEventCatId() {
-        return eventCatId;
-    }
-
-    public void setEventCatId(int eventCatId) {
-        this.eventCatId = eventCatId;
-    }
-
     public String getEventName() {
         return eventName;
     }
 
     public void setEventName(String eventName) {
         this.eventName = eventName;
-    }
-
-    public Timestamp getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Timestamp startTime) {
-        this.startTime = startTime;
-    }
-
-    public Timestamp getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Timestamp endTime) {
-        this.endTime = endTime;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public int getNumberOfGuests() {
-        return numberOfGuests;
-    }
-
-    public void setNumberOfGuests(int numberOfGuests) {
-        this.numberOfGuests = numberOfGuests;
     }
 
     public BigDecimal getPricePerTable() {
@@ -104,28 +68,36 @@ public class Event {
         this.pricePerTable = pricePerTable;
     }
 
-    public BigDecimal getTotalCost() {
-        return totalCost;
+    public int getEventCatId() {
+        return eventCatId;
     }
 
-    public void setTotalCost(BigDecimal totalCost) {
-        this.totalCost = totalCost;
+    public void setEventCatId(int eventCatId) {
+        this.eventCatId = eventCatId;
     }
 
-    public String getSetupRequirements() {
-        return setupRequirements;
+    public String getLocation() {
+        return location;
     }
 
-    public void setSetupRequirements(String setupRequirements) {
-        this.setupRequirements = setupRequirements;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
-    public String getStatus() {
-        return status;
+    public Timestamp getCreatedDate() {
+        return createdDate;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setCreatedDate(Timestamp createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public Timestamp getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(Timestamp updatedDate) {
+        this.updatedDate = updatedDate;
     }
 
     public EventCategory getEventCategory() {
@@ -136,11 +108,8 @@ public class Event {
         this.eventCategory = eventCategory;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    @Override
+    public String toString() {
+        return "Event{" + "eventId=" + eventId + ", eventName=" + eventName + ", price=" + pricePerTable + '}';
     }
 }

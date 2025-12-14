@@ -44,6 +44,10 @@ CREATE TABLE Customers (
     created_at DATETIME DEFAULT GETDATE()
 );
 
+-- [QUAN TRỌNG] THÊM DỮ LIỆU KHÁCH HÀNG MẪU NGAY ĐỂ DÙNG CHO EVENT REQUEST SAU NÀY
+INSERT INTO Customers (full_name, email, password, phone)
+VALUES (N'Nguyễn Văn Khách', 'guest@gmail.com', '123456', '0901234567');
+
 /* ============================================================
  II. PHÒNG & BOOKING
 ============================================================ */
@@ -286,14 +290,18 @@ IF OBJECT_ID('Events', 'U') IS NOT NULL DROP TABLE Events; -- Xóa nếu trùng 
 
 CREATE TABLE Events (
     eventId INT IDENTITY(1,1) PRIMARY KEY,
-    name NVARCHAR(255) NOT NULL,            -- Tên gói sự kiện
-    price DECIMAL(18, 0) DEFAULT 0,         -- Giá
-    serviceCategoryId INT,                  -- Thuộc loại dịch vụ nào (Ví dụ: Hội nghị, Tiệc cưới)
-    roomIds NVARCHAR(MAX),                  -- Lưu chuỗi ID các phòng áp dụng (VD: "1,2,5")
+    name NVARCHAR(255) NOT NULL,
+    price DECIMAL(18, 0) DEFAULT 0,
+    serviceCategoryId INT,
+    roomIds NVARCHAR(MAX),
     created_date DATETIME DEFAULT GETDATE(),
     updated_date DATETIME DEFAULT GETDATE(),
+    
+    -- [QUAN TRỌNG] Khai báo luôn các cột này để tránh lỗi
+    status NVARCHAR(50) DEFAULT 'Active',
+    description NVARCHAR(MAX) NULL,
+    image_url VARCHAR(255) NULL,
 
-    -- Khóa ngoại trỏ về bảng ServiceCategories có sẵn
     CONSTRAINT FK_Events_ServiceCategories FOREIGN KEY (serviceCategoryId) REFERENCES ServiceCategories(category_id)
 );
 GO
@@ -305,23 +313,20 @@ IF OBJECT_ID('EventRequest', 'U') IS NOT NULL DROP TABLE EventRequest;
 
 CREATE TABLE EventRequest (
     requestId INT IDENTITY(1,1) PRIMARY KEY,
-    eventId INT NOT NULL,                   -- Khách chọn gói sự kiện nào
-    status NVARCHAR(50) DEFAULT 'PENDING',  -- ACCEPT, PENDING, DECLINE
-    
-    roomIds NVARCHAR(MAX),                  -- Các phòng cụ thể được chốt cho request này
-    
-    check_in_date DATETIME NOT NULL,        -- Ngày giờ dự kiến bắt đầu
-    check_out_date DATETIME NOT NULL,       -- Ngày giờ dự kiến kết thúc
-    
-    real_check_in_date DATETIME NULL,       -- Ngày giờ thực tế bắt đầu
-    real_check_out_date DATETIME NULL,      -- Ngày giờ thực tế kết thúc
-    
-    message NVARCHAR(MAX),                  -- Ghi chú của khách hàng
-    
+    eventId INT NOT NULL,
+    customer_id INT NOT NULL, -- [QUAN TRỌNG] Có ngay từ đầu
+    status NVARCHAR(50) DEFAULT 'PENDING',
+    roomIds NVARCHAR(MAX),
+    check_in_date DATETIME NOT NULL,
+    check_out_date DATETIME NOT NULL,
+    real_check_in_date DATETIME NULL,
+    real_check_out_date DATETIME NULL,
+    message NVARCHAR(MAX),
     created_date DATETIME DEFAULT GETDATE(),
     updated_date DATETIME DEFAULT GETDATE(),
 
-    CONSTRAINT FK_EventRequest_Events FOREIGN KEY (eventId) REFERENCES Events(eventId)
+    CONSTRAINT FK_EventRequest_Events FOREIGN KEY (eventId) REFERENCES Events(eventId),
+    CONSTRAINT FK_EventRequest_Customers FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
 GO
 
@@ -337,22 +342,23 @@ DECLARE @EventCatID INT = (SELECT category_id FROM ServiceCategories WHERE categ
 
 -- Bước B: Insert vào bảng Events
 -- Giả sử phòng 101 (id=1) và 102 (id=2) là phòng sự kiện
-INSERT INTO Events (name, price, serviceCategoryId, roomIds, created_date, updated_date)
+INSERT INTO Events (name, price, serviceCategoryId, roomIds, created_date, updated_date, status)
 VALUES 
-(N'Gói Tiệc Cưới', 5000000, @EventCatID, '1,2', GETDATE(), GETDATE()),
-(N'Tiệc Sinh Nhật Trọn Gói', 3000000, @EventCatID, '1', GETDATE(), GETDATE());
+(N'Gói Tiệc Cưới Vàng', 5000000, @EventCatID, '3,4', GETDATE(), GETDATE(), 'Active'),
+(N'Tiệc Sinh Nhật VIP', 3000000, @EventCatID, '3', GETDATE(), GETDATE(), 'Active');
 
--- Bước C: Insert vào bảng EventRequest
--- Lấy ID của Event vừa tạo
-DECLARE @EventID_1 INT = (SELECT TOP 1 eventId FROM Events WHERE name = N'Gói Tiệc Cưới');
+-- Bước C. Insert vào bảng Event Requests
+DECLARE @EventID_1 INT = (SELECT TOP 1 eventId FROM Events WHERE name = N'Gói Tiệc Cưới Vàng');
+DECLARE @CusID INT = (SELECT TOP 1 customer_id FROM Customers); -- Lấy khách hàng đầu tiên
 
-INSERT INTO EventRequest (eventId, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
+-- [ĐÃ CHỈNH SỬA] Insert có cột customer_id
+INSERT INTO EventRequest (eventId, customer_id, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
 VALUES 
-(@EventID_1, 'PENDING', '1,2', DATEADD(DAY, 5, GETDATE()), DATEADD(HOUR, 4, DATEADD(DAY, 5, GETDATE())), N'Yêu cầu chuẩn bị thêm máy chiếu và nước suối.', GETDATE(), GETDATE());
+(@EventID_1, @CusID, 'PENDING', '3,4', DATEADD(DAY, 5, GETDATE()), DATEADD(HOUR, 4, DATEADD(DAY, 5, GETDATE())), N'Yêu cầu chuẩn bị thêm máy chiếu.', GETDATE(), GETDATE());
 
-INSERT INTO EventRequest (eventId, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
+INSERT INTO EventRequest (eventId, customer_id, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
 VALUES 
-(@EventID_1, 'ACCEPT', '1', DATEADD(DAY, 10, GETDATE()), DATEADD(HOUR, 5, DATEADD(DAY, 10, GETDATE())), N'Đã đặt cọc 50%.', GETDATE(), GETDATE());
+(@EventID_1, @CusID, 'ACCEPT', '3', DATEADD(DAY, 10, GETDATE()), DATEADD(HOUR, 5, DATEADD(DAY, 10, GETDATE())), N'Đã đặt cọc.', GETDATE(), GETDATE());
 
 GO
 
@@ -621,13 +627,9 @@ VALUES
 ('HALL-A', 2, 'Available', 'event123', 0, 1),
 ('HALL-B', 2, 'Available', 'event123', 0, 1);
 
--- 1. Thêm cột status
-ALTER TABLE Events ADD [status] NVARCHAR(50) DEFAULT 'Active';
-GO
 
--- 2. Cập nhật dữ liệu cũ để không bị Null
-UPDATE Events SET [status] = 'Active' WHERE [status] IS NULL;
-GO
+
+
 
 /* ============================================================
    PHẦN 3: KIỂM TRA LẠI (SẼ THẤY FOOD/DRINK BẮT ĐẦU TỪ 1)

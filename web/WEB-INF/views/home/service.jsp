@@ -272,8 +272,20 @@
                         <a href="services?page=${currentPage + 1}"><i class="fa fa-angle-right"></i></a>
                     </c:if>
                 </div>
-            </c:if>
-            
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="service-item">
+                        <img src="https://www.vietnambooking.com/wp-content/uploads/2023/08/to-chuc-su-kien-1.jpg" alt="Tổ chức sự kiện">
+                        
+                        <i class="flaticon-012-cocktail"></i>
+                        <h4>Tổ chức sự kiện</h4>
+                        <p>Tổ chức trọn gói Tiệc cưới, Sinh nhật và Hội nghị. Sảnh tiệc sang trọng, thực đơn đa dạng và kịch bản chuyên nghiệp.</p>
+                        
+                        <a href="${pageContext.request.contextPath}/event-booking" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Đặt Phòng Ngay</a>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </section>
 
