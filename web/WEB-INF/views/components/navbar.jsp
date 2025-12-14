@@ -73,7 +73,7 @@
                                 
                                 <li><a href="${pageContext.request.contextPath}/home">Trang chủ</a></li>
                                 <li><a href="${pageContext.request.contextPath}/listRooms">Phòng Nghỉ</a></li>
-                                <li><a href="${pageContext.request.contextPath}/services">Dịch Vụ</a></li>
+                                <li><a href="${pageContext.request.contextPath}/services-home">Dịch Vụ</a></li>
                                 <li><a href="${pageContext.request.contextPath}/contact">Liên Hệ</a></li>
 
                                 <c:if test="${sessionScope.USER != null}">
