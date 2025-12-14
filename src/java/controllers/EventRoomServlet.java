@@ -42,6 +42,32 @@ public class EventRoomServlet extends HttpServlet {
 
         try {
             switch (action.toUpperCase()) {
+                case "LOCK":
+                    String idLockStr = request.getParameter("id");
+                    if (idLockStr != null) {
+                        try {
+                            int id = Integer.parseInt(idLockStr);
+                            Room room = roomDAO.getEventRoomById(id);
+                            
+                            if (room != null) {
+                                boolean newLockState = !room.isActiveLogin();
+                                room.setActiveLogin(newLockState);
+                                roomDAO.updateRoom(room);
+                                
+                                // --- [THÊM ĐOẠN NÀY] ---
+                                String msg = newLockState ? "Unlocked hall " + room.getRoomNumber() + " successfully!" : "Locked hall " + room.getRoomNumber() + " successfully!";
+                                request.getSession().setAttribute("successMessage", msg);
+                                // -----------------------
+                            } else {
+                                request.getSession().setAttribute("errorMessage", "Hall ID not found!");
+                            }
+                        } catch (NumberFormatException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    response.sendRedirect("event-rooms?action=LIST");
+                    break;
+                    
                 case "LIST":
                     // 1. Dữ liệu Dropdown
                     List<RoomType> listType = roomDAO.getAllEventRoomTypes();

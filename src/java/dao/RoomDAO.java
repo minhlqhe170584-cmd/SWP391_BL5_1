@@ -491,4 +491,20 @@ public class RoomDAO extends DBContext {
         } catch (SQLException e) {}
         return list;
     }
+    
+    // 15. Lấy chi tiết phòng SỰ KIỆN theo ID (Dùng cho chức năng Lock/Edit bên EventRoomServlet)
+    public Room getEventRoomById(int id) {
+        String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
+                   + "FROM Rooms r INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "WHERE r.room_id = ? AND r.isEventRoom = 1"; // <-- Quan trọng: isEventRoom = 1
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, id);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) return mapRoom(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getEventRoomById: " + e.getMessage());
+        }
+        return null;
+    }
 }
