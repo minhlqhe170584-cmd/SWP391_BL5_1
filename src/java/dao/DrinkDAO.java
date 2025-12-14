@@ -190,18 +190,29 @@ public class DrinkDAO extends DBContext {
 
     // --- HÀM MAP RESULTSET ---
     private Drink mapResultSetToDrink(ResultSet rs) throws SQLException {
-        return new Drink(
-                rs.getInt("drink_id"),
-                rs.getInt("service_id"),
-                rs.getString("drink_name"),
-                rs.getDouble("price"),
-                rs.getString("description"),
-                rs.getInt("volume_ml"),
-                rs.getBoolean("is_alcoholic"),
-                rs.getString("image_url"),
-                rs.getBoolean("is_active")
-        );
+    
+    // Xử lý giá trị NULL an toàn cho volume_ml
+    int volumeMl = rs.getInt("volume_ml");
+    if (rs.wasNull()) {
+        volumeMl = 0; // Hoặc giá trị mặc định nếu volume_ml là NULL
     }
+    
+    // Xử lý giá trị NULL an toàn cho is_alcoholic
+    boolean isAlcoholic = rs.getBoolean("is_alcoholic");
+    // Không cần wasNull cho boolean trừ khi bạn cần 3 trạng thái (True, False, NULL)
+
+    return new Drink(
+        rs.getInt("drink_id"),
+        rs.getInt("service_id"),
+        rs.getString("drink_name"),
+        rs.getDouble("price"),
+        rs.getString("description"),
+        volumeMl, // Sử dụng giá trị đã kiểm tra NULL
+        isAlcoholic, 
+        rs.getString("image_url"),
+        rs.getBoolean("is_active")
+    );
+}
 
     // --- LẤY DANH SÁCH CHO GIAO DIỆN KHÁCH HÀNG (ĐÃ SỬA LỖI AMBIGUOUS COLUMN) ---
     public List<Drink> getAllActiveDrinks() {
