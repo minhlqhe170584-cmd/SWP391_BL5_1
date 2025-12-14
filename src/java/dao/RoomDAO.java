@@ -423,7 +423,7 @@ public class RoomDAO extends DBContext {
 
     // 13. Tìm kiếm nâng cao phòng SỰ KIỆN (Thêm tham số keyword)
     // Lưu ý: Đã sửa lại signature của hàm để nhận thêm keyword
-    public List<Room> findEventRooms(String keyword, String typeId, String minCap, String maxCap) {
+public List<Room> findEventRooms(String keyword, String typeId, String minCap, String maxCap, String active) {
         List<Room> list = new ArrayList<>();
         
         StringBuilder sql = new StringBuilder(
@@ -434,28 +434,30 @@ public class RoomDAO extends DBContext {
 
         List<Object> params = new ArrayList<>();
 
-        // 1. [MỚI] Lọc theo Tên Sảnh (keyword)
+        // 1. Keyword
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND r.room_number LIKE ? ");
             params.add("%" + keyword.trim() + "%");
         }
-
-        // 2. Lọc theo Loại phòng
+        // 2. Type
         if (typeId != null && !typeId.trim().isEmpty()) {
             sql.append(" AND r.type_id = ? ");
             params.add(Integer.parseInt(typeId));
         }
-
-        // 3. Lọc theo Sức chứa (Min)
+        // 3. Min Cap
         if (minCap != null && !minCap.trim().isEmpty()) {
             sql.append(" AND t.capacity >= ? ");
             params.add(Integer.parseInt(minCap));
         }
-
-        // 4. Lọc theo Sức chứa (Max)
+        // 4. Max Cap
         if (maxCap != null && !maxCap.trim().isEmpty()) {
             sql.append(" AND t.capacity <= ? ");
             params.add(Integer.parseInt(maxCap));
+        }
+        // 5. [MỚI] Active Login
+        if (active != null && !active.trim().isEmpty()) {
+            sql.append(" AND r.is_active_login = ? ");
+            params.add(Boolean.parseBoolean(active));
         }
         
         sql.append(" ORDER BY t.capacity ASC, r.room_number ASC");
@@ -465,16 +467,15 @@ public class RoomDAO extends DBContext {
                 st.setObject(i + 1, params.get(i));
             }
             try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapRoom(rs));
-                }
+                while (rs.next()) list.add(mapRoom(rs));
             }
         } catch (SQLException e) {
             System.err.println("Error findEventRooms: " + e.getMessage());
         }
         return list;
     }
-    
+
+
     // 14. Lấy danh sách Loại phòng SỰ KIỆN (Cho Dropdown Filter bên Event Room)
     public List<RoomType> getAllEventRoomTypes() {
         List<RoomType> list = new ArrayList<>();

@@ -69,20 +69,20 @@ public class EventRoomServlet extends HttpServlet {
                     break;
                     
                 case "LIST":
-                    // 1. Dữ liệu Dropdown
+                    // 1. Chuẩn bị dữ liệu Dropdown
                     List<RoomType> listType = roomDAO.getAllEventRoomTypes();
                     request.setAttribute("listType", listType);
 
-                    // 2. Lấy tham số (Search & Filter chung 1 form)
+                    // 2. Lấy tham số từ Form Filter (5 tham số)
                     String keyword = request.getParameter("keyword");
                     String typeId = request.getParameter("typeId");
                     String minCap = request.getParameter("minCapacity");
                     String maxCap = request.getParameter("maxCapacity");
+                    String active = request.getParameter("active"); // <--- [MỚI]
 
-                    // 3. Logic tìm kiếm (Luôn gọi hàm findEventRooms để support cả search lẫn filter)
-                    // Nếu không nhập gì cả thì các tham số là null/empty -> hàm DAO sẽ tự ignore và trả về all (nhưng vẫn support phân trang)
-                    // Gọi hàm tìm kiếm với đầy đủ tham số kết hợp
-                    List<Room> fullList = roomDAO.findEventRooms(keyword, typeId, minCap, maxCap);
+                    // 3. Gọi hàm DAO (Đã cập nhật nhận 5 tham số)
+                    // Hàm này sẽ xử lý logic AND: Tên + Loại + Sức chứa + Trạng thái Login
+                    List<Room> fullList = roomDAO.findEventRooms(keyword, typeId, minCap, maxCap, active);
 
                     // 4. Xử lý phân trang trên List kết quả
                     int count = fullList.size();
@@ -105,23 +105,26 @@ public class EventRoomServlet extends HttpServlet {
                         pagedList = fullList.subList(start, end);
                     }
 
-                    // 5. Gửi dữ liệu về JSP
+                    // 5. Gửi dữ liệu hiển thị về JSP
                     request.setAttribute("eventRooms", pagedList);
                     request.setAttribute("endPage", endPage);
                     request.setAttribute("tag", index);
-                    request.setAttribute("totalRooms", count); // Thêm cái này để hiện "Found X rooms" cho xịn
+                    request.setAttribute("totalRooms", count); 
 
-                    // Gửi lại tham số để giữ form và link phân trang
+                    // 6. Gửi lại tham số để giữ trạng thái Form và Link phân trang
                     request.setAttribute("keyword", keyword);
                     request.setAttribute("currentType", typeId);
                     request.setAttribute("minCapacity", minCap);
                     request.setAttribute("maxCapacity", maxCap);
+                    request.setAttribute("currentActive", active); // <--- [MỚI]
 
-                    // Biến cờ để hiện nút Reset
+                    // 7. Biến cờ để hiện nút Reset
                     boolean isFiltering = (keyword != null && !keyword.trim().isEmpty())
                             || (typeId != null && !typeId.isEmpty())
                             || (minCap != null && !minCap.isEmpty())
-                            || (maxCap != null && !maxCap.isEmpty());
+                            || (maxCap != null && !maxCap.isEmpty())
+                            || (active != null && !active.isEmpty()); // <--- [MỚI]
+                    
                     request.setAttribute("isFiltering", isFiltering);
 
                     request.getRequestDispatcher("/WEB-INF/views/event/event-room-list.jsp").forward(request, response);

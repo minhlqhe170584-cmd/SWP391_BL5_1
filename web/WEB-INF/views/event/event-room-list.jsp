@@ -56,7 +56,7 @@
                             <form action="event-rooms" method="GET" class="mb-4">
                                 <input type="hidden" name="action" value="LIST">
                                 <div class="form-row align-items-end">
-                                    <div class="form-group col-md-3">
+                                    <div class="form-group col-md-2">
                                         <label>Hall Name</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -65,7 +65,7 @@
                                             <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="Search name...">
                                         </div>
                                     </div>
-                                    <div class="form-group col-md-3">
+                                    <div class="form-group col-md-2">
                                         <label>Hall Type</label>
                                         <select name="typeId" class="form-control">
                                             <option value="">-- All Types --</option>
@@ -83,6 +83,15 @@
                                     <div class="form-group col-md-2">
                                         <label>Max Cap</label>
                                         <input type="number" name="maxCapacity" value="${maxCapacity}" class="form-control" placeholder="Max">
+                                    </div>
+                                    
+                                    <div class="form-group col-md-2">
+                                        <label>Login Access</label>
+                                        <select name="active" class="form-control">
+                                            <option value="">-- All --</option>
+                                            <option value="true" ${currentActive == 'true' ? 'selected' : ''}>Allowed</option>
+                                            <option value="false" ${currentActive == 'false' ? 'selected' : ''}>Locked</option>
+                                        </select>
                                     </div>
                                     <div class="form-group col-md-2 d-flex justify-content-between">
                                         <button type="submit" class="btn btn-info flex-fill mr-1" title="Search & Filter">
