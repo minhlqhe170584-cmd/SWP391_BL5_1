@@ -9,11 +9,13 @@ public class Food {
     private String description;
     private String imageUrl;
     private boolean isActive;
+    private boolean isVegetarian;
 
     public Food() {
     }
 
-    public Food(int foodId, int serviceId, String name, double price, String description, String imageUrl, boolean isActive) {
+    // CONSTRUCTOR MỚI: Đã thêm tham số isVegetarian
+    public Food(int foodId, int serviceId, String name, double price, String description, String imageUrl, boolean isActive, boolean isVegetarian) {
         this.foodId = foodId;
         this.serviceId = serviceId;
         this.name = name;
@@ -21,9 +23,19 @@ public class Food {
         this.description = description;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
+        this.isVegetarian = isVegetarian; // Khởi tạo trường mới
     }
 
-    // --- GETTER & SETTER ---
+    // --- GETTER & SETTER cho trường mới ---
+    public boolean isIsVegetarian() {
+        return isVegetarian;
+    }
+
+    public void setIsVegetarian(boolean isVegetarian) {
+        this.isVegetarian = isVegetarian;
+    }
+
+    // --- GETTER & SETTER CŨ (Không thay đổi) ---
     public int getFoodId() {
         return foodId;
     }

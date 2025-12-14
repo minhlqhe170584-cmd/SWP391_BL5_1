@@ -19,20 +19,20 @@ public class DrinkDAO extends DBContext {
     // --- 1. LẤY DANH SÁCH (Hỗ trợ Tìm kiếm + Lọc Service + Phân trang) ---
     public List<Drink> getDrinks(String keyword, String serviceIdStr, int pageIndex, int pageSize) {
         List<Drink> list = new ArrayList<>();
-        
-        // Xử lý tham số đầu vào
+
         String searchName = (keyword == null || keyword.trim().isEmpty()) ? "" : keyword.trim();
         int serviceId = -1;
         try {
             if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
                 serviceId = Integer.parseInt(serviceIdStr);
             }
-        } catch (NumberFormatException e) { serviceId = -1; }
-        
+        } catch (NumberFormatException e) {
+            serviceId = -1;
+        }
+
         int offset = (pageIndex - 1) * pageSize;
 
-        // SQL Server 2012+ Paging
-        // SỬA: Tên bảng 'Drinks' và cột 'drink_name'
+        // SELECT đầy đủ 9 cột data
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT drink_id, service_id, drink_name, price, description, volume_ml, is_alcoholic, image_url, is_active FROM Drinks WHERE 1=1 ");
 
@@ -47,14 +47,14 @@ public class DrinkDAO extends DBContext {
 
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             int index = 1;
-            
+
             if (!searchName.isEmpty()) {
                 ps.setString(index++, "%" + searchName + "%");
             }
             if (serviceId != -1) {
                 ps.setInt(index++, serviceId);
             }
-            
+
             ps.setInt(index++, offset);
             ps.setInt(index++, pageSize);
 
@@ -76,11 +76,12 @@ public class DrinkDAO extends DBContext {
             if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
                 serviceId = Integer.parseInt(serviceIdStr);
             }
-        } catch (NumberFormatException e) { serviceId = -1; }
+        } catch (NumberFormatException e) {
+            serviceId = -1;
+        }
 
-        // SỬA: Tên bảng 'Drinks'
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Drinks WHERE 1=1 ");
-        
+
         if (!searchName.isEmpty()) {
             sql.append(" AND drink_name LIKE ? ");
         }
@@ -96,9 +97,11 @@ public class DrinkDAO extends DBContext {
             if (serviceId != -1) {
                 ps.setInt(index++, serviceId);
             }
-            
+
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,9 +109,8 @@ public class DrinkDAO extends DBContext {
     }
 
     // --- 3. CÁC HÀM CRUD CƠ BẢN ---
-
     public void createDrink(Drink drink) throws SQLException {
-        // SỬA: Tên bảng 'Drinks' và cột 'drink_name'
+        // SQL đã bao gồm đủ 8 cột data
         String sql = "INSERT INTO Drinks (service_id, drink_name, price, description, volume_ml, is_alcoholic, image_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, drink.getServiceId());
@@ -123,9 +125,9 @@ public class DrinkDAO extends DBContext {
         }
     }
 
+    // SỬA LỖI: Thêm cột is_active vào UPDATE
     public void updateDrink(Drink drink) throws SQLException {
-        // SỬA: Tên bảng 'Drinks' và cột 'drink_name'
-        String sql = "UPDATE Drinks SET service_id = ?, drink_name = ?, price = ?, description = ?, volume_ml = ?, is_alcoholic = ?, image_url = ? WHERE drink_id = ?";
+        String sql = "UPDATE Drinks SET service_id = ?, drink_name = ?, price = ?, description = ?, volume_ml = ?, is_alcoholic = ?, image_url = ?, is_active = ? WHERE drink_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, drink.getServiceId());
             ps.setString(2, drink.getName());
@@ -134,19 +136,24 @@ public class DrinkDAO extends DBContext {
             ps.setInt(5, drink.getVolumeMl());
             ps.setBoolean(6, drink.getIsAlcoholic());
             ps.setString(7, drink.getImageUrl());
-            ps.setInt(8, drink.getDrinkId());
+            ps.setBoolean(8, drink.getIsActive()); // Đã thêm is_active
+            ps.setInt(9, drink.getDrinkId());      // drink_id là tham số cuối
             ps.executeUpdate();
         }
     }
 
     public Drink getDrinkById(int id) {
-        String sql = "SELECT * FROM Drinks WHERE drink_id = ?";
+        String sql = "SELECT drink_id, service_id, drink_name, price, description, volume_ml, is_alcoholic, image_url, is_active FROM Drinks WHERE drink_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapResultSetToDrink(rs);
+                if (rs.next()) {
+                    return mapResultSetToDrink(rs);
+                }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -169,10 +176,9 @@ public class DrinkDAO extends DBContext {
     // Lấy danh sách Service cho Dropdown
     public List<Service> getAllServices() {
         List<Service> list = new ArrayList<>();
-        // LƯU Ý: Nếu Category ID của Drink không phải là 3, hãy sửa số 3 này lại
-        String sql = "SELECT service_id, service_name FROM Services WHERE category_id = 3"; 
-        try (PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        // Giả sử category_id = 3 là Drink Category ID
+        String sql = "SELECT service_id, service_name FROM Services WHERE category_id = 3";
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(new Service(rs.getInt("service_id"), rs.getString("service_name")));
             }
@@ -187,7 +193,7 @@ public class DrinkDAO extends DBContext {
         return new Drink(
                 rs.getInt("drink_id"),
                 rs.getInt("service_id"),
-                rs.getString("drink_name"), // Đã sửa thành drink_name
+                rs.getString("drink_name"),
                 rs.getDouble("price"),
                 rs.getString("description"),
                 rs.getInt("volume_ml"),
@@ -196,7 +202,30 @@ public class DrinkDAO extends DBContext {
                 rs.getBoolean("is_active")
         );
     }
-    
+
+    // --- LẤY DANH SÁCH CHO GIAO DIỆN KHÁCH HÀNG (ĐÃ SỬA LỖI AMBIGUOUS COLUMN) ---
+    public List<Drink> getAllActiveDrinks() {
+        List<Drink> list = new ArrayList<>();
+
+        // ĐÃ SỬA: SỬ DỤNG ALIAS CHO CÁC CỘT CHUNG (service_id, image_url, is_active)
+        // Để đảm bảo tên cột trả về là chính xác.
+        String sql = "SELECT d.drink_id, s.service_id AS service_id, d.drink_name, d.price, d.description, d.volume_ml, d.is_alcoholic, s.image_url AS image_url, s.is_active AS is_active "
+                + "FROM Drinks d "
+                + "JOIN Services s ON d.service_id = s.service_id "
+                + "WHERE s.is_active = 1";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapResultSetToDrink(rs));
+            }
+        } catch (Exception e) {
+            // Vui lòng in lỗi chi tiết ở đây nếu vẫn bị 500
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // Test Main
     public static void main(String[] args) {
         DrinkDAO dao = new DrinkDAO();
