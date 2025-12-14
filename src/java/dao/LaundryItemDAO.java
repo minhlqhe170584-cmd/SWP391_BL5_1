@@ -420,13 +420,5 @@ public class LaundryItemDAO extends DBContext {
         }
         return null;
     }
-    
-    public static void main(String[] args) {
-        LaundryItemDAO dao = new LaundryItemDAO();
-        ArrayList<Service> rs = dao.getActiveServices();
-        for(Service list: rs){
-            System.out.println(list.getServiceName());
-        }   
-    }
 }
 

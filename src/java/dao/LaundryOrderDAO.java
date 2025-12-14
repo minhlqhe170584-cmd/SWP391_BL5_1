@@ -13,13 +13,15 @@ public class LaundryOrderDAO extends DBContext {
             + "so.room_id, so.order_date, so.total_amount "
             + "FROM LaundryOrders lo "
             + "LEFT JOIN ServiceOrders so ON lo.order_id = so.order_id "
+            + "WHERE so.status LIKE N'%Pending%' "
             + "ORDER BY lo.laundry_id DESC";
 
     private static final String GET_ORDER_BY_ID = "SELECT lo.laundry_id, lo.order_id, lo.pickup_time, "
             + "lo.expected_pickup_time, lo.expected_return_time, lo.status, lo.note, "
-            + "so.room_id, so.order_date, so.total_amount "
+            + "so.room_id, so.order_date, so.total_amount, so.status AS service_status, r.room_number "
             + "FROM LaundryOrders lo "
             + "LEFT JOIN ServiceOrders so ON lo.order_id = so.order_id "
+            + "LEFT JOIN Rooms r ON so.room_id = r.room_id "
             + "WHERE lo.laundry_id = ?";
 
     private static final String GET_ORDER_DETAILS = "SELECT lod.laundry_id, lod.laundry_item_id, "
@@ -47,7 +49,15 @@ public class LaundryOrderDAO extends DBContext {
     private static final String DELETE_ORDER = "DELETE FROM LaundryOrders WHERE laundry_id=?";
 
     private static final String BASE_ORDER_SEARCH = "FROM LaundryOrders lo "
-            + "LEFT JOIN ServiceOrders so ON lo.order_id = so.order_id WHERE 1=1";
+            + "LEFT JOIN ServiceOrders so ON lo.order_id = so.order_id "
+            + "LEFT JOIN Rooms r ON so.room_id = r.room_id WHERE 1=1 ";
+    
+    private static final String CANCEL_SERVICE_ORDER = 
+    "UPDATE ServiceOrders SET status = 'Canceled' " +
+    "WHERE order_id = (SELECT order_id FROM LaundryOrders WHERE laundry_id = ?)";
+
+    private static final String CANCEL_LAUNDRY_ORDER = 
+    "UPDATE LaundryOrders SET status = 'Canceled' WHERE laundry_id = ?";
 
     // Get all laundry orders
     public ArrayList<LaundryOrder> getAllOrders() {
@@ -127,6 +137,7 @@ public class LaundryOrderDAO extends DBContext {
 
                 order.setStatus(rs.getString("status"));
                 order.setNote(rs.getString("note"));
+                order.setRoomNumber(rs.getString("room_number"));
 
                 // Set ServiceOrder info
                 ServiceOrder serviceOrder = new ServiceOrder();
@@ -137,6 +148,7 @@ public class LaundryOrderDAO extends DBContext {
                     serviceOrder.setOrderDate(orderDate);
                 }
                 serviceOrder.setTotalAmount(rs.getDouble("total_amount"));
+                serviceOrder.setStatus(rs.getString("service_status"));
                 order.setServiceOrder(serviceOrder);
 
                 // Get order details
@@ -411,13 +423,57 @@ public class LaundryOrderDAO extends DBContext {
         }
         return false;
     }
+    
+    public boolean cancelOrder(int laundryId) {
+    Connection conn = null;
+    PreparedStatement stService = null;
+    PreparedStatement stLaundry = null;
+
+    try {
+        conn = connection; 
+        conn.setAutoCommit(false); 
+
+        stService = conn.prepareStatement(CANCEL_SERVICE_ORDER);
+        stService.setInt(1, laundryId);
+        int rowsService = stService.executeUpdate();
+
+        stLaundry = conn.prepareStatement(CANCEL_LAUNDRY_ORDER);
+        stLaundry.setInt(1, laundryId);
+        stLaundry.executeUpdate();
+
+        if (rowsService > 0) {
+            conn.commit();
+            return true;
+        } else {
+            conn.rollback();
+            return false;
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Error canceling order: " + e);
+        try {
+            if (conn != null) conn.rollback();
+        } catch (SQLException ex) {
+            System.out.println("Error rolling back: " + ex);
+        }
+        return false;
+    } finally {
+        try {
+            if (conn != null) conn.setAutoCommit(true);
+            if (stService != null) stService.close();
+            if (stLaundry != null) stLaundry.close();
+        } catch (SQLException e) {
+            System.out.println("Error closing resources: " + e);
+        }
+    }
+}
 
     // Search with filters, sorting, and pagination
-    public ArrayList<LaundryOrder> search(String search, String status, String sort, int pageIndex, int pageSize) {
+    public ArrayList<LaundryOrder> search(String search, String status, String filter, String sort, int pageIndex, int pageSize) {
         ArrayList<LaundryOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT lo.laundry_id, lo.order_id, lo.pickup_time, lo.expected_pickup_time, ")
-                .append("lo.expected_return_time, lo.status, lo.note, so.room_id, so.order_date, so.total_amount ")
+                .append("lo.expected_return_time, lo.status, lo.note, so.room_id, so.order_date, so.total_amount, so.status, r.room_number ")
                 .append(BASE_ORDER_SEARCH);
 
         if (search != null && !search.trim().isEmpty()) {
@@ -427,6 +483,27 @@ public class LaundryOrderDAO extends DBContext {
 
         if (status != null && !status.trim().isEmpty()) {
             sql.append(" AND lo.status = ? ");
+        }
+        
+//        if ("deleted".equals(deleteFilter)) {
+//            sql.append(" AND is_deleted = 1 ");
+//        } else {
+//            sql.append(" AND is_deleted = 0 ");
+        
+        if(filter == null || filter.isEmpty()){
+            sql.append(" AND so.status LIKE N'%Pending%' ");
+        }else{
+            switch (filter){
+                case "Canceled":
+                    sql.append(" AND so.status LIKE N'%Canceled%' ");
+                    break;
+                case "Completed":
+                    sql.append(" AND so.status LIKE N'%Completed%' ");
+                    break;
+                default:
+                    sql.append(" AND so.status LIKE N'%Pending%' ");
+                    break;
+            }
         }
 
         // Sorting
@@ -491,6 +568,7 @@ public class LaundryOrderDAO extends DBContext {
                 LaundryOrder order = new LaundryOrder();
                 order.setLaundryId(rs.getInt("laundry_id"));
                 order.setOrderId(rs.getInt("order_id"));
+                order.setRoomNumber(rs.getString("room_number"));
 
                 Timestamp pickup = rs.getTimestamp("pickup_time");
                 if (pickup != null) {
@@ -513,6 +591,7 @@ public class LaundryOrderDAO extends DBContext {
                 ServiceOrder serviceOrder = new ServiceOrder();
                 serviceOrder.setOrderId(rs.getInt("order_id"));
                 serviceOrder.setRoomId(rs.getInt("room_id"));
+                serviceOrder.setStatus(rs.getString("status"));
                 Timestamp orderDate = rs.getTimestamp("order_date");
                 if (orderDate != null) {
                     serviceOrder.setOrderDate(orderDate);
@@ -530,7 +609,7 @@ public class LaundryOrderDAO extends DBContext {
     }
 
     // Count search results
-    public int countSearch(String search, String status) {
+    public int countSearch(String search, String status, String filter) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) ").append(BASE_ORDER_SEARCH);
 
@@ -543,6 +622,22 @@ public class LaundryOrderDAO extends DBContext {
             sql.append(" AND lo.status = ? ");
         }
 
+        if(filter == null || filter.isEmpty()){
+            sql.append(" AND so.status LIKE N'%Pending%' ");
+        }else{
+            switch (filter){
+                case "Canceled":
+                    sql.append(" AND so.status LIKE N'%Canceled%' ");
+                    break;
+                case "Completed":
+                    sql.append(" AND so.status LIKE N'%Completed%' ");
+                    break;
+                default:
+                    sql.append(" AND so.status LIKE N'%Pending%' ");
+                    break;
+            }
+        }
+        
         try {
             PreparedStatement st = connection.prepareStatement(sql.toString());
             int idx = 1;

@@ -102,15 +102,15 @@
                                 <div class="info-label">Room ID</div>
                                 <div class="info-value">
                                     <c:if test="${not empty order.serviceOrder}">
-                                        <span class="badge badge-light">Room ${order.serviceOrder.roomId}</span>
+                                        <span class="badge badge-light">Room ${order.roomNumber}</span>
                                     </c:if>
                                 </div>
                             </div>
                             <div class="info-row">
                                 <div class="info-label">Status</div>
                                 <div class="info-value">
-                                    <span class="status-badge status-${order.status}">
-                                        ${order.status}
+                                    <span class="status-badge status-${order.serviceOrder.status}">
+                                        ${order.serviceOrder.status}
                                     </span>
                                 </div>
                             </div>
@@ -137,29 +137,29 @@
                                 <div class="info-value">
                                     <c:choose>
                                         <c:when test="${not empty order.pickupTime}">
-                                            <i class="far fa-calendar-alt mr-1"></i> ${order.formattedPickupTime}
+                                             ${order.formattedPickupTime}
                                         </c:when>
                                         <c:otherwise><span class="text-muted text-small">Not set</span></c:otherwise>
                                     </c:choose>
                                 </div>
                             </div>
                             <div class="info-row">
-                                <div class="info-label">Expected Delivery</div>
+                                <div class="info-label">Expect Pick Up</div>
                                 <div class="info-value">
                                     <c:choose>
                                         <c:when test="${not empty order.expectedPickupTime}">
-                                            <i class="far fa-calendar-check mr-1"></i> ${order.formattedExpectedPickupTime}
+                                            <i class="far fa-calendar-alt mr-1"></i> ${order.formattedExpectedPickupTime}
                                         </c:when>
                                         <c:otherwise><span class="text-muted text-small">Not set</span></c:otherwise>
                                     </c:choose>
                                 </div>
                             </div>
                             <div class="info-row">
-                                <div class="info-label">Actual Return</div>
+                                <div class="info-label">Expect Return</div>
                                 <div class="info-value">
                                     <c:choose>
                                         <c:when test="${not empty order.expectedReturnTime}">
-                                            ${order.formattedExpectedReturnTime}
+                                            <i class="far fa-calendar-check mr-1"></i> ${order.formattedExpectedReturnTime}
                                         </c:when>
                                         <c:otherwise><span class="text-muted text-small">Not returned yet</span></c:otherwise>
                                     </c:choose>
@@ -193,8 +193,7 @@
                                     <thead>
                                         <tr>
                                             <th>#</th>
-                                            <th>Item Name</th>
-                                            <th>Description</th>
+                                            <th>Item Name</th>                                          
                                             <th>Unit</th>
                                             <th>Qty</th>
                                             <th>Unit Price</th>
@@ -207,17 +206,20 @@
                                             <tr>
                                                 <td>${status.index + 1}</td>
                                                 <td><strong>${detail.laundryItem.itemName}</strong></td>
-                                                <td>
-                                                    <c:out value="${detail.laundryItem.description}" default="-"/>
-                                                </td>
                                                 <td>${detail.laundryItem.unit}</td>
                                                 <td>${detail.quantity}</td>
-                                                <td>
-                                                    <fmt:formatNumber value="${detail.unitPrice}" type="currency" currencySymbol="$" maxFractionDigits="2"/>
+                                                <td>                                                   
+                                                    <fmt:formatNumber value="${detail.unitPrice}" 
+                                                                            type="currency" 
+                                                                            currencySymbol="" 
+                                                                            maxFractionDigits="0"/> VNĐ
                                                 </td>
                                                 <td class="text-right">
                                                     <strong>
-                                                        <fmt:formatNumber value="${detail.subtotal}" type="currency" currencySymbol="$" maxFractionDigits="2"/>
+                                                        <fmt:formatNumber value="${detail.subtotal}" 
+                                                                            type="currency" 
+                                                                            currencySymbol="" 
+                                                                            maxFractionDigits="0"/> VNĐ
                                                     </strong>
                                                 </td>
                                             </tr>
@@ -226,7 +228,7 @@
 
                                         <c:if test="${empty order.orderDetails}">
                                             <tr>
-                                                <td colspan="7" class="text-center py-5">
+                                                <td colspan="5" class="text-center py-5">
                                                     <div class="empty-state">
                                                         <div class="empty-state-icon bg-secondary">
                                                             <i class="fas fa-box-open"></i>
@@ -240,9 +242,12 @@
                                     <c:if test="${not empty order.orderDetails}">
                                         <tfoot>
                                             <tr class="total-row">
-                                                <td colspan="6" class="text-right">Total Amount:</td>
-                                                <td class="text-right">
-                                                    <fmt:formatNumber value="${total}" type="currency" currencySymbol="$" maxFractionDigits="2"/>
+                                                <td colspan="5" class="text-right">Total Amount:</td>
+                                                <td class="text-right">                                                  
+                                                    <fmt:formatNumber value="${total}" 
+                                                                            type="currency" 
+                                                                            currencySymbol="" 
+                                                                            maxFractionDigits="0"/> VNĐ
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -250,17 +255,27 @@
                                 </table>
                             </div>
                         </div>
-                        <div class="card-footer bg-whitesmoke text-right">
-                            <a href="laundry-order?action=updateStatus&id=${order.laundryId}" class="btn btn-warning btn-icon icon-left">
-                                <i class="fas fa-sync"></i> Update Status
-                            </a>
-                            <a href="laundry-order?action=edit&id=${order.laundryId}" class="btn btn-primary btn-icon icon-left">
-                                <i class="fas fa-edit"></i> Edit Order
-                            </a>
-                            <button type="button" class="btn btn-danger btn-icon icon-left" onclick="confirmDelete(${order.laundryId})">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
+                            <div class="card-footer bg-whitesmoke text-right">
+                            <c:choose>
+                                <c:when test="${order.serviceOrder.status.equalsIgnoreCase('pending')}">
+                                <div class="card-footer bg-whitesmoke text-right">
+                                    <a href="laundry-order?action=updateStatus&id=${order.laundryId}" class="btn btn-warning btn-icon icon-left">
+                                        <i class="fas fa-sync"></i> Update Status
+                                    </a>
+                                    <a href="laundry-order?action=edit&id=${order.laundryId}" class="btn btn-primary btn-icon icon-left">
+                                        <i class="fas fa-edit"></i> Edit Order
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-icon icon-left" onclick="confirmDelete(${order.laundryId})">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                    <a href="laundry-order" class="btn btn-secondary ">Cancel</a>    
+                                </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="laundry-order" class="btn btn-secondary" >Cancel</a>    
+                                </c:otherwise>
+                            </c:choose> 
+                            </div>
                     </div>
                 </div>
             </div>

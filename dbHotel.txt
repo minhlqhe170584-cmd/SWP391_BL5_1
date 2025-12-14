@@ -654,7 +654,7 @@ CREATE TABLE LaundryOrders (
     order_id             INT NOT NULL
         FOREIGN KEY REFERENCES ServiceOrders(order_id),
 
-    pickup_time          DATETIME DEFAULT GETDATE(),
+    pickup_time          DATETIME,
     expected_pickup_time DATETIME NULL,
     expected_return_time   DATETIME NULL,
     status               NVARCHAR(20) DEFAULT N'Pending',
