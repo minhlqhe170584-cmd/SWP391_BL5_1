@@ -487,6 +487,7 @@ public List<Room> findEventRooms(String keyword, String typeId, String minCap, S
                 RoomType rt = new RoomType();
                 rt.setTypeId(rs.getInt("type_id"));
                 rt.setTypeName(rs.getString("type_name"));
+                rt.setCapacity(rs.getInt("capacity"));
                 list.add(rt);
             }
         } catch (SQLException e) {}
@@ -507,5 +508,20 @@ public List<Room> findEventRooms(String keyword, String typeId, String minCap, S
             System.err.println("Error getEventRoomById: " + e.getMessage());
         }
         return null;
+    }
+    
+    // 16. Thêm mới phòng SỰ KIỆN (Bắt buộc set isEventRoom = 1)
+    public void insertEventRoom(Room room) {
+        String sql = "INSERT INTO Rooms (room_number, type_id, room_status, room_password, is_active_login, isEventRoom) VALUES (?, ?, ?, ?, ?, 1)";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, room.getRoomNumber());
+            st.setInt(2, room.getTypeId());
+            st.setString(3, room.getStatus());
+            st.setString(4, room.getRoomPassword());
+            st.setBoolean(5, room.isActiveLogin());
+            st.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error insertEventRoom: " + e.getMessage());
+        }
     }
 }
