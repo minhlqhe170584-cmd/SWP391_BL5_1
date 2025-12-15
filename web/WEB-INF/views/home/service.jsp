@@ -258,7 +258,8 @@
                     </div>
                 </c:if>
 
-            </div> <c:if test="${totalPages > 1}">
+            </div> 
+                <c:if test="${totalPages > 1}">
                 <div class="room-pagination">
                     <c:if test="${currentPage > 1}">
                         <a href="services?page=${currentPage - 1}"><i class="fa fa-angle-left"></i></a>
@@ -271,6 +272,7 @@
                     <c:if test="${currentPage < totalPages}">
                         <a href="services?page=${currentPage + 1}"><i class="fa fa-angle-right"></i></a>
                     </c:if>
+                </c:if>
                 </div>
 
                 <div class="col-lg-3 col-md-6">
