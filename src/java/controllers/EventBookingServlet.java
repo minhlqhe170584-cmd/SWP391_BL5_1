@@ -5,6 +5,7 @@
 package controllers;
 
 import dao.EventDAO;
+import dao.RoomDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -16,6 +17,7 @@ import java.util.List;
 import models.Customer;
 import models.Event;
 import models.EventRequest;
+import models.Room;
 
 /**
  *
@@ -72,9 +74,20 @@ public class EventBookingServlet extends HttpServlet {
         if (eventIdRaw != null) {
             int eventId = Integer.parseInt(eventIdRaw);
             Event event = eventDAO.getEventById(eventId);
-            String[] roomIds = event.getLocation().split(",");
-            request.setAttribute("roomIds", roomIds);
+            
+            String roomIdsStr = event.getLocation(); 
+            
+            // 1. Lấy danh sách tên phòng 
+            dao.RoomDAO roomDAO = new dao.RoomDAO();
+            request.setAttribute("roomList", roomDAO.getRoomsByIds(roomIdsStr));
             request.setAttribute("event", event);
+            
+            // 2. [MỚI] Lấy danh sách ngày đã kín lịch để chặn
+            List<String> bookedRanges = eventDAO.getBookedRanges(roomIdsStr);
+            // Chuyển List thành chuỗi JSON mảng: [ {from:..}, {from:..} ]
+            String jsonDisable = "[" + String.join(",", bookedRanges) + "]";
+            
+            request.setAttribute("disableDates", jsonDisable);
         }
 
         request.getRequestDispatcher("/WEB-INF/views/event/event-booking.jsp")
