@@ -56,7 +56,6 @@
                                 <input type="hidden" name="action" value="UPDATE">
                                 <input type="hidden" name="roomId" value="${room.roomId}">
 
-                                <!-- ROOM NUMBER (Readonly in edit) -->
                                 <div class="form-group">
                                     <label>Room Number <span class="text-danger">*</span></label>
                                     <div class="input-group">
@@ -75,7 +74,6 @@
                                     </div>
                                 </div>
 
-                                <!-- ROOM TYPE -->
                                 <div class="form-group">
                                     <label>Room Type</label>
                                     <select name="typeId" class="form-control selectric">
@@ -88,12 +86,8 @@
                                     </select>
                                 </div>
 
-                                <!-- NO STATUS in Edit -->
-                                <!-- (Theo yêu cầu: bỏ update status hoàn toàn) -->
-
-                                <!-- PASSWORD -->
                                 <div class="form-group">
-                                    <label>Room Password (For Guest Login)</label>
+                                    <label>Room Password (For Guest Login) <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
                                             <div class="input-group-text">
@@ -101,18 +95,22 @@
                                             </div>
                                         </div>
                                         <input type="text"
+                                               id="roomPassword"
                                                name="roomPassword"
                                                value="${room.roomPassword}"
                                                class="form-control">
                                     </div>
+                                    <small id="errorPassMsg" class="text-danger" style="display: none; margin-top: 5px;">
+                                        Password cannot be empty!
+                                    </small>
                                 </div>
 
-                                <!-- ACTIVE LOGIN -->
                                 <div class="form-group">
                                     <div class="control-label">Settings</div>
                                     <label class="custom-switch mt-2">
                                         <input type="checkbox"
                                                name="activeLogin"
+                                               value="true"
                                                class="custom-switch-input"
                                                ${room.activeLogin ? 'checked' : ''}>
                                         <span class="custom-switch-indicator"></span>
@@ -122,12 +120,11 @@
                                     </label>
                                 </div>
 
-                                <!-- BUTTONS -->
                                 <div class="form-group text-right">
                                     <a href="rooms?action=LIST" class="btn btn-secondary btn-lg mr-2">
                                         <i class="fas fa-times"></i> Cancel
                                     </a>
-                                    <button type="submit" class="btn btn-primary btn-lg">
+                                    <button type="submit" class="btn btn-primary btn-lg" onclick="return validateRoom()">
                                         <i class="fas fa-save"></i> Update
                                     </button>
                                 </div>
@@ -141,5 +138,39 @@
         </div>
     </section>
 </div>
+
+<script>
+    function validateRoom() {
+        // 1. Lấy phần tử input và thẻ lỗi
+        // (Ở màn hình Edit, roomNumber là readonly nhưng vẫn lấy để tránh lỗi script, 
+        //  tuy nhiên ta chủ yếu validate Password)
+        var inputElement = document.getElementById("roomNumber");
+        var errorText = document.getElementById("errorMsg"); // Có thể không có div này ở Edit nếu bạn không copy sang, tôi check kỹ bên dưới
+
+        var passElement = document.getElementById("roomPassword");
+        var errorPassText = document.getElementById("errorPassMsg");
+
+        // Validate Password (Quan trọng nhất ở Edit)
+        if (passElement) {
+            // Reset lỗi password
+            if (errorPassText) errorPassText.style.display = "none";
+            passElement.classList.remove("is-invalid");
+
+            var passInput = passElement.value.trim();
+            if (passInput === "") {
+                if (errorPassText) {
+                    errorPassText.innerText = "Room Password cannot be empty!";
+                    errorPassText.style.display = "block";
+                }
+                passElement.focus();
+                passElement.classList.add("is-invalid");
+                return false;
+            }
+        }
+        
+        // Hợp lệ
+        return true; 
+    }
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

@@ -10,13 +10,11 @@ public class ServiceOrder {
     private String status;
     private String note;
     private String roomNumber;
-    private Timestamp bookingStartDate;
-    private Timestamp bookingEndDate;
 
     public ServiceOrder() {
     }
 
-    public ServiceOrder(int orderId, int roomId, Timestamp orderDate, double totalAmount, String status, String note, String roomNumber, Timestamp bookingStartDate, Timestamp bookingEndDate) {
+    public ServiceOrder(int orderId, int roomId, Timestamp orderDate, double totalAmount, String status, String note, String roomNumber) {
         this.orderId = orderId;
         this.roomId = roomId;
         this.orderDate = orderDate;
@@ -24,8 +22,6 @@ public class ServiceOrder {
         this.status = status;
         this.note = note;
         this.roomNumber = roomNumber;
-        this.bookingStartDate = bookingStartDate;
-        this.bookingEndDate = bookingEndDate;
     }
 
     public int getOrderId() {
@@ -83,22 +79,4 @@ public class ServiceOrder {
     public void setRoomNumber(String roomNumber) {
         this.roomNumber = roomNumber;
     }
-
-    public Timestamp getBookingStartDate() {
-        return bookingStartDate;
-    }
-
-    public void setBookingStartDate(Timestamp bookingStartDate) {
-        this.bookingStartDate = bookingStartDate;
-    }
-
-    public Timestamp getBookingEndDate() {
-        return bookingEndDate;
-    }
-
-    public void setBookingEndDate(Timestamp bookingEndDate) {
-        this.bookingEndDate = bookingEndDate;
-    }
-    
-    
 }

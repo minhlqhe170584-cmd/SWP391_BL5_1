@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import models.Bicycle;
-import models.ServiceOrder;
+import models.BikeServiceOrder;
 
 @WebServlet(name = "BikeRentalOpsServlet", urlPatterns = {"/bike-ops"})
 public class BikeRentalOpsServlet extends HttpServlet {
@@ -24,7 +24,7 @@ public class BikeRentalOpsServlet extends HttpServlet {
         if (view == null) view = "pending";
 
         if ("pending".equals(view)) {
-            ArrayList<ServiceOrder> orders = dao.getOrdersByStatus("Pending");
+            ArrayList<BikeServiceOrder> orders = dao.getOrdersByStatus("Pending");
             request.setAttribute("orders", orders);
             
             if (!orders.isEmpty()) {

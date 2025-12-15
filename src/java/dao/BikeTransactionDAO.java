@@ -7,11 +7,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import models.Bicycle;
 import models.BikeRentalOption;
+import models.BikeServiceOrder;
 import models.Service;
-import models.ServiceOrder;
+import models.SlotAvailability;
 
 public class BikeTransactionDAO extends DBContext {
 
@@ -26,33 +29,12 @@ public class BikeTransactionDAO extends DBContext {
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 list.add(new Service(
-                    rs.getInt("service_id"), 
-                    rs.getString("service_name"), 
-                    rs.getString("image_url"), 
-                    rs.getBoolean("is_active"), 
-                    rs.getInt("category_id"), 
-                    rs.getBoolean("is_deleted")
+                    rs.getInt("service_id"), rs.getString("service_name"), rs.getString("image_url"), 
+                    rs.getBoolean("is_active"), rs.getInt("category_id"), rs.getBoolean("is_deleted")
                 ));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
-    }
-
-    public int getBikeServiceId() {
-        String sql = "SELECT TOP 1 s.service_id FROM Services s " +
-                     "JOIN ServiceCategories c ON s.category_id = c.category_id " +
-                     "WHERE (c.category_name LIKE N'%Xe đạp%' OR c.category_name LIKE '%Bike%') " +
-                     "AND s.is_active = 1";
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0; 
     }
 
     public ArrayList<BikeRentalOption> getBikeOptions(int serviceId) {
@@ -68,9 +50,7 @@ public class BikeTransactionDAO extends DBContext {
                         rs.getInt("duration_minutes"), rs.getDouble("price"), rs.getBoolean("is_active")
                 ));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
@@ -86,38 +66,62 @@ public class BikeTransactionDAO extends DBContext {
                         rs.getInt("duration_minutes"), rs.getDouble("price"), rs.getBoolean("is_active")
                 );
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
+    public int getTotalBikeCount(int serviceId) {
+        String sql = "SELECT COUNT(*) FROM Bicycles WHERE status != 'Maintenance' AND status != 'Deleted' AND service_id = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, serviceId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
     public int getAvailableQuantity(Timestamp start, Timestamp end, int serviceId) {
-        int totalBikes = 0;
+        int totalBikes = getTotalBikeCount(serviceId);
         int bookedBikes = 0;
-        String sqlTotal = "SELECT COUNT(*) FROM Bicycles WHERE status != 'Maintenance' AND status != 'Deleted' AND service_id = ?";
         String sqlBooked = "SELECT SUM(d.quantity) FROM ServiceOrders o JOIN OrderDetails d ON o.order_id = d.order_id " +
                            "WHERE o.status IN ('Pending', 'Confirmed') AND d.service_id = ? " +
                            "AND (o.booking_start_date < ? AND o.booking_end_date > ?)";
         try {
-            PreparedStatement st1 = connection.prepareStatement(sqlTotal);
-            st1.setInt(1, serviceId);
-            ResultSet rs1 = st1.executeQuery();
-            if (rs1.next()) totalBikes = rs1.getInt(1);
-
             PreparedStatement st2 = connection.prepareStatement(sqlBooked);
             st2.setInt(1, serviceId);
             st2.setTimestamp(2, end);
             st2.setTimestamp(3, start);
             ResultSet rs2 = st2.executeQuery();
             if (rs2.next()) bookedBikes = rs2.getInt(1);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return totalBikes - bookedBikes;
     }
 
-    //tự động lấy Staff Id cho Task tại đây - Tạo ra một Task mới
+    public ArrayList<SlotAvailability> getHourlyAvailability(Timestamp start, Timestamp end, int serviceId) {
+        ArrayList<SlotAvailability> list = new ArrayList<>();
+        LocalDateTime checkTime = start.toLocalDateTime();
+        LocalDateTime endTime = end.toLocalDateTime();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        while (checkTime.isBefore(endTime)) {
+            LocalDateTime nextHour = checkTime.plusHours(1);
+            if (nextHour.isAfter(endTime)) nextHour = endTime;
+
+            Timestamp tStart = Timestamp.valueOf(checkTime);
+            Timestamp tEnd = Timestamp.valueOf(nextHour);
+            
+            int avail = getAvailableQuantity(tStart, tEnd, serviceId);
+            String timeStr = checkTime.format(formatter) + " - " + nextHour.format(formatter);
+            String status = (avail > 0) ? "Available" : "Full";
+            
+            list.add(new SlotAvailability(timeStr, avail, status));
+            
+            checkTime = checkTime.plusHours(1);
+        }
+        return list;
+    }
+
     public boolean createBikeBooking(int roomId, int serviceId, int optionId, int quantity, String note, Timestamp start, Timestamp end) {
         Connection conn = null;
         try {
@@ -161,9 +165,11 @@ public class BikeTransactionDAO extends DBContext {
         return false;
     }
 
-    public ArrayList<ServiceOrder> getOrdersByStatus(String status) {
-        ArrayList<ServiceOrder> list = new ArrayList<>();
-        String sql = "SELECT o.*, r.room_number FROM ServiceOrders o LEFT JOIN Rooms r ON o.room_id = r.room_id " +
+    public ArrayList<BikeServiceOrder> getOrdersByStatus(String status) {
+        ArrayList<BikeServiceOrder> list = new ArrayList<>();
+        String sql = "SELECT o.*, r.room_number, d.item_name, d.quantity " +
+                     "FROM ServiceOrders o " +
+                     "LEFT JOIN Rooms r ON o.room_id = r.room_id " +
                      "JOIN OrderDetails d ON o.order_id = d.order_id " + 
                      "LEFT JOIN Services s ON d.service_id = s.service_id " +
                      "LEFT JOIN ServiceCategories c ON s.category_id = c.category_id " +
@@ -173,15 +179,21 @@ public class BikeTransactionDAO extends DBContext {
             st.setString(1, status);
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                list.add(new ServiceOrder(
-                        rs.getInt("order_id"), rs.getInt("room_id"), rs.getTimestamp("order_date"), rs.getDouble("total_amount"),
-                        rs.getString("status"), rs.getString("note"), rs.getString("room_number"),
-                        rs.getTimestamp("booking_start_date"), rs.getTimestamp("booking_end_date")
+                list.add(new BikeServiceOrder(
+                        rs.getInt("order_id"), 
+                        rs.getInt("room_id"), 
+                        rs.getTimestamp("order_date"), 
+                        rs.getDouble("total_amount"),
+                        rs.getString("status"), 
+                        rs.getString("note"), 
+                        rs.getString("room_number"),
+                        rs.getTimestamp("booking_start_date"), 
+                        rs.getTimestamp("booking_end_date"),
+                        rs.getInt("quantity"), 
+                        rs.getString("item_name")
                 ));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
@@ -199,9 +211,7 @@ public class BikeTransactionDAO extends DBContext {
                     rs.getString("status"), rs.getString("condition"), rs.getString("service_name")
                 ));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
     
@@ -212,9 +222,7 @@ public class BikeTransactionDAO extends DBContext {
             st.setInt(1, orderId);
             ResultSet rs = st.executeQuery();
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return 0;
     }
 
@@ -224,16 +232,13 @@ public class BikeTransactionDAO extends DBContext {
         try {
             conn = this.connection;
             conn.setAutoCommit(false);
-
             PreparedStatement psOrder = conn.prepareStatement("SELECT total_amount FROM ServiceOrders WHERE order_id = ?");
             psOrder.setInt(1, orderId);
             ResultSet rs = psOrder.executeQuery();
             if (!rs.next()) return;
             double amount = rs.getDouble("total_amount");
-
             PreparedStatement psRental = conn.prepareStatement("INSERT INTO BikeRentals (order_id, bike_id, start_time, status) VALUES (?, ?, GETDATE(), 'Active')");
             PreparedStatement psBike = conn.prepareStatement("UPDATE Bicycles SET status = 'Rented' WHERE bike_id = ?");
-
             for (String bid : bikeIds) {
                 psRental.setInt(1, orderId);
                 psRental.setInt(2, Integer.parseInt(bid));
@@ -243,16 +248,13 @@ public class BikeTransactionDAO extends DBContext {
             }
             psRental.executeBatch();
             psBike.executeBatch();
-
             PreparedStatement psInv = conn.prepareStatement("INSERT INTO ServiceInvoices (order_id, created_at, final_amount, status) VALUES (?, GETDATE(), ?, 'Unpaid')");
             psInv.setInt(1, orderId);
             psInv.setDouble(2, amount);
             psInv.executeUpdate();
-
             PreparedStatement psUpdateOrder = conn.prepareStatement("UPDATE ServiceOrders SET status = 'Confirmed' WHERE order_id = ?");
             psUpdateOrder.setInt(1, orderId);
             psUpdateOrder.executeUpdate();
-
             conn.commit();
         } catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
@@ -267,24 +269,19 @@ public class BikeTransactionDAO extends DBContext {
         try {
             conn = this.connection;
             conn.setAutoCommit(false);
-
             PreparedStatement psRental = conn.prepareStatement("UPDATE BikeRentals SET end_time = GETDATE(), status = 'Returned' WHERE order_id = ?");
             psRental.setInt(1, orderId);
             psRental.executeUpdate();
-
             PreparedStatement psBike = conn.prepareStatement("UPDATE Bicycles SET status = 'Available' WHERE bike_id IN (SELECT bike_id FROM BikeRentals WHERE order_id = ?)");
             psBike.setInt(1, orderId);
             psBike.executeUpdate();
-
             PreparedStatement psInv = conn.prepareStatement("UPDATE ServiceInvoices SET status = 'Paid', payment_method = ? WHERE order_id = ?");
             psInv.setString(1, paymentMethod);
             psInv.setInt(2, orderId);
             psInv.executeUpdate();
-
             PreparedStatement psOrder = conn.prepareStatement("UPDATE ServiceOrders SET status = 'Completed' WHERE order_id = ?");
             psOrder.setInt(1, orderId);
             psOrder.executeUpdate();
-
             conn.commit();
         } catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}

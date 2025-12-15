@@ -26,7 +26,7 @@
             </ul>
 
             <c:if test="${not empty param.error}">
-                <div class="alert alert-danger">Error: Please select at least one bike!</div>
+                <div class="alert alert-danger">Error: Please select the correct number of bikes!</div>
             </c:if>
             <c:if test="${not empty param.msg}">
                 <div class="alert alert-success">Action completed successfully!</div>
@@ -40,10 +40,10 @@
                                 <tr>
                                     <th>Order ID</th>
                                     <th>Room</th>
+                                    <th>Request</th>
                                     <th>Schedule</th>
                                     <th>Total</th>
-                                    <th>Note</th>
-                                    <th style="min-width: 250px;">Action</th>
+                                    <th style="min-width: 300px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -58,26 +58,35 @@
                                         <td>#${o.orderId}</td>
                                         <td><span class="badge badge-info">${o.roomNumber}</span></td>
                                         <td>
+                                            <strong class="text-primary">${o.quantity} x ${o.itemName}</strong>
+                                            <div class="text-muted small">Note: ${o.note}</div>
+                                        </td>
+                                        <td>
                                             <small>
                                                 Start: <fmt:formatDate value="${o.bookingStartDate}" pattern="dd/MM HH:mm"/><br>
                                                 End: <fmt:formatDate value="${o.bookingEndDate}" pattern="dd/MM HH:mm"/>
                                             </small>
                                         </td>
                                         <td><fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="VND"/></td>
-                                        <td>${o.note}</td>
                                         <td>
                                             <c:choose>
                                                 <c:when test="${view == 'pending'}">
-                                                    <form action="bike-ops" method="POST">
+                                                    <form action="bike-ops" method="POST" onsubmit="return validateSelection(this, ${o.quantity})">
                                                         <input type="hidden" name="action" value="handover">
                                                         <input type="hidden" name="orderId" value="${o.orderId}">
                                                         
                                                         <div class="form-group mb-2">
-                                                            <label class="font-weight-bold text-primary">Assign Bikes:</label><br>
-                                                            <div style="max-height: 100px; overflow-y: auto;">
+                                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                <label class="font-weight-bold m-0">Assign Bikes:</label>
+                                                                <button type="button" class="btn btn-sm btn-outline-info" onclick="autoPick(this, ${o.quantity})">
+                                                                    <i class="fas fa-magic"></i> Auto Pick ${o.quantity}
+                                                                </button>
+                                                            </div>
+                                                            
+                                                            <div style="max-height: 120px; overflow-y: auto; border: 1px solid #eee; padding: 5px;">
                                                                 <c:forEach var="b" items="${bikes}">
                                                                     <div class="custom-control custom-checkbox">
-                                                                        <input type="checkbox" class="custom-control-input" 
+                                                                        <input type="checkbox" class="custom-control-input bike-checkbox" 
                                                                                id="bike_${b.bikeId}_${o.orderId}" name="bikeIds" value="${b.bikeId}">
                                                                         <label class="custom-control-label" for="bike_${b.bikeId}_${o.orderId}">
                                                                             ${b.bikeCode} <small class="text-muted">(${b.condition})</small>
@@ -125,5 +134,34 @@
         </div>
     </section>
 </div>
+
+<script>
+    function autoPick(btn, qty) {
+        var form = btn.closest('form');
+        var checkboxes = form.querySelectorAll('.bike-checkbox');
+        var count = 0;
+        checkboxes.forEach(cb => cb.checked = false);
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (count < qty) {
+                checkboxes[i].checked = true;
+                count++;
+            } else {
+                break;
+            }
+        }
+        if (count < qty) {
+            alert("Warning: Not enough bikes in the list to fulfill this order!");
+        }
+    }
+
+    function validateSelection(form, requiredQty) {
+        var checked = form.querySelectorAll('input[name="bikeIds"]:checked').length;
+        if (checked !== requiredQty) {
+            alert("Please select exactly " + requiredQty + " bikes.");
+            return false;
+        }
+        return true;
+    }
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

@@ -39,7 +39,6 @@
 
                         <div class="card-body">
 
-                            <!-- ERROR MESSAGE -->
                             <c:if test="${not empty error}">
                                 <div class="alert alert-danger alert-dismissible show fade">
                                     <div class="alert-body">
@@ -56,7 +55,6 @@
 
                                 <input type="hidden" name="action" value="CREATE">
 
-                                <!-- ROOM NUMBER -->
                                 <div class="form-group">
                                     <label>Room Number <span class="text-danger">*</span></label>
                                     <div class="input-group">
@@ -83,7 +81,6 @@
                                     </small>
                                 </div>
 
-                                <!-- ROOM TYPE -->
                                 <div class="form-group">
                                     <label>Room Type</label>
                                     <select name="typeId" class="form-control selectric">
@@ -95,7 +92,6 @@
                                     </select>
                                 </div>
 
-                                <!-- STATUS (Add only 2 options) -->
                                 <div class="form-group">
                                     <label>Status</label>
                                     <select name="status" class="form-control selectric">
@@ -104,9 +100,8 @@
                                     </select>
                                 </div>
 
-                                <!-- PASSWORD -->
                                 <div class="form-group">
-                                    <label>Room Password (For Guest Login)</label>
+                                    <label>Room Password (For Guest Login) <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
                                             <div class="input-group-text">
@@ -114,18 +109,22 @@
                                             </div>
                                         </div>
                                         <input type="text"
+                                               id="roomPassword"
                                                name="roomPassword"
                                                class="form-control"
                                                placeholder="Enter a secure password">
                                     </div>
+                                    <small id="errorPassMsg" class="text-danger" style="display: none; margin-top: 5px;">
+                                        Password cannot be empty!
+                                    </small>
                                 </div>
 
-                                <!-- ACTIVE LOGIN -->
                                 <div class="form-group">
                                     <div class="control-label">Settings</div>
                                     <label class="custom-switch mt-2">
                                         <input type="checkbox"
                                                name="activeLogin"
+                                               value="true"
                                                class="custom-switch-input">
                                         <span class="custom-switch-indicator"></span>
                                         <span class="custom-switch-description">
@@ -134,7 +133,6 @@
                                     </label>
                                 </div>
 
-                                <!-- BUTTONS -->
                                 <div class="form-group text-right">
                                     <a href="rooms?action=LIST" class="btn btn-secondary btn-lg mr-2">
                                         <i class="fas fa-times"></i> Cancel
@@ -154,12 +152,15 @@
     </section>
 </div>
 
-<!--Validate trương room Number                                      -->
 <script>
     function validateRoom() {
         // 1. Lấy phần tử input và thẻ lỗi
         var inputElement = document.getElementById("roomNumber");
         var errorText = document.getElementById("errorMsg");
+
+        // Validate Password
+        var passElement = document.getElementById("roomPassword");
+        var errorPassText = document.getElementById("errorPassMsg");
 
         // Kiểm tra an toàn
         if (!inputElement || !errorText) return false;
@@ -170,7 +171,12 @@
         errorText.style.display = "none";
         inputElement.classList.remove("is-invalid");
 
-        // 3. Kiểm tra Rỗng
+        if (passElement && errorPassText) {
+            errorPassText.style.display = "none";
+            passElement.classList.remove("is-invalid");
+        }
+
+        // 3. Kiểm tra Rỗng Room Number
         if (roomInput === "") {
             errorText.innerText = "Room Number cannot be null. Please enter the room number!";
             errorText.style.display = "block";
@@ -185,6 +191,18 @@
             inputElement.focus();
             inputElement.classList.add("is-invalid");
             return false;
+        }
+
+        // 5. Kiểm tra Password Rỗng (MỚI THÊM)
+        if (passElement) {
+            var passInput = passElement.value.trim();
+            if (passInput === "") {
+                errorPassText.innerText = "Room Password cannot be empty!";
+                errorPassText.style.display = "block";
+                passElement.focus();
+                passElement.classList.add("is-invalid");
+                return false;
+            }
         }
         
         // Hợp lệ
