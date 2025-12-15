@@ -105,13 +105,16 @@
                                     <td>
                                         <c:choose>
                                             <c:when test="${s.isDeleted}">
-                                                <div class="badge badge-danger">Deleted</div>
+                                                <div class="badge badge-danger" style="min-width: 80px;">Deleted</div>
                                             </c:when>
-                                            <c:when test="${s.isActive}">
-                                                <div class="badge badge-success">Active</div>
-                                            </c:when>
+                                            
                                             <c:otherwise>
-                                                <div class="badge badge-secondary">Inactive</div>
+                                                <a href="service?action=toggle-status&id=${s.serviceId}" 
+                                                   class="btn btn-sm ${s.isActive ? 'btn-success' : 'btn-secondary'}"
+                                                   style="min-width: 80px; font-weight: bold;"
+                                                   title="Click to toggle status">
+                                                    ${s.isActive ? 'Active' : 'Inactive'}
+                                                </a>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -126,11 +129,7 @@
                                                 </c:when>
                                                 
                                                 <c:otherwise>
-                                                    <a href="service?action=toggle-status&id=${s.serviceId}" 
-                                                       class="btn btn-sm mr-2 ${s.isActive ? 'btn-secondary' : 'btn-success'}" 
-                                                       title="${s.isActive ? 'Deactivate' : 'Activate'}" style="width: 32px;">
-                                                        <i class="fas ${s.isActive ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                                                    </a>
+                                                    <%-- Đã xóa nút Toggle Status ở đây vì đã tích hợp vào cột Status --%>
 
                                                     <a href="service?action=detail&id=${s.serviceId}" class="btn btn-warning btn-sm mr-2" title="Edit">
                                                         <i class="fas fa-pencil-alt"></i>

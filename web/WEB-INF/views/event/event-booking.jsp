@@ -112,24 +112,31 @@
                                         <div class="form-group">
                                             <label>Chọn phòng</label>
 
-                                            <c:forEach var="rid" items="${roomIds}">
+                                            <c:forEach var="room" items="${roomList}">
                                                 <div class="form-check">
-                                                    <input type="checkbox" name="roomIds" value="${rid}">
-                                                    Phòng ${rid}
+                                                    <input type="checkbox" name="roomIds" value="${room.roomId}" class="form-check-input" id="r_${room.roomId}">
+                                                    <label class="form-check-label" for="r_${room.roomId}">
+                                                        Phòng ${room.roomNumber}
+                                                    </label>
                                                 </div>
                                             </c:forEach>
+
+                                            <c:if test="${empty roomList}">
+                                                <p class="text-muted text-small">Không có phòng cụ thể cho gói này (Áp dụng linh hoạt).</p>
+                                            </c:if>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Thời gian bắt đầu (Ngày & Giờ)</label>
+                                            <input type="text" id="checkInDate" name="checkInDate" 
+                                                   class="form-control bg-white" 
+                                                   placeholder="Chọn ngày giờ bắt đầu..." readonly required>
                                         </div>
 
                                         <div class="form-group">
-                                            <label>Ngày tổ chức</label>
-                                            <input type="date" name="checkInDate"
-                                                   class="form-control" required>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Ngày kết thúc</label>
-                                            <input type="date" name="checkOutDate"
-                                                   class="form-control" required>
+                                            <label>Thời gian kết thúc (Ngày & Giờ)</label>
+                                            <input type="text" id="checkOutDate" name="checkOutDate" 
+                                                   class="form-control bg-white" 
+                                                   placeholder="Chọn ngày giờ kết thúc..." readonly required>
                                         </div>
 
                                         <div class="form-group">

@@ -1,6 +1,5 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ * EventBookingListServlet.java
  */
 package controllers;
 
@@ -14,70 +13,77 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import models.EventRequestView;
 
-/**
- *
- * @author My Lap
- */
 @WebServlet(name = "EventBookingListServlet", urlPatterns = {"/admin/event-booking-list"})
 public class EventBookingListServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    // Helper: Xử lý logic chung cho cả GET và POST
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        EventDAO eventDAO = new EventDAO();
-        List<EventRequestView> list = eventDAO.getAllEventRequests();
-        request.setAttribute("eventRequests", list);
-        request.getRequestDispatcher("/WEB-INF/views/event/event-booking-list.jsp")
-                .forward(request, response);
+        request.setCharacterEncoding("UTF-8");
 
+        EventDAO eventDAO = new EventDAO();
+        String action = request.getParameter("action");
+
+        // Nếu không có action thì mặc định là LIST
+        if (action == null) {
+            action = "LIST";
+        }
+
+        try {
+            switch (action.toUpperCase()) {
+                case "APPROVE":
+                    // Xử lý Duyệt đơn
+                    int idApprove = Integer.parseInt(request.getParameter("id"));
+                    eventDAO.updateEventRequestStatus(idApprove, "ACCEPT");
+                    request.getSession().setAttribute("successMessage", "Request #" + idApprove + " has been Approved!");
+                    response.sendRedirect("event-booking-list");
+                    break;
+
+                case "REJECT":
+                    // Xử lý Từ chối đơn
+                    int idReject = Integer.parseInt(request.getParameter("id"));
+                    eventDAO.updateEventRequestStatus(idReject, "REJECT");
+                    request.getSession().setAttribute("successMessage", "Request #" + idReject + " has been Rejected!");
+                    response.sendRedirect("event-booking-list");
+                    break;
+
+                case "FINISH": // Hoặc COMPLETE
+                    // Xử lý Kết thúc sự kiện (đã diễn ra xong)
+                    int idFinish = Integer.parseInt(request.getParameter("id"));
+                    eventDAO.updateEventRequestStatus(idFinish, "COMPLETED");
+                    request.getSession().setAttribute("successMessage", "Event #" + idFinish + " marked as Completed!");
+                    response.sendRedirect("event-booking-list");
+                    break;
+
+                case "LIST":
+                default:
+                    // Lấy danh sách hiển thị
+                    List<EventRequestView> list = eventDAO.getAllEventRequests();
+                    request.setAttribute("eventRequests", list);
+                    request.getRequestDispatcher("/WEB-INF/views/event/event-booking-list.jsp").forward(request, response);
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("event-booking-list?error=true");
+        }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Event Booking Management Servlet";
+    }
 }

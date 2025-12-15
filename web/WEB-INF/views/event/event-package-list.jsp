@@ -28,7 +28,7 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            
+
                             <c:if test="${not empty sessionScope.successMessage}">
                                 <div class="alert alert-success alert-dismissible show fade">
                                     <div class="alert-body">
@@ -37,6 +37,16 @@
                                     </div>
                                 </div>
                                 <c:remove var="successMessage" scope="session" />
+                            </c:if>
+
+                            <c:if test="${not empty sessionScope.errorMessage}">
+                                <div class="alert alert-danger alert-dismissible show fade">
+                                    <div class="alert-body">
+                                        <button class="close" data-dismiss="alert"><span>&times;</span></button>
+                                        <i class="fas fa-exclamation-triangle"></i> ${sessionScope.errorMessage}
+                                    </div>
+                                </div>
+                                <c:remove var="errorMessage" scope="session" />
                             </c:if>
 
                             <div class="table-responsive">
@@ -72,7 +82,7 @@
                                                         <fmt:formatNumber value="${p.pricePerTable}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
                                                     </strong>
                                                 </td>
-                                                
+
                                                 <td class="text-center">
                                                     <c:choose>
                                                         <c:when test="${p.status == 'Active'}">
@@ -83,7 +93,7 @@
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>
-                                                
+
                                                 <td>
                                                     <fmt:formatDate value="${p.createdDate}" pattern="dd/MM/yyyy"/>
                                                 </td>
@@ -91,11 +101,33 @@
                                                     <a href="event-packages?action=EDIT&id=${p.eventId}" class="btn btn-primary btn-sm mr-1" data-toggle="tooltip" title="Edit">
                                                         <i class="fas fa-pencil-alt"></i>
                                                     </a>
-                                                    <a href="event-packages?action=DELETE&id=${p.eventId}" class="btn btn-danger btn-sm" 
-                                                       onclick="return confirm('Are you sure you want to delete this package?');" 
-                                                       data-toggle="tooltip" title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
+
+                                                    <c:choose>
+                                                        <c:when test="${p.status == 'Active'}">
+                                                            <c:url var="deactivateLink" value="event-packages">
+                                                                <c:param name="action" value="DEACTIVATE"/>
+                                                                <c:param name="id" value="${p.eventId}"/>
+                                                            </c:url>
+                                                            <a href="${deactivateLink}" 
+                                                               class="btn btn-warning btn-sm" 
+                                                               onclick="confirmStatusChange(event, '${p.eventName}', 'DEACTIVATE', '${deactivateLink}')"
+                                                               data-toggle="tooltip" title="Deactivate">
+                                                                <i class="fas fa-ban"></i>
+                                                            </a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:url var="activateLink" value="event-packages">
+                                                                <c:param name="action" value="ACTIVATE"/>
+                                                                <c:param name="id" value="${p.eventId}"/>
+                                                            </c:url>
+                                                            <a href="${activateLink}" 
+                                                               class="btn btn-success btn-sm" 
+                                                               onclick="confirmStatusChange(event, '${p.eventName}', 'ACTIVATE', '${activateLink}')"
+                                                               data-toggle="tooltip" title="Activate">
+                                                                <i class="fas fa-check-circle"></i>
+                                                            </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -109,5 +141,49 @@
         </div>
     </section>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function confirmStatusChange(event, packageName, action, link) {
+        event.preventDefault(); // Prevents the default <a> navigation
+
+        let titleInfo = "";
+        let textInfo = "";
+        let iconType = "";
+        let confirmColor = "";
+        let btnText = "";
+
+        if (action === 'DEACTIVATE') {
+            titleInfo = "Deactivate Package " + packageName + "?";
+            textInfo = "This event package will be hidden and unavailable for new bookings!";
+            iconType = "warning";
+            confirmColor = "#ffc107"; // Yellow (Warning)
+            btnText = "Yes, Deactivate it!";
+        } else { // ACTIVATE
+            titleInfo = "Activate Package " + packageName + "?";
+            textInfo = "This event package will be visible and available for new bookings.";
+            iconType = "question";
+            confirmColor = "#28a745"; // Green (Success)
+            btnText = "Yes, Activate it!";
+        }
+
+        Swal.fire({
+            title: titleInfo,
+            text: textInfo,
+            icon: iconType,
+            showCancelButton: true,
+            confirmButtonColor: confirmColor,
+            cancelButtonColor: '#d33',
+            confirmButtonText: btnText,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // If user confirms, redirect to the provided URL
+                window.location.href = link;
+            }
+        });
+    }
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
