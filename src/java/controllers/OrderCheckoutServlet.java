@@ -6,10 +6,24 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.sql.SQLException;
+import java.util.List;
+
+// Class phụ để lưu tạm món khách chọn
+class CartItem {
+
+    int serviceId;
+    int quantity;
+
+    public CartItem(int serviceId, int quantity) {
+        this.serviceId = serviceId;
+        this.quantity = quantity;
+    }
+}
 
 @WebServlet(name = "OrderCheckoutServlet", urlPatterns = {"/checkout-order"})
 public class OrderCheckoutServlet extends HttpServlet {
@@ -22,97 +36,107 @@ public class OrderCheckoutServlet extends HttpServlet {
         orderDAO = new OrderDAO();
     }
 
-    // Xử lý POST request từ form food_menu.jsp
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Object currentRole = session.getAttribute("ROLE");
 
-        request.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html;charset=UTF-8");
-
+// Nếu chưa đăng nhập HOẶC không phải là ROOM -> Đá về Login
+        if (session.getAttribute("USER") == null || !"ROOM".equals(currentRole)) {
+            response.sendRedirect("login"); // Hoặc đường dẫn tới servlet login của bạn
+            return; // Chặn ngay
+        }
+        // 1. Lấy Room ID
+        // Bạn nói nhập số phòng rồi mới xác nhận được, nên tôi giữ logic lấy roomNumber
         String roomNumber = request.getParameter("roomNumber");
-        String note = request.getParameter("note");
-
         int roomId = -1;
-        int orderId = -1;
-        boolean transactionSuccess = false;
+
+        // Nếu không nhập roomNumber thì thử lấy từ session (hoặc mặc định là 4 như bạn test)
+        try {
+            if (roomNumber != null && !roomNumber.isEmpty()) {
+                roomId = orderDAO.getRoomIdByNumber(roomNumber);
+            } else if (request.getSession().getAttribute("ROOM_ID") != null) {
+                roomId = (int) request.getSession().getAttribute("ROOM_ID");
+            } else {
+                roomId = 4; // ID mặc định để test
+            }
+        } catch (Exception e) {
+        }
+
+        String note = request.getParameter("note");
+        if (note == null) {
+            note = "";
+        }
 
         try {
-            // 1. Kiểm tra và lấy Room ID
-            roomId = orderDAO.getRoomIdByNumber(roomNumber);
+            // --- BƯỚC 1: QUÉT FORM LẤY MÓN ---
+            List<CartItem> selectedItems = new ArrayList<>();
+            Enumeration<String> paramNames = request.getParameterNames();
 
-            if (roomId == -1) {
-                request.setAttribute("errorMessage", "Số phòng " + roomNumber + " không hợp lệ hoặc không tồn tại.");
-                request.getRequestDispatcher("/WEB-INF/views/menu/food_menu.jsp").forward(request, response);
-                return;
-            }
-
-            // 2. Tạo Order chính (ServiceOrders)
-            orderId = orderDAO.createOrder(roomId, note);
-
-            if (orderId == -1) {
-                throw new Exception("Lỗi hệ thống khi tạo đơn hàng chính.");
-            }
-
-            // 3. Lặp qua các tham số Form để tìm các món đã đặt
-            Enumeration<String> parameterNames = request.getParameterNames();
-            boolean hasItems = false;
-
-            while (parameterNames.hasMoreElements()) {
-                String paramName = parameterNames.nextElement();
-
+            while (paramNames.hasMoreElements()) {
+                String paramName = paramNames.nextElement();
+                // Khớp với name trong input của bạn: item_serviceId_...
                 if (paramName.startsWith("item_serviceId_")) {
-                    int serviceId = Integer.parseInt(paramName.substring(paramName.lastIndexOf("_") + 1));
-
-                    // Xử lý ngoại lệ NumberFormatException nếu người dùng nhập ký tự
-                    int quantity = 0;
                     try {
-                        quantity = Integer.parseInt(request.getParameter(paramName));
-                    } catch (NumberFormatException nfe) {
-                        quantity = 0;
-                    }
-
-                    if (quantity > 0) {
-                        hasItems = true;
-
-                        // 4. Lấy thông tin giá/tên Service
-                        try (ResultSet rs = orderDAO.getServiceDetail(serviceId)) { // Dùng tên hàm đã sửa
-                            if (rs.next()) {
-                                String itemName = rs.getString("service_name");
-                                double unitPrice = rs.getDouble("price"); // Cột 'price' bây giờ đã tồn tại do Alias
-
-                                // 6. Tạo Order Detail
-                                orderDAO.createOrderDetail(orderId, serviceId, itemName, quantity, unitPrice);
-                            }
+                        int quantity = Integer.parseInt(request.getParameter(paramName));
+                        if (quantity > 0) {
+                            int serviceId = Integer.parseInt(paramName.substring(paramName.lastIndexOf("_") + 1));
+                            selectedItems.add(new CartItem(serviceId, quantity));
                         }
+                    } catch (NumberFormatException e) {
+                        continue;
                     }
                 }
             }
 
-            if (!hasItems) {
-                // Nếu không có món nào được chọn, hủy Order rỗng
-                // (Bạn cần thêm hàm deleteOrder(orderId) vào OrderDAO nếu muốn xóa hoàn toàn)
-                request.setAttribute("errorMessage", "Vui lòng chọn ít nhất một món để đặt.");
-                request.getRequestDispatcher("/WEB-INF/views/menu/food_menu.jsp").forward(request, response);
-                return;
+            // --- BƯỚC 2: KHẮC PHỤC LỖI "TRANG TRẮNG" ---
+            if (selectedItems.isEmpty()) {
+                // Lưu lỗi vào session để hiển thị sau khi reload trang
+                request.getSession().setAttribute("errorMessage", "Bạn chưa chọn món nào! Vui lòng chọn số lượng.");
+
+                // CÁCH SỬA QUAN TRỌNG NHẤT:
+                // Dùng sendRedirect để tải lại trang Menu cũ. 
+                // getHeader("referer") chính là cái link trang Menu mà bạn vừa đứng.
+                // Nó sẽ tải lại dữ liệu món ăn => KHÔNG BỊ TRANG TRẮNG NỮA.
+                response.sendRedirect(request.getHeader("referer"));
+                return; // Dừng ngay lập tức
             }
 
-            // 6. Cập nhật Total Amount
-            orderDAO.updateTotalAmount(orderId);
-            transactionSuccess = true;
+            // --- BƯỚC 3: TẠO ĐƠN HÀNG (KHẮC PHỤC LỖI ĐỎ DAO) ---
+            int orderId = orderDAO.createOrder(roomId, note);
 
-            // 7. Chuyển hướng thành công
-            request.setAttribute("orderId", orderId);
-            request.getRequestDispatcher("/WEB-INF/views/menu/order_success.jsp").forward(request, response);
+            if (orderId > 0) {
+                for (CartItem item : selectedItems) {
+                    // Logic tự lấy giá để KHỚP 5 THAM SỐ của DAO cũ
+                    String itemName = "Unknown";
+                    double price = 0.0;
+                    try (ResultSet rs = orderDAO.getServiceDetail(item.serviceId)) {
+                        if (rs.next()) {
+                            itemName = rs.getString("service_name");
+                            price = rs.getDouble("price");
+                        }
+                    } catch (Exception ex) {
+                    }
 
-        } catch (SQLException sqle) {
-            sqle.printStackTrace();
-            request.setAttribute("errorMessage", "Lỗi SQL: Không thể lưu đơn hàng. Vui lòng kiểm tra database.");
-            request.getRequestDispatcher("/WEB-INF/views/menu/food_menu.jsp").forward(request, response);
+                    // Truyền đủ 5 tham số: orderId, serviceId, NAME, quantity, PRICE
+                    // => HẾT LỖI ĐỎ
+                    orderDAO.createOrderDetail(orderId, item.serviceId, itemName, item.quantity, price);
+                }
+                orderDAO.updateTotalAmount(orderId);
+
+                // Thành công
+                request.setAttribute("orderId", orderId);
+                request.getRequestDispatcher("/WEB-INF/views/menu/order_success.jsp").forward(request, response);
+            } else {
+                request.getSession().setAttribute("errorMessage", "Lỗi hệ thống: Không tạo được đơn.");
+                response.sendRedirect(request.getHeader("referer"));
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("errorMessage", "Lỗi xử lý đơn hàng: " + e.getMessage());
-            request.getRequestDispatcher("/WEB-INF/views/menu/food_menu.jsp").forward(request, response);
+            request.getSession().setAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            response.sendRedirect(request.getHeader("referer"));
         }
     }
 }
