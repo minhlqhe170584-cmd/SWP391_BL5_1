@@ -1,7 +1,7 @@
 USE master
 GO
 
--- Xóa DB cũ
+-- 1. XÓA DB CŨ NẾU CÓ
 IF EXISTS (SELECT name FROM sys.databases WHERE name = N'SmartHotelDB')
 BEGIN
     ALTER DATABASE [SmartHotelDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
@@ -16,7 +16,7 @@ USE [SmartHotelDB]
 GO
 
 /* ============================================================
- I. NHÂN SỰ & KHÁCH HÀNG
+   I. NHÂN SỰ & KHÁCH HÀNG
 ============================================================ */
 
 CREATE TABLE StaffRoles (
@@ -44,12 +44,8 @@ CREATE TABLE Customers (
     created_at DATETIME DEFAULT GETDATE()
 );
 
--- [QUAN TRỌNG] THÊM DỮ LIỆU KHÁCH HÀNG MẪU NGAY ĐỂ DÙNG CHO EVENT REQUEST SAU NÀY
-INSERT INTO Customers (full_name, email, password, phone)
-VALUES (N'Nguyễn Văn Khách', 'guest@gmail.com', '123456', '0901234567');
-
 /* ============================================================
- II. PHÒNG & BOOKING
+   II. PHÒNG & BOOKING
 ============================================================ */
 
 CREATE TABLE RoomTypes (
@@ -60,10 +56,9 @@ CREATE TABLE RoomTypes (
     image_url NVARCHAR(255),
     base_price_weekday DECIMAL(18,0) NOT NULL,
     base_price_weekend DECIMAL(18,0) NOT NULL,
-    is_active BIT DEFAULT 1
+    is_active BIT DEFAULT 1,
+    isEventRoom INT DEFAULT 0
 );
-GO
-
 
 CREATE TABLE Rooms (
     room_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -72,7 +67,8 @@ CREATE TABLE Rooms (
     room_status NVARCHAR(20) DEFAULT 'Available',
     room_password VARCHAR(50),
     is_active_login BIT DEFAULT 0,
-    last_cleaned_at DATETIME NULL
+    last_cleaned_at DATETIME NULL,
+    isEventRoom INT DEFAULT 0
 );
 
 CREATE TABLE Bookings (
@@ -82,10 +78,9 @@ CREATE TABLE Bookings (
     check_in_date DATETIME NOT NULL,
     check_out_date DATETIME NOT NULL,
     status NVARCHAR(20) DEFAULT 'Confirmed',
-
-    -- Real check-in/out
     real_check_in DATETIME NULL,
-    real_check_out DATETIME NULL
+    real_check_out DATETIME NULL,
+    total_amount DECIMAL(18,0) DEFAULT 0 -- Thêm cột này để hỗ trợ Payment
 );
 
 CREATE TABLE Invoices (
@@ -99,7 +94,7 @@ CREATE TABLE Invoices (
 );
 
 /* ============================================================
- III. DỊCH VỤ – GIỮ LẠI PHẦN XE ĐẠP
+   III. DỊCH VỤ (SERVICE CORE)
 ============================================================ */
 
 CREATE TABLE ServiceCategories (
@@ -117,6 +112,11 @@ CREATE TABLE Services (
     is_deleted BIT DEFAULT 0
 );
 
+/* ============================================================
+   IV. CHI TIẾT DỊCH VỤ (XE, FOOD, DRINK, LAUNDRY)
+============================================================ */
+
+-- 1. Xe Đạp
 CREATE TABLE BikeRentalOptions (
     item_id INT IDENTITY(1,1) PRIMARY KEY,
     service_id INT FOREIGN KEY REFERENCES Services(service_id),
@@ -126,10 +126,6 @@ CREATE TABLE BikeRentalOptions (
     is_active BIT DEFAULT 1
 );
 
-/* ============================================================
- IV. KHO XE ĐẠP
-============================================================ */
-
 CREATE TABLE Bicycles (
     bike_id INT IDENTITY(1,1) PRIMARY KEY,
     bike_code VARCHAR(20) UNIQUE NOT NULL,
@@ -138,8 +134,39 @@ CREATE TABLE Bicycles (
     condition NVARCHAR(255)
 );
 
+-- 2. Đồ Ăn (Foods)
+CREATE TABLE Foods (
+    food_id INT IDENTITY(1,1) PRIMARY KEY,
+    service_id INT NOT NULL FOREIGN KEY REFERENCES Services(service_id),
+    food_name NVARCHAR(100) NOT NULL,
+    price DECIMAL(18,0) DEFAULT 0,
+    description NVARCHAR(MAX),
+    is_vegetarian BIT DEFAULT 0
+);
+
+-- 3. Đồ Uống (Drinks)
+CREATE TABLE Drinks (
+    drink_id INT IDENTITY(1,1) PRIMARY KEY,
+    service_id INT NOT NULL FOREIGN KEY REFERENCES Services(service_id),
+    drink_name NVARCHAR(100) NOT NULL,
+    price DECIMAL(18,0) DEFAULT 0,
+    description NVARCHAR(MAX),
+    volume_ml INT
+);
+
+-- 4. Giặt Là (Laundry Items)
+CREATE TABLE LaundryItems (
+    laundry_item_id INT IDENTITY(1,1) PRIMARY KEY,
+    service_id INT NOT NULL FOREIGN KEY REFERENCES Services(service_id),
+    item_name NVARCHAR(100) NOT NULL,
+    description NVARCHAR(MAX) NULL,
+    default_price DECIMAL(18,0) NOT NULL,
+    unit NVARCHAR(20) NOT NULL,
+    is_active BIT DEFAULT 1
+);
+
 /* ============================================================
- V. ORDER – DETAILS – INVOICES – RENTALS – TASKS
+   V. ORDERS & TRANSACTIONS (ĐẶT DỊCH VỤ)
 ============================================================ */
 
 CREATE TABLE ServiceOrders (
@@ -149,7 +176,6 @@ CREATE TABLE ServiceOrders (
     total_amount DECIMAL(18,0) DEFAULT 0,
     status NVARCHAR(20) DEFAULT 'Pending',
     note NVARCHAR(MAX),
-    
     booking_start_date DATETIME NULL,
     booking_end_date DATETIME NULL
 );
@@ -158,7 +184,6 @@ CREATE TABLE OrderDetails (
     detail_id INT IDENTITY(1,1) PRIMARY KEY,
     order_id INT FOREIGN KEY REFERENCES ServiceOrders(order_id),
     service_id INT FOREIGN KEY REFERENCES Services(service_id),
-
     item_name NVARCHAR(100),
     quantity INT DEFAULT 1,
     unit_price DECIMAL(18,0) NOT NULL,
@@ -183,6 +208,26 @@ CREATE TABLE BikeRentals (
     status NVARCHAR(20) DEFAULT 'Active'
 );
 
+-- Laundry Orders
+CREATE TABLE LaundryOrders (
+    laundry_id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT NOT NULL FOREIGN KEY REFERENCES ServiceOrders(order_id),
+    pickup_time DATETIME,
+    expected_pickup_time DATETIME NULL,
+    expected_return_time DATETIME NULL,
+    status NVARCHAR(20) DEFAULT N'Pending',
+    note NVARCHAR(MAX) NULL
+);
+
+CREATE TABLE LaundryOrderDetails (
+    laundry_detail_id INT IDENTITY(1,1) PRIMARY KEY,
+    laundry_id INT NOT NULL FOREIGN KEY REFERENCES LaundryOrders(laundry_id),
+    laundry_item_id INT NOT NULL FOREIGN KEY REFERENCES LaundryItems(laundry_item_id),
+    quantity INT NOT NULL DEFAULT 1,
+    unit_price DECIMAL(18,0) NOT NULL,
+    subtotal AS (quantity * unit_price)
+);
+
 CREATE TABLE Tasks (
     task_id INT IDENTITY(1,1) PRIMARY KEY,
     task_name NVARCHAR(100),
@@ -194,99 +239,8 @@ CREATE TABLE Tasks (
 );
 
 /* ============================================================
- VI. ROOM HISTORY
+   VI. EVENTS & REQUESTS
 ============================================================ */
-
-CREATE TABLE RoomHistory (
-    history_id INT IDENTITY(1,1) PRIMARY KEY,
-    room_id INT FOREIGN KEY REFERENCES Rooms(room_id),
-    customer_id INT NULL FOREIGN KEY REFERENCES Customers(customer_id),
-    booking_id INT NULL FOREIGN KEY REFERENCES Bookings(booking_id),
-
-    action NVARCHAR(50),
-    description NVARCHAR(MAX),
-
-    created_at DATETIME DEFAULT GETDATE()
-);
-
-/* ============================================================
- VII. TRIGGERS BOOKING – ROOM HISTORY
-============================================================ */
-
-GO
-CREATE OR ALTER TRIGGER trg_Booking_CheckIn
-ON Bookings
-AFTER UPDATE
-AS
-BEGIN
-    INSERT INTO RoomHistory (room_id, customer_id, booking_id, action, description)
-    SELECT i.room_id, i.customer_id, i.booking_id, 
-           'Check-in', N'Khách đã nhận phòng'
-    FROM inserted i
-    JOIN deleted d ON i.booking_id = d.booking_id
-    WHERE i.real_check_in IS NOT NULL 
-      AND d.real_check_in IS NULL;
-END;
-GO
-
-
-GO
-CREATE OR ALTER TRIGGER trg_Booking_CheckOut
-ON Bookings
-AFTER UPDATE
-AS
-BEGIN
-    INSERT INTO RoomHistory (room_id, customer_id, booking_id, action, description)
-    SELECT i.room_id, i.customer_id, i.booking_id, 
-           'Check-out', N'Khách đã trả phòng'
-    FROM inserted i
-    JOIN deleted d ON i.booking_id = d.booking_id
-    WHERE i.real_check_out IS NOT NULL 
-      AND d.real_check_out IS NULL;
-END;
-GO
-
-
-GO
-CREATE OR ALTER TRIGGER trg_Room_AfterCheckout
-ON Bookings
-AFTER UPDATE
-AS
-BEGIN
-    UPDATE r
-    SET r.room_status      = 'Available',
-        r.is_active_login  = 0
-    FROM Rooms r
-    JOIN inserted i ON r.room_id = i.room_id
-    JOIN deleted d  ON i.booking_id = d.booking_id
-    WHERE i.real_check_out IS NOT NULL 
-      AND d.real_check_out IS NULL;
-END;
-GO
-
-USE [SmartHotelDB]
-GO
-
-/* ============================================================
-   1. CHỈNH SỬA BẢNG ROOMS (THÊM CỘT isEventRoom)
-============================================================ */
--- Thêm cột isEventRoom, mặc định là 0 (Không phải phòng sự kiện)
--- 1 = Phòng chuyên tổ chức sự kiện, 0 = Phòng ngủ thường
-IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'isEventRoom' AND Object_ID = Object_ID(N'Rooms'))
-BEGIN
-    ALTER TABLE Rooms ADD isEventRoom INT DEFAULT 0;
-END
-GO
-
--- Cập nhật một vài phòng làm mẫu thành phòng sự kiện (Ví dụ phòng có ID 1 và 2)
--- Lưu ý: Bạn cần đảm bảo Rooms đã có dữ liệu, nếu chưa thì chạy phần Insert dữ liệu cũ trước.
-UPDATE Rooms SET isEventRoom = 1 WHERE room_number IN ('101', '102'); 
-GO
-
-/* ============================================================
-   2. TẠO BẢNG EVENTS (DANH SÁCH GÓI SỰ KIỆN)
-============================================================ */
-IF OBJECT_ID('Events', 'U') IS NOT NULL DROP TABLE Events; -- Xóa nếu trùng tên cũ (lưu ý backup nếu cần)
 
 CREATE TABLE Events (
     eventId INT IDENTITY(1,1) PRIMARY KEY,
@@ -296,25 +250,16 @@ CREATE TABLE Events (
     roomIds NVARCHAR(MAX),
     created_date DATETIME DEFAULT GETDATE(),
     updated_date DATETIME DEFAULT GETDATE(),
-    
-    -- [QUAN TRỌNG] Khai báo luôn các cột này để tránh lỗi
     status NVARCHAR(50) DEFAULT 'Active',
     description NVARCHAR(MAX) NULL,
     image_url VARCHAR(255) NULL,
-
     CONSTRAINT FK_Events_ServiceCategories FOREIGN KEY (serviceCategoryId) REFERENCES ServiceCategories(category_id)
 );
-GO
-
-/* ============================================================
-   3. TẠO BẢNG EVENTREQUEST (YÊU CẦU ĐẶT SỰ KIỆN)
-============================================================ */
-IF OBJECT_ID('EventRequest', 'U') IS NOT NULL DROP TABLE EventRequest;
 
 CREATE TABLE EventRequest (
     requestId INT IDENTITY(1,1) PRIMARY KEY,
     eventId INT NOT NULL,
-    customer_id INT NOT NULL, -- [QUAN TRỌNG] Có ngay từ đầu
+    customer_id INT NOT NULL,
     status NVARCHAR(50) DEFAULT 'PENDING',
     roomIds NVARCHAR(MAX),
     check_in_date DATETIME NOT NULL,
@@ -324,408 +269,227 @@ CREATE TABLE EventRequest (
     message NVARCHAR(MAX),
     created_date DATETIME DEFAULT GETDATE(),
     updated_date DATETIME DEFAULT GETDATE(),
-
     CONSTRAINT FK_EventRequest_Events FOREIGN KEY (eventId) REFERENCES Events(eventId),
     CONSTRAINT FK_EventRequest_Customers FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
-GO
 
 /* ============================================================
-   4. INSERT DỮ LIỆU MẪU (SAMPLE DATA)
+   VII. PAYMENT MODULE (MỚI)
 ============================================================ */
 
--- Bước A: Đảm bảo có Category cho Event
-IF NOT EXISTS (SELECT * FROM ServiceCategories WHERE category_name = 'EventPackage')
-    INSERT INTO ServiceCategories(category_name, description) VALUES ('EventPackage', N'Các gói tổ chức sự kiện');
-
-DECLARE @EventCatID INT = (SELECT category_id FROM ServiceCategories WHERE category_name = 'EventPackage');
-
--- Bước B: Insert vào bảng Events
--- Giả sử phòng 101 (id=1) và 102 (id=2) là phòng sự kiện
-INSERT INTO Events (name, price, serviceCategoryId, roomIds, created_date, updated_date, status)
-VALUES 
-(N'Gói Tiệc Cưới Vàng', 5000000, @EventCatID, '3,4', GETDATE(), GETDATE(), 'Active'),
-(N'Tiệc Sinh Nhật VIP', 3000000, @EventCatID, '3', GETDATE(), GETDATE(), 'Active');
-
--- Bước C. Insert vào bảng Event Requests
-DECLARE @EventID_1 INT = (SELECT TOP 1 eventId FROM Events WHERE name = N'Gói Tiệc Cưới Vàng');
-DECLARE @CusID INT = (SELECT TOP 1 customer_id FROM Customers); -- Lấy khách hàng đầu tiên
-
--- [ĐÃ CHỈNH SỬA] Insert có cột customer_id
-INSERT INTO EventRequest (eventId, customer_id, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
-VALUES 
-(@EventID_1, @CusID, 'PENDING', '3,4', DATEADD(DAY, 5, GETDATE()), DATEADD(HOUR, 4, DATEADD(DAY, 5, GETDATE())), N'Yêu cầu chuẩn bị thêm máy chiếu.', GETDATE(), GETDATE());
-
-INSERT INTO EventRequest (eventId, customer_id, status, roomIds, check_in_date, check_out_date, message, created_date, updated_date)
-VALUES 
-(@EventID_1, @CusID, 'ACCEPT', '3', DATEADD(DAY, 10, GETDATE()), DATEADD(HOUR, 5, DATEADD(DAY, 10, GETDATE())), N'Đã đặt cọc.', GETDATE(), GETDATE());
-
-GO
-
-/* ============================================================
-   KIỂM TRA DỮ LIỆU
-============================================================ */
-SELECT * FROM Rooms;
-SELECT * FROM Events;
-SELECT * FROM EventRequest;
-
-
-/* ============================================================
- VIII. DỮ LIỆU MẪU
-============================================================ */
-
-GO
-INSERT INTO StaffRoles(role_name)
-VALUES ('Manager'), ('Staff');
-
-INSERT INTO Staff(full_name, email, password, role_id)
-VALUES (N'Admin', 'admin', '123', 1);
-
-
-INSERT INTO ServiceCategories(category_name)
-VALUES (N'Bike');
-
-INSERT INTO Services(service_name, category_id)
-VALUES (N'Thuê Xe Đạp', 1);
-
-INSERT INTO BikeRentalOptions(service_id, option_name, duration_minutes, price)
-VALUES
-(1, N'1 Giờ', 60, 20000),
-(1, N'1 Ngày', 1440, 100000);
-
-INSERT INTO Bicycles(bike_code, service_id, status)
-VALUES ('XE-01', 1, 'Available'),
-       ('XE-02', 1, 'Available');
-
-
-INSERT INTO ServiceOrders(room_id, status)
-VALUES (1, 'Pending');
-
-INSERT INTO OrderDetails(order_id, service_id, item_name, unit_price)
-VALUES (1, 1, N'1 Ngày', 100000);
-
-INSERT INTO BikeRentals(order_id, bike_id)
-VALUES (1, 1);
-
-UPDATE Bicycles 
-SET status = 'Rented' 
-WHERE bike_id = 1;
-
-INSERT INTO ServiceInvoices(order_id, final_amount, status)
-VALUES (1, 100000, 'Paid');
-GO
-USE [SmartHotelDB]
-GO
-
-/* ============================================================
-   PHẦN 1: CẤU TRÚC LẠI BẢNG (RE-DESIGN)
-   Để Food_ID và Drink_ID tự chạy từ 1, chúng cần là IDENTITY riêng.
-============================================================ */
-
--- 1. Xóa bảng cũ
-IF OBJECT_ID('Foods', 'U') IS NOT NULL DROP TABLE Foods;
-IF OBJECT_ID('Drinks', 'U') IS NOT NULL DROP TABLE Drinks;
-
--- 2. Dọn dẹp bảng Services (Xóa Food/Drink cũ, giữ lại Xe Đạp)
-DELETE FROM Services 
-WHERE category_id IN (
-    SELECT category_id FROM ServiceCategories 
-    WHERE category_name IN ('Food', 'Drink')
+CREATE TABLE PaymentMethods (
+    method_id INT IDENTITY(1,1) PRIMARY KEY,
+    method_name NVARCHAR(50) NOT NULL,
+    method_code VARCHAR(20) UNIQUE,
+    is_active BIT DEFAULT 1
 );
 
--- 3. Tạo bảng FOODS (Cấu trúc mới)
-CREATE TABLE Foods (
-    food_id INT IDENTITY(1,1) PRIMARY KEY, -- Tự động tăng từ 1
-    service_id INT NOT NULL,               -- Khóa ngoại trỏ về Services
-    food_name NVARCHAR(100) NOT NULL,
-    price DECIMAL(18,0) DEFAULT 0,
+CREATE TABLE Transactions (
+    transaction_id INT IDENTITY(1,1) PRIMARY KEY,
+    booking_id INT FOREIGN KEY REFERENCES Bookings(booking_id),
+    method_id INT FOREIGN KEY REFERENCES PaymentMethods(method_id),
+    amount DECIMAL(18,0) NOT NULL,
+    transaction_date DATETIME DEFAULT GETDATE(),
+    reference_code NVARCHAR(100) NULL
+);
+
+/* ============================================================
+   VIII. ROOM HISTORY & TRIGGERS
+============================================================ */
+
+CREATE TABLE RoomHistory (
+    history_id INT IDENTITY(1,1) PRIMARY KEY,
+    room_id INT FOREIGN KEY REFERENCES Rooms(room_id),
+    customer_id INT NULL FOREIGN KEY REFERENCES Customers(customer_id),
+    booking_id INT NULL FOREIGN KEY REFERENCES Bookings(booking_id),
+    action NVARCHAR(50),
     description NVARCHAR(MAX),
-    is_vegetarian BIT DEFAULT 0,
-    
-    CONSTRAINT FK_Foods_Services FOREIGN KEY (service_id) REFERENCES Services(service_id)
+    created_at DATETIME DEFAULT GETDATE()
 );
-
--- 4. Tạo bảng DRINKS (Cấu trúc mới)
-CREATE TABLE Drinks (
-    drink_id INT IDENTITY(1,1) PRIMARY KEY, -- Tự động tăng từ 1
-    service_id INT NOT NULL,                -- Khóa ngoại trỏ về Services
-    drink_name NVARCHAR(100) NOT NULL,
-    price DECIMAL(18,0) DEFAULT 0,
-    description NVARCHAR(MAX),
-    volume_ml INT,
-
-    CONSTRAINT FK_Drinks_Services FOREIGN KEY (service_id) REFERENCES Services(service_id)
-);
-
--- 5. Chỉnh lại bộ đếm cho Services (Nối đuôi Xe Đạp)
-DECLARE @MaxID INT = (SELECT ISNULL(MAX(service_id), 0) FROM Services);
-DBCC CHECKIDENT ('Services', RESEED, @MaxID);
 GO
 
-/* ============================================================
-   PHẦN 2: THÊM 20 DỮ LIỆU MẪU
-   Lúc này Food_id và Drink_id sẽ tự động chạy từ 1.
-============================================================ */
+CREATE OR ALTER TRIGGER trg_Booking_CheckIn ON Bookings AFTER UPDATE AS
 BEGIN
-    -- Đảm bảo Category tồn tại
-    IF NOT EXISTS (SELECT * FROM ServiceCategories WHERE category_name = 'Food')
-        INSERT INTO ServiceCategories(category_name, description) VALUES ('Food', N'Đồ ăn');
-    IF NOT EXISTS (SELECT * FROM ServiceCategories WHERE category_name = 'Drink')
-        INSERT INTO ServiceCategories(category_name, description) VALUES ('Drink', N'Đồ uống');
-
-    DECLARE @FoodCat INT = (SELECT category_id FROM ServiceCategories WHERE category_name = 'Food');
-    DECLARE @DrinkCat INT = (SELECT category_id FROM ServiceCategories WHERE category_name = 'Drink');
-    DECLARE @NewServiceID INT; 
-
-    -- ==================== 10 MÓN ĂN (FOODS) ====================
-    -- ID Food sẽ tự nhảy: 1, 2, 3...
-    
-    -- 1
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/pho.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Phở Bò', 65000, N'Bò tái nạm', 0);
-
-    -- 2
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/comtam.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Cơm Tấm', 55000, N'Sườn bì chả', 0);
-
-    -- 3
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/buncha.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Bún Chả', 60000, N'Hà Nội gốc', 0);
-
-    -- 4
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/bunbo.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Bún Bò Huế', 65000, N'Giò heo', 0);
-
-    -- 5
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/mixao.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Mì Xào Giòn', 85000, N'Hải sản', 0);
-
-    -- 6
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/pizza.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Pizza Bò', 120000, N'Size M', 0);
-
-    -- 7
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/burger.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Burger Gà', 90000, N'Cay', 0);
-
-    -- 8
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/salad.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Salad Nga', 50000, N'Mayonnaise', 1);
-
-    -- 9
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/steak.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Beefsteak', 250000, N'Sốt tiêu', 0);
-
-    -- 10
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Food Item', @FoodCat, N'/images/food/soup.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Foods (service_id, food_name, price, description, is_vegetarian) VALUES (@NewServiceID, N'Súp Cua', 45000, N'Trứng bắc thảo', 0);
-
-
-    -- ==================== 10 ĐỒ UỐNG (DRINKS) ====================
-    -- ID Drink sẽ tự nhảy: 1, 2, 3...
-
-    -- 1
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/coke.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Coca Cola', 20000, 330);
-
-    -- 2
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/pepsi.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Pepsi', 20000, 330);
-
-    -- 3
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/water.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Lavie', 15000, 500);
-
-    -- 4
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/tiger.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Tiger Beer', 30000, 330);
-
-    -- 5
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/heineken.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Heineken', 35000, 330);
-
-    -- 6
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/coffee.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Cà Phê Đen', 25000, 200);
-
-    -- 7
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/bacxiu.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Bạc Xỉu', 35000, 200);
-
-    -- 8
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/orange.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Cam Vắt', 45000, 300);
-
-    -- 9
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/sinhto.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Sinh Tố Dâu', 50000, 350);
-
-    -- 10
-    INSERT INTO Services (service_name, category_id, image_url, is_active) VALUES (N'Drink Item', @DrinkCat, N'/images/drink/tea.jpg', 1);
-    SET @NewServiceID = SCOPE_IDENTITY();
-    INSERT INTO Drinks (service_id, drink_name, price, volume_ml) VALUES (@NewServiceID, N'Trà Đào', 40000, 400);
-END
+    INSERT INTO RoomHistory (room_id, customer_id, booking_id, action, description)
+    SELECT i.room_id, i.customer_id, i.booking_id, 'Check-in', N'Khách đã nhận phòng'
+    FROM inserted i JOIN deleted d ON i.booking_id = d.booking_id
+    WHERE i.real_check_in IS NOT NULL AND d.real_check_in IS NULL;
+END;
 GO
 
-/* ============================================================
-   CẬP NHẬT BẢNG ROOMTYPES
-============================================================ */
-
--- 1. Thêm cột isEventRoom (0 = Loại phòng ngủ, 1 = Loại sảnh sự kiện)
-IF NOT EXISTS(SELECT * FROM sys.columns WHERE Name = N'isEventRoom' AND Object_ID = Object_ID(N'RoomTypes'))
+CREATE OR ALTER TRIGGER trg_Booking_CheckOut ON Bookings AFTER UPDATE AS
 BEGIN
-    ALTER TABLE RoomTypes ADD isEventRoom INT DEFAULT 0;
-END
+    INSERT INTO RoomHistory (room_id, customer_id, booking_id, action, description)
+    SELECT i.room_id, i.customer_id, i.booking_id, 'Check-out', N'Khách đã trả phòng'
+    FROM inserted i JOIN deleted d ON i.booking_id = d.booking_id
+    WHERE i.real_check_out IS NOT NULL AND d.real_check_out IS NULL;
+END;
 GO
 
--- 2. Cập nhật dữ liệu cũ (Set các loại Sảnh thành 1)
--- Lưu ý: Dựa vào tên để đoán, hoặc bạn có thể update theo ID cụ thể
-UPDATE RoomTypes 
-SET isEventRoom = 1 
-WHERE type_name LIKE N'%Sảnh%' 
-   OR type_name LIKE N'%Hội Nghị%' 
-   OR type_name LIKE N'%Tiệc%';
+CREATE OR ALTER TRIGGER trg_Room_AfterCheckout ON Bookings AFTER UPDATE AS
+BEGIN
+    UPDATE r SET r.room_status = 'Available', r.is_active_login = 0
+    FROM Rooms r JOIN inserted i ON r.room_id = i.room_id JOIN deleted d ON i.booking_id = d.booking_id
+    WHERE i.real_check_out IS NOT NULL AND d.real_check_out IS NULL;
+END;
 GO
 
--- 2. LOẠI PHÒNG (RoomTypes) - Cần phân biệt isEventRoom
--- Loại 1: Phòng ngủ thường
-INSERT INTO RoomTypes (type_name, capacity, description, image_url, base_price_weekday, base_price_weekend, is_active, isEventRoom)
-VALUES (N'Standard Room', 2, N'Phòng tiêu chuẩn', N'/images/standard.jpg', 500000, 600000, 1, 0);
-
--- Loại 2: Sảnh Tiệc (Sự kiện)
-INSERT INTO RoomTypes (type_name, capacity, description, image_url, base_price_weekday, base_price_weekend, is_active, isEventRoom)
-VALUES (N'Grand Ballroom', 200, N'Sảnh tiệc cưới sang trọng', N'/images/ballroom.jpg', 15000000, 20000000, 1, 1);
--- 3. PHÒNG (Rooms)
--- Phòng ngủ 101, 102
-INSERT INTO Rooms(room_number, type_id, room_status, room_password, is_active_login, isEventRoom)
-VALUES 
-('101', 1, 'Available', '123456', 1, 0),
-('102', 1, 'Available', '123456', 0, 0);
-
--- Phòng sự kiện (Sảnh A, Sảnh B) - Lưu ý type_id = 2 (Grand Ballroom)
-INSERT INTO Rooms(room_number, type_id, room_status, room_password, is_active_login, isEventRoom)
-VALUES 
-('HALL-A', 2, 'Available', 'event123', 0, 1),
-('HALL-B', 2, 'Available', 'event123', 0, 1);
-
-
-
-
-
 /* ============================================================
-   PHẦN 3: KIỂM TRA LẠI (SẼ THẤY FOOD/DRINK BẮT ĐẦU TỪ 1)
+   IX. DATA SEEDING (MỖI BẢNG ÍT NHẤT 5 VÍ DỤ)
 ============================================================ */
--- Xem bảng Foods: food_id sẽ là 1, 2, 3...
-SELECT * FROM Foods;
 
--- Xem bảng Drinks: drink_id sẽ là 1, 2, 3...
-SELECT * FROM Drinks;
+-- 1. StaffRoles (5 dòng)
+INSERT INTO StaffRoles (role_name) VALUES 
+('Admin'), ('Receptionist'), ('Manager'), ('Housekeeping'), ('Security');
 
--- Xem bảng Services: service_id vẫn tăng nối tiếp xe đạp
-SELECT * FROM Services;
+-- 2. Staff (5 dòng)
+INSERT INTO Staff (full_name, email, password, role_id) VALUES 
+(N'Quản trị viên', 'admin@hotel.com', '123456', 1),
+(N'Lễ tân A', 'receptionA@hotel.com', '123456', 2),
+(N'Quản lý B', 'managerB@hotel.com', '123456', 3),
+(N'Buồng phòng C', 'cleanerC@hotel.com', '123456', 4),
+(N'Bảo vệ D', 'securityD@hotel.com', '123456', 5);
 
-/* ============================================================
-   TẠO BẢNG CHO LAUNDRY SERVICES
-============================================================ */
--- 1) Mỗi dòng = 1 loại dịch vụ giặt cụ thể (tương ứng 1 checkbox)
-CREATE TABLE LaundryItems (
-    laundry_item_id INT IDENTITY(1,1) PRIMARY KEY,
-    service_id      INT NOT NULL
-        FOREIGN KEY REFERENCES Services(service_id), -- dịch vụ Giặt là
+-- 3. Customers (5 dòng)
+INSERT INTO Customers (full_name, email, password, phone) VALUES 
+(N'Nguyễn Văn Khách', 'guest1@gmail.com', '123', '0901234561'),
+(N'Trần Thị B', 'guest2@gmail.com', '123', '0901234562'),
+(N'Lê Văn C', 'guest3@gmail.com', '123', '0901234563'),
+(N'Phạm Thị D', 'guest4@gmail.com', '123', '0901234564'),
+(N'Hoàng Văn E', 'guest5@gmail.com', '123', '0901234565');
 
-    item_name       NVARCHAR(100) NOT NULL,  -- Laundry Shirt Service, Jean Service,...
-    description     NVARCHAR(MAX) NULL,
-    default_price   DECIMAL(18,0) NOT NULL,  -- giá / 1 đơn vị
-    unit            NVARCHAR(20) NOT NULL,   -- 'cái', 'kg',...
-    is_active       BIT DEFAULT 1
-);
+-- 4. ServiceCategories (5 dòng)
+INSERT INTO ServiceCategories(category_name, description) VALUES 
+('Bike', N'Thuê xe đạp'), 
+('Food', N'Đồ ăn nhà hàng'), 
+('Drink', N'Đồ uống quầy Bar'), 
+('Laundry', N'Giặt ủi cao cấp'), 
+('EventPackage', N'Gói sự kiện trọn gói');
 
--- 2) 1 phiếu giặt – gắn với 1 ServiceOrder (của phòng đó)
-CREATE TABLE LaundryOrders (
-    laundry_id           INT IDENTITY(1,1) PRIMARY KEY,
-    order_id             INT NOT NULL
-        FOREIGN KEY REFERENCES ServiceOrders(order_id),
+-- 5. RoomTypes (5 dòng - 2 loại Event, 3 loại ngủ)
+INSERT INTO RoomTypes (type_name, capacity, description, image_url, base_price_weekday, base_price_weekend, isEventRoom) VALUES 
+(N'Standard Room', 2, N'Phòng tiêu chuẩn', '/img/std.jpg', 500000, 600000, 0),
+(N'Deluxe Room', 2, N'Phòng cao cấp', '/img/deluxe.jpg', 800000, 1000000, 0),
+(N'Family Suite', 4, N'Phòng gia đình', '/img/suite.jpg', 15000000, 1800000, 0),
+(N'Conference Hall', 50, N'Phòng hội nghị nhỏ', '/img/conf.jpg', 5000000, 7000000, 1),
+(N'Grand Ballroom', 200, N'Sảnh tiệc lớn', '/img/hall.jpg', 20000000, 25000000, 1);
 
-    pickup_time          DATETIME,
-    expected_pickup_time DATETIME NULL,
-    expected_return_time   DATETIME NULL,
-    status               NVARCHAR(20) DEFAULT N'Pending',
-    note                 NVARCHAR(MAX) NULL
-);
+-- 6. Rooms (5 dòng)
+INSERT INTO Rooms(room_number, type_id, room_status, isEventRoom) VALUES 
+('101', 1, 'Occupied', 0), 
+('102', 2, 'Available', 0), 
+('201', 3, 'Available', 0), 
+('HALL-A', 4, 'Available', 1), 
+('HALL-B', 5, 'Available', 1);
 
--- 3) Chi tiết các loại trong 1 phiếu giặt
-CREATE TABLE LaundryOrderDetails (
-    laundry_detail_id INT IDENTITY(1,1) PRIMARY KEY,
-    laundry_id        INT NOT NULL
-        FOREIGN KEY REFERENCES LaundryOrders(laundry_id),
-    laundry_item_id   INT NOT NULL
-        FOREIGN KEY REFERENCES LaundryItems(laundry_item_id),
+-- 7. Bookings (5 dòng)
+-- Guest 1 đang ở phòng 101
+INSERT INTO Bookings (customer_id, room_id, check_in_date, check_out_date, status, total_amount) 
+VALUES (1, 1, GETDATE()-1, GETDATE()+2, 'Confirmed', 1500000);
 
-    quantity          INT NOT NULL DEFAULT 1,
-    unit_price        DECIMAL(18,0) NOT NULL,  -- giá dùng thực tế
-    subtotal          AS (quantity * unit_price)
-);
+-- Guest 2 đã trả phòng 102
+INSERT INTO Bookings (customer_id, room_id, check_in_date, check_out_date, status, real_check_in, real_check_out, total_amount) 
+VALUES (2, 2, GETDATE()-5, GETDATE()-3, 'CheckedOut', GETDATE()-5, GETDATE()-3, 1600000);
 
-INSERT INTO ServiceCategories (category_name, description)
-VALUES (N'Giặt là', N'Dịch vụ giặt ủi');
+-- Guest 3 sắp đến
+INSERT INTO Bookings (customer_id, room_id, check_in_date, check_out_date, status, total_amount) 
+VALUES (3, 3, GETDATE()+1, GETDATE()+3, 'Confirmed', 3000000);
 
-INSERT INTO Services (service_name, category_id, image_url, is_active, is_deleted)
-VALUES (
-    N'Dịch vụ giặt là',
-    (SELECT category_id FROM ServiceCategories WHERE category_name = N'Giặt là'),
-    NULL, 1, 0
-);
+-- Guest 4 đặt Event
+INSERT INTO Bookings (customer_id, room_id, check_in_date, check_out_date, status, total_amount) 
+VALUES (4, 4, GETDATE()+10, GETDATE()+10, 'Confirmed', 5000000);
 
-DECLARE @laundryServiceId INT =
-    (SELECT service_id FROM Services WHERE service_name = N'Dịch vụ giặt là');
+-- Guest 5 hủy phòng
+INSERT INTO Bookings (customer_id, room_id, check_in_date, check_out_date, status, total_amount) 
+VALUES (5, 1, GETDATE()+20, GETDATE()+22, 'Cancelled', 1000000);
 
-INSERT INTO LaundryItems (service_id, item_name, default_price, unit)
-VALUES
-(@laundryServiceId, N'Laundry Shirt Service',                  20000, N'cái'),
-(@laundryServiceId, N'Laundry Jean Service',                   25000, N'cái'),
-(@laundryServiceId, N'Leather and Suede Cleaning',             80000, N'cái'),
-(@laundryServiceId, N'Wash/Dry/Fold Laundry Service',          30000, N'kg'),
-(@laundryServiceId, N'Flat Work Laundry Service',              40000, N'kg'),
-(@laundryServiceId, N'Designer Purse/Handbag Cleaning',       100000, N'cái'),
-(@laundryServiceId, N'Wedding Dress Cleaning and Preservation',300000, N'cái');
+-- 8. PaymentMethods (5 dòng)
+INSERT INTO PaymentMethods (method_name, method_code) VALUES 
+(N'Tiền mặt', 'CASH'), 
+(N'Thẻ tín dụng', 'CARD'), 
+(N'Chuyển khoản', 'BANKING'), 
+(N'Momo', 'MOMO'), 
+(N'VNPAY', 'VNPAY');
 
--- 1. Tạo ServiceOrder cho phòng 101
-INSERT INTO ServiceOrders (room_id, status)
-VALUES ( (SELECT room_id FROM Rooms WHERE room_number = '101'), N'Pending');
+-- 9. Transactions (5 dòng)
+INSERT INTO Transactions (booking_id, method_id, amount) VALUES 
+(1, 1, 500000), -- Khách 1 cọc tiền mặt
+(1, 2, 1000000), -- Khách 1 trả thẻ
+(2, 3, 1600000), -- Khách 2 chuyển khoản hết
+(4, 3, 2000000), -- Khách 4 cọc hội nghị
+(5, 4, -50000);   -- Hoàn tiền cho khách 5
 
-DECLARE @orderId INT = SCOPE_IDENTITY();
+-- 10. Services (Tổng hợp)
+-- ID 1: Bike
+INSERT INTO Services (service_name, category_id) VALUES (N'Dịch vụ Xe Đạp', 1);
+-- ID 2-6: Food (5 món)
+INSERT INTO Services (service_name, category_id) VALUES (N'Food Service', 2), (N'Food Service', 2), (N'Food Service', 2), (N'Food Service', 2), (N'Food Service', 2);
+-- ID 7-11: Drink (5 món)
+INSERT INTO Services (service_name, category_id) VALUES (N'Drink Service', 3), (N'Drink Service', 3), (N'Drink Service', 3), (N'Drink Service', 3), (N'Drink Service', 3);
+-- ID 12: Laundry
+INSERT INTO Services (service_name, category_id) VALUES (N'Dịch vụ Giặt Là', 4);
 
--- 2. Tạo LaundryOrder cho ServiceOrder này
-INSERT INTO LaundryOrders (order_id, status)
-VALUES (@orderId, N'Pending');
+-- 11. Bike Data (5 dòng options, 5 xe)
+INSERT INTO BikeRentalOptions(service_id, option_name, duration_minutes, price) VALUES 
+(1, N'1 Giờ', 60, 20000), (1, N'4 Giờ', 240, 60000), (1, N'1 Ngày', 1440, 100000), (1, N'Cuối tuần', 2880, 180000), (1, N'1 Tuần', 10080, 500000);
 
-DECLARE @laundryId INT = SCOPE_IDENTITY();
+INSERT INTO Bicycles(bike_code, service_id) VALUES 
+('XE-01', 1), ('XE-02', 1), ('XE-03', 1), ('XE-04', 1), ('XE-05', 1);
 
--- 3. Thêm chi tiết
-INSERT INTO LaundryOrderDetails (laundry_id, laundry_item_id, quantity, unit_price)
-VALUES
-(@laundryId,
- (SELECT laundry_item_id FROM LaundryItems WHERE item_name = N'Laundry Shirt Service'),
- 3, 20000),
-(@laundryId,
- (SELECT laundry_item_id FROM LaundryItems WHERE item_name = N'Laundry Jean Service'),
- 2, 25000);
+-- 12. Foods (5 món - Gắn với Service ID 2,3,4,5,6)
+INSERT INTO Foods (service_id, food_name, price) VALUES 
+(2, N'Phở Bò', 65000), (3, N'Cơm Tấm', 55000), (4, N'Bún Chả', 60000), (5, N'Pizza', 120000), (6, N'Burger', 90000);
+
+-- 13. Drinks (5 món - Gắn với Service ID 7,8,9,10,11)
+INSERT INTO Drinks (service_id, drink_name, price) VALUES 
+(7, N'Coca Cola', 20000), (8, N'Pepsi', 20000), (9, N'Lavie', 15000), (10, N'Sinh Tố', 50000), (11, N'Cafe Đá', 25000);
+
+-- 14. LaundryItems (5 dòng - Gắn với Service ID 12)
+INSERT INTO LaundryItems (service_id, item_name, default_price, unit) VALUES 
+(12, N'Áo Sơ Mi', 20000, N'cái'), (12, N'Quần Jean', 25000, N'cái'), (12, N'Váy Đầm', 50000, N'cái'), (12, N'Vest', 80000, N'cái'), (12, N'Giặt Ký', 30000, N'kg');
+
+-- 15. ServiceOrders (5 đơn hàng)
+INSERT INTO ServiceOrders (room_id, status, total_amount) VALUES 
+(1, 'Pending', 130000),  -- Phòng 101 gọi đồ ăn
+(1, 'Completed', 40000), -- Phòng 101 gọi nước
+(2, 'Paid', 100000),      -- Phòng 102 thuê xe (đã trả)
+(3, 'Pending', 200000),  -- Phòng 201 giặt ủi
+(4, 'Pending', 5000000); -- Hội nghị A đặt tiệc
+
+-- 16. OrderDetails (5 chi tiết)
+INSERT INTO OrderDetails (order_id, service_id, quantity, unit_price, item_name) VALUES 
+(1, 2, 2, 65000, N'Phở Bò'),    -- Order 1: 2 Phở
+(2, 7, 2, 20000, N'Coca Cola'), -- Order 2: 2 Coca
+(3, 1, 1, 100000, N'Thuê Xe'),  -- Order 3: Xe đạp
+(4, 12, 4, 50000, N'Váy Đầm'),  -- Order 4: Giặt
+(5, 5, 50, 100000, N'Pizza');   -- Order 5: Tiệc Pizza
+
+-- 17. LaundryOrders & Details (Cho Order 4 - Giặt ủi)
+INSERT INTO LaundryOrders (order_id, status) VALUES (4, 'Processing');
+INSERT INTO LaundryOrderDetails (laundry_id, laundry_item_id, quantity, unit_price) VALUES (1, 3, 4, 50000);
+
+-- 18. Events & Requests (5 dòng)
+INSERT INTO Events (name, price, serviceCategoryId, roomIds) VALUES 
+(N'Tiệc Cưới Silver', 5000000, 5, '4,5'),
+(N'Tiệc Cưới Gold', 10000000, 5, '5'),
+(N'Hội Nghị Cấp Cao', 2000000, 5, '4'),
+(N'Sinh Nhật Bé Yêu', 3000000, 5, '4'),
+(N'Year End Party', 15000000, 5, '5');
+
+INSERT INTO EventRequest (eventId, customer_id, status, roomIds, check_in_date, check_out_date, message) VALUES 
+(1, 1, 'PENDING', '4', GETDATE()+10, GETDATE()+10, N'Cần hoa tươi'),
+(2, 2, 'APPROVED', '5', GETDATE()+20, GETDATE()+20, N'Đã cọc 50%'),
+(3, 3, 'CANCELLED', '4', GETDATE()+5, GETDATE()+5, N'Hủy do bận'),
+(4, 4, 'COMPLETED', '4', GETDATE()-5, GETDATE()-5, N'Đã xong'),
+(5, 5, 'PENDING', '5', GETDATE()+30, GETDATE()+30, N'Cần MC');
+
+-- 19. Invoices (5 hóa đơn cũ)
+INSERT INTO Invoices (booking_id, staff_id, total_amount, payment_method, note) VALUES 
+(1, 2, 1500000, N'Cash', N'Thanh toán đợt 1'),
+(2, 2, 1600000, N'Banking', N'Đã thanh toán hết'),
+(3, 2, 0, NULL, N'Chưa thanh toán'),
+(4, 2, 2000000, N'Banking', N'Cọc Event'),
+(5, 2, 0, N'Cash', N'Đã hoàn tiền');
+
+GO
+PRINT N'=== TẠO DATABASE VÀ DỮ LIỆU MẪU THÀNH CÔNG ===';

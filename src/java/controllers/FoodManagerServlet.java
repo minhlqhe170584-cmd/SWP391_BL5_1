@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet(name = "FoodManagerServlet", urlPatterns = {"/foods"})
+@WebServlet(name = "FoodManagerServlet", urlPatterns = {"/admin/foods"})
 public class FoodManagerServlet extends HttpServlet {
 
     private FoodDAO foodDAO;
