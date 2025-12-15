@@ -41,25 +41,41 @@
             </li>
 
             <li class="menu-header">Service Management</li>
+            
             <li class="nav-item">
-                <a href="service" class="nav-link">Service</a>
-            </li>
-            <li class="nav-item">
-                <a href="service-category" class="nav-link">Service Category</a>
+                <a href="${pageContext.request.contextPath}/admin/service" class="nav-link">
+                    <i class="fas fa-concierge-bell"></i> <span>Service</span>
+                </a>
             </li>
             
             <li class="nav-item">
-                <a href="${pageContext.request.contextPath}/admin/events" class="nav-link">
+                <a href="${pageContext.request.contextPath}/admin/service-category" class="nav-link">
+                    <i class="fas fa-list-alt"></i> <span>Service Category</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="${pageContext.request.contextPath}/admin/event-packages" class="nav-link">
                     <i class="fas fa-place-of-worship"></i> <span>Event Packages</span>
                 </a>
             </li>
             
             <li class="nav-item">
-                <a href="bicycle" class="nav-link">Bicycle</a>
+                <a href="${pageContext.request.contextPath}/admin/event-booking-list" class="nav-link">
+                    <i class="fas fa-place-of-worship"></i> <span>Event Booking</span>
+                </a>
             </li>
             
             <li class="nav-item">
-                <a href="bike-options" class="nav-link">Bicycle Rental option</a>
+                <a href="${pageContext.request.contextPath}/admin/bicycle" class="nav-link">
+                    <i class="fas fa-bicycle"></i> <span>Bicycle</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="${pageContext.request.contextPath}/admin/bike-options" class="nav-link">
+                    <i class="fas fa-cogs"></i> <span>Bicycle Rental option</span>
+                </a>
             </li>
 
             <li class="nav-item">

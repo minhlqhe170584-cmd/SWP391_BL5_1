@@ -8,9 +8,8 @@ public class Booking {
     private int roomId;
     private Timestamp checkInDate;
     private Timestamp checkOutDate;
-    private String status; // Confirmed, Cancelled, Pending
-    
-    // Các trường phụ để hiển thị (Join bảng)
+    private String status; 
+     
     private Room room;
     private Customer customer;
 
@@ -25,7 +24,6 @@ public class Booking {
         this.status = status;
     }
 
-    // --- GETTER & SETTER ---
     public int getBookingId() { return bookingId; }
     public void setBookingId(int bookingId) { this.bookingId = bookingId; }
 

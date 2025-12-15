@@ -14,34 +14,58 @@ import java.util.Date;
  */
 public class Task {
     private int taskId;
+    private int orderId;
+    private int staffId;
     private String taskName;
     private String description;
     private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime finishedAt;
     private Staff staff;
-    private Room room;
-
-    public Task(int taskId, String taskName, String description, String status, LocalDateTime createdAt, LocalDateTime finishedAt, Staff staff, Room room) {
-        this.taskId = taskId;
-        this.taskName = taskName;
-        this.description = description;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.finishedAt = finishedAt;
-        this.staff = staff;
-        this.room = room;
-    }  
-
-    public Task(int taskId, String taskName, String description, String status, LocalDateTime createdAt, LocalDateTime finishedAt, Staff staff) {
-        this.taskId = taskId;
-        this.taskName = taskName;
-        this.description = description;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.finishedAt = finishedAt;
-        this.staff = staff;
+    private ServiceOrder serviceOrder;
+    private LocalDateTime createdAt;
+    
+    public Task(){
+        
     }
+
+    public Task(int taskId, int orderId, int staffId, String taskName, String description, String status, Staff staff, ServiceOrder serviceOrder, LocalDateTime createdAt) {
+        this.taskId = taskId;
+        this.orderId = orderId;
+        this.staffId = staffId;
+        this.taskName = taskName;
+        this.description = description;
+        this.status = status;
+        this.staff = staff;
+        this.serviceOrder = serviceOrder;
+        this.createdAt = createdAt;
+    }
+
+    
+
+    public ServiceOrder getServiceOrder() {
+        return serviceOrder;
+    }
+
+    public void setServiceOrder(ServiceOrder serviceOrder) {
+        this.serviceOrder = serviceOrder;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
+    }
+
+    public int getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(int staffId) {
+        this.staffId = staffId;
+    }
+    
+    
 
     public int getTaskId() {
         return taskId;
@@ -89,22 +113,7 @@ public class Task {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
-    public LocalDateTime getFinishedAt() {
-        return finishedAt;
-    }
-
-    public Date getFinishedAtAsDate() {
-        if (finishedAt == null) {
-            return null;
-        }
-        return Date.from(finishedAt.atZone(ZoneId.systemDefault()).toInstant());
-    }
     
-    public void setFinishedAt(LocalDateTime finishedAt) {
-        this.finishedAt = finishedAt;
-    }
-
     public Staff getStaff() {
         return staff;
     }
@@ -113,25 +122,4 @@ public class Task {
         this.staff = staff;
     }
 
-    public Room getRoom() {
-        return room;
-    }
-
-    public void setRoom(Room room) {
-        this.room = room;
-    }
-    
-    @Override
-public String toString() {
-    return "Task{" +
-            "taskId=" + taskId +
-            ", taskName='" + taskName + '\'' +
-            ", description='" + description + '\'' +
-            ", status='" + status + '\'' +
-            ", createdAt=" + createdAt +
-            ", finishedAt=" + finishedAt +
-            ", staff=" + (staff != null ? staff.getFullName(): "N/A") +
-            ", room=" + (room != null ? room.getRoomNumber(): "N/A") +
-            '}';
-}
 }
