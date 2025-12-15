@@ -1,21 +1,22 @@
-//package dao;
-//
-//import dbContext.DBContext;
-//import java.util.ArrayList;
-//import java.sql.*;
-//import java.time.LocalDateTime;
-//import java.util.List;
-//import models.Role;
-//import models.Room;
-//import models.ServiceOrder;
-//import models.Staff;
-//import models.Task;
-//
-///**
-// *
-// * @author Acer
-// */
-//public class TaskDAO extends DBContext {
+
+package dao;
+
+import dbContext.DBContext;
+import java.util.ArrayList;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import models.Role;
+import models.Room;
+import models.ServiceOrder;
+import models.Staff;
+import models.Task;
+
+/**
+ *
+ * @author Acer
+ */
+public class TaskDAO extends DBContext {
 //
 //    private static final String GET_ALL_TASKS = "SELECT t.task_id, t.task_name, t.description, t.staff_id, "
 //            + "t.related_room_id, t.status, t.created_at, t.finished_at, "
@@ -554,4 +555,4 @@
 //        }
 //
 //    }
-//}
+}
