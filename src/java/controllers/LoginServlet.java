@@ -69,7 +69,7 @@ public class LoginServlet extends HttpServlet {
                 
                 session.setAttribute("CURRENT_ROOM", room);
                 session.setAttribute("ROOM_ID", room.getRoomId());
-                response.sendRedirect("services-home"); 
+                response.sendRedirect("services"); 
                 return;
             }
 

@@ -58,6 +58,7 @@
                         <i class="flaticon-024-towel"></i>
                         <h4>Giặt Là Cao Cấp</h4>
                         <p>Dịch vụ giặt ủi, giặt khô lấy ngay trong ngày. Quần áo được chăm sóc kỹ lưỡng, hương thơm dịu nhẹ.</p>
+                         <a href="${pageContext.request.contextPath}/laundry-book" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Giặt là</a>
                     </div>
                 </div>
 
@@ -73,6 +74,7 @@
                         <c:if test="${sessionScope.ROLE == 'ROOM'}">
                             <a href="${pageContext.request.contextPath}/order" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Gọi Món Ngay</a>
                         </c:if>
+                             <a href="${pageContext.request.contextPath}/order" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Gọi món ngay</a>
                     </div>
                 </div>
 
