@@ -226,6 +226,7 @@ public class BikeTransactionDAO extends DBContext {
         return 0;
     }
 
+    //Update status cho task ? 
     public void handoverBikes(int orderId, String[] bikeIds) {
         Connection conn = null;
         try {
@@ -262,6 +263,7 @@ public class BikeTransactionDAO extends DBContext {
         }
     }
 
+    //Hoàn thành task update status cho task
     public void returnBikesAndPay(int orderId, String paymentMethod) {
         Connection conn = null;
         try {

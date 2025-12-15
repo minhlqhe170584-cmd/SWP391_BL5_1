@@ -1,23 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import dbContext.DBContext;
-import java.math.BigDecimal;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
-import models.Role;
-import models.Room;
-import models.RoomType;
-import models.Staff;
+import java.sql.*;
+import java.time.LocalDateTime;
+import models.ServiceOrder;
 import models.Task;
 
 /**
