@@ -1,6 +1,6 @@
 <%-- 
     Document   : services
-    Description: Trang Dịch vụ Tĩnh (Hardcode) - Bản gốc chưa sửa
+    Description: Trang Dịch vụ - Đã fix hiển thị nút theo Role ROOM
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -58,7 +58,10 @@
                         <i class="flaticon-024-towel"></i>
                         <h4>Giặt Là Cao Cấp</h4>
                         <p>Dịch vụ giặt ủi, giặt khô lấy ngay trong ngày. Quần áo được chăm sóc kỹ lưỡng, hương thơm dịu nhẹ.</p>
-                         <a href="${pageContext.request.contextPath}/laundry-book" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Giặt là</a>
+                        
+                        <c:if test="${sessionScope.ROLE == 'ROOM'}">
+                            <a href="${pageContext.request.contextPath}/laundry-book" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Đặt Giặt Là</a>
+                        </c:if>
                     </div>
                 </div>
 
@@ -74,7 +77,6 @@
                         <c:if test="${sessionScope.ROLE == 'ROOM'}">
                             <a href="${pageContext.request.contextPath}/order" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Gọi Món Ngay</a>
                         </c:if>
-                             <a href="${pageContext.request.contextPath}/order" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Gọi món ngay</a>
                     </div>
                 </div>
 
@@ -87,7 +89,9 @@
                         <h4>Thuê Xe Đạp</h4>
                         <p>Khám phá trong khuôn viên khách sạn và khu vực lân cận với dịch vụ thuê xe đạp địa hình, xe đạp đôi.</p>
                         
-                        <a href="${pageContext.request.contextPath}/book-bike" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Thuê Xe Ngay</a>
+                        <c:if test="${sessionScope.ROLE == 'ROOM'}">
+                            <a href="${pageContext.request.contextPath}/book-bike" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Thuê Xe Ngay</a>
+                        </c:if>
                     </div>
                 </div>
 
@@ -100,7 +104,9 @@
                         <h4>Tổ chức sự kiện</h4>
                         <p>Tổ chức trọn gói Tiệc cưới, Sinh nhật và Hội nghị. Sảnh tiệc sang trọng, thực đơn đa dạng và kịch bản chuyên nghiệp.</p>
                         
-                        <a href="${pageContext.request.contextPath}/event-booking" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Đặt Tiệc Ngay</a>
+                        <c:if test="${sessionScope.ROLE == 'ROOM'}">
+                             <a href="${pageContext.request.contextPath}/event-booking" class="primary-btn" style="padding: 10px 20px; margin-top: 10px; width: 100%;">Đặt Tiệc Ngay</a>
+                        </c:if>
                     </div>
                 </div>
 
