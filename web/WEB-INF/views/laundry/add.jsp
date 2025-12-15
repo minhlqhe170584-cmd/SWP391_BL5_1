@@ -97,7 +97,7 @@
 
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label>Dự kiến giao hàng</label>
+                                            <label>Dự kiến thời gian tới lấy đồ</label>
                                             <input type="datetime-local" name="deliveryTime" class="form-control"
                                                    value="<fmt:formatDate value='${order.expectedPickupTime}' pattern='yyyy-MM-dd\'T\'HH:mm'/>">
                                         </div>
@@ -105,7 +105,7 @@
 
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label>Dự kiến trả về</label>
+                                            <label>Dự kiến thời gian nhận lại đồ</label>
                                             <input type="datetime-local" name="returnTime" class="form-control"
                                                    value="<fmt:formatDate value='${order.expectedReturnTime}' pattern='yyyy-MM-dd\'T\'HH:mm'/>">
                                         </div>
