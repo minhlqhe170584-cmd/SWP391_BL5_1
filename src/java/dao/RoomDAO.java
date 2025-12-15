@@ -59,7 +59,7 @@ public class RoomDAO extends DBContext {
         return roomList;
     }
 
-    <<<<<<< HEAD
+    
     public List<Room> getAllActiveLoginRooms() {
         List<Room> roomList = new ArrayList<>();
         // THÊM: WHERE r.isEventRoom = 0
