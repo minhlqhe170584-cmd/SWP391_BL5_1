@@ -1,6 +1,5 @@
 package dao;
 
-import com.sun.jdi.connect.spi.Connection;
 import dbContext.DBContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -95,9 +94,27 @@ public class EventDAO extends DBContext {
     public void deleteEvent(int id) {
         /* Giữ nguyên */ }
 
+    // 5. Lấy danh sách Event Category (Triển khai logic SQL)
     public List<EventCategory> getAllEventCategories() {
-        /* Giữ nguyên */ return new ArrayList<>();
-    } // (Code cũ của bạn)
+        List<EventCategory> list = new ArrayList<>();
+        // Giả định ServiceCategories có category_id, category_name, description
+        String sql = "SELECT category_id, category_name, description FROM ServiceCategories";
+
+        // Sử dụng try-with-resources để quản lý connection/statement/resultset
+        try (java.sql.PreparedStatement st = connection.prepareStatement(sql); ResultSet rs = st.executeQuery()) {
+
+            while (rs.next()) {
+                EventCategory cat = new EventCategory();
+                cat.setEventCatId(rs.getInt("category_id"));
+                cat.setCategoryName(rs.getString("category_name"));
+                cat.setDescription(rs.getString("description"));
+                list.add(cat);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getAllEventCategories: " + e.getMessage());
+        }
+        return list;
+    }
 
     // --- Helper Map (Thêm map status) ---
     private Event mapEvent(ResultSet rs) throws SQLException {
@@ -125,18 +142,18 @@ public class EventDAO extends DBContext {
         return event;
     }
 
+// Hàm Insert (Giữ nguyên logic của bạn, SQL Server tự parse String thành DateTime)
     public boolean insertEventRequest(EventRequest er) {
         String sql = """
-        INSERT INTO EventRequest
-        (eventId, roomIds, check_in_date, check_out_date, message, status, customer_id, created_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
-    """;
+            INSERT INTO EventRequest
+            (eventId, roomIds, check_in_date, check_out_date, message, status, customer_id, created_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
+        """;
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
-
             st.setInt(1, er.getEventId());
             st.setString(2, er.getRoomIds());
-            st.setString(3, er.getCheckInDate());
+            st.setString(3, er.getCheckInDate()); // String format 'yyyy-MM-dd HH:mm'
             st.setString(4, er.getCheckOutDate());
             st.setString(5, er.getMessage());
             st.setString(6, er.getStatus());
@@ -144,7 +161,6 @@ public class EventDAO extends DBContext {
 
             int rows = st.executeUpdate();
             return rows > 0;
-
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -206,7 +222,104 @@ public class EventDAO extends DBContext {
 
         return list;
     }
-    
+
+    public void updateEventRequestStatus(int requestId, String newStatus) {
+        String sql = "UPDATE EventRequest SET status = ?, updated_date = GETDATE() WHERE requestId = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, newStatus);
+            ps.setInt(2, requestId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Lấy danh sách thời gian đã được đặt (Status = ACCEPT) của các phòng trong danh sách
+    // Input: "1,2" (chuỗi id phòng của gói sự kiện hiện tại)
+    public List<String> getBookedRanges(String roomIdsStr) {
+        List<String> ranges = new ArrayList<>();
+
+        if (roomIdsStr == null || roomIdsStr.isEmpty()) {
+            return ranges;
+        }
+
+        // Logic: 
+        // 1. Tìm tất cả đơn đã ACCEPT.
+        // 2. Kiểm tra xem đơn đó có dính dáng đến phòng nào trong `roomIdsStr` không.
+        // (Ở đây dùng query đơn giản: Lấy hết đơn ACCEPT, sau đó lọc xem có trùng phòng không)
+        String sql = "SELECT roomIds, check_in_date, check_out_date FROM EventRequest WHERE status = 'ACCEPT'";
+
+        try (PreparedStatement st = connection.prepareStatement(sql); ResultSet rs = st.executeQuery()) {
+
+            // Chuyển chuỗi input "1,2" thành mảng ["1", "2"] để so sánh
+            String[] targetRooms = roomIdsStr.split(",");
+
+            while (rs.next()) {
+                String bookedRooms = rs.getString("roomIds"); // VD: "2,3"
+                boolean isConflict = false;
+
+                // Kiểm tra giao thoa phòng
+                for (String tRoom : targetRooms) {
+                    if (bookedRooms.contains(tRoom.trim())) {
+                        isConflict = true;
+                        break;
+                    }
+                }
+
+                if (isConflict) {
+                    // Nếu trùng phòng -> Thêm khoảng thời gian vào danh sách chặn
+                    // Format JSON cho Flatpickr: { from: "...", to: "..." }
+                    String from = rs.getTimestamp("check_in_date").toString();
+                    String to = rs.getTimestamp("check_out_date").toString();
+                    // Loại bỏ phần nano giây thừa nếu có, giữ format yyyy-MM-dd HH:mm:ss
+                    ranges.add("{ from: '" + from + "', to: '" + to + "' }");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ranges;
+    }
+
+// Phương thức kiểm tra tên gói sự kiện có tồn tại không
+    public boolean checkEventNameExists(String name) {
+        // Chỉ kiểm tra các gói sự kiện đang hoạt động (serviceCategoryId = 1)
+        String sql = "SELECT eventId FROM Events WHERE name = ? AND serviceCategoryId = 1";
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setString(1, name);
+            try (ResultSet rs = st.executeQuery()) {
+                return rs.next(); // True nếu tìm thấy
+            }
+        } catch (SQLException e) {
+            System.err.println("Error checkEventNameExists: " + e.getMessage());
+            return true; // Xử lý an toàn: nếu có lỗi DB thì coi như trùng
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái (status) của Gói Sự kiện.
+     *
+     * @param eventId ID của Gói Sự kiện.
+     * @param newStatus Trạng thái mới ('Active' hoặc 'Inactive').
+     * @return true nếu cập nhật thành công, false nếu thất bại.
+     */
+    public boolean updateEventStatus(int eventId, String newStatus) {
+        // Sử dụng chung cho cả Activate và Deactivate
+        String sql = "UPDATE Events SET status = ?, updated_date = GETDATE() WHERE eventId = ?";
+
+        try (java.sql.PreparedStatement st = connection.prepareStatement(sql)) {
+
+            st.setString(1, newStatus);
+            st.setInt(2, eventId);
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error updateEventStatus: " + e.getMessage());
+            return false;
+        }
+    }
+
     public static void main(String[] args) {
         EventDAO d = new EventDAO();
         System.out.println(d.getAllEventRequests().get(0).toString());

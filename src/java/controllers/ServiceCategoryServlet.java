@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import models.ServiceCategory;
 
-@WebServlet(name = "ServiceCategoryServlet", urlPatterns = {"/service-category"})
+@WebServlet(name = "ServiceCategoryServlet", urlPatterns = {"/admin/service-category"})
 public class ServiceCategoryServlet extends HttpServlet {
 
     private final ServiceCategoryDAO categoryDAO = new ServiceCategoryDAO();

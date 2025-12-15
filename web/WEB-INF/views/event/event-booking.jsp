@@ -7,6 +7,8 @@
     <head>
         <title>Đặt Sự Kiện | Smart Hotel</title>
         <jsp:include page="../components/head.jsp"/>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     </head>
 
     <body>
@@ -67,17 +69,13 @@
                                                     <c:if test="${event != null && event.eventId == e.eventId}">
                                                         selected
                                                     </c:if>>
-                                                ${e.eventName} - 
-                                                <fmt:formatNumber value="${e.pricePerTable}"
-                                                                  type="currency"
-                                                                  currencySymbol="VND"/>
+                                                ${e.eventName} - <fmt:formatNumber value="${e.pricePerTable}" type="currency" currencySymbol="VND"/>
                                             </option>
                                         </c:forEach>
                                     </select>
                                 </form>
                             </div>
                         </div>
-                        <!-- Thông tin sự kiện -->
                         <c:if test="${not empty event}">
 
                             <div class="card mb-4">
@@ -88,9 +86,7 @@
                                     <p><strong>Tên sự kiện:</strong> ${event.eventName}</p>
                                     <p>
                                         <strong>Giá: </strong>
-                                        <fmt:formatNumber value="${event.pricePerTable}"
-                                                          type="currency"
-                                                          currencySymbol="VND"/>
+                                        <fmt:formatNumber value="${event.pricePerTable}" type="currency" currencySymbol="VND"/>
                                     </p>
                                 </div>
                             </div>
@@ -112,29 +108,41 @@
                                         <div class="form-group">
                                             <label>Chọn phòng</label>
 
-                                            <c:forEach var="rid" items="${roomIds}">
+                                            <c:forEach var="room" items="${roomList}">
                                                 <div class="form-check">
-                                                    <input type="checkbox" name="roomIds" value="${rid}">
-                                                    Phòng ${rid}
+                                                    <input type="checkbox" name="roomIds" value="${room.roomId}" class="form-check-input" id="r_${room.roomId}"
+                                                        <c:if test="${paramValues.roomIds != null}">
+                                                            <c:forEach var="selectedRoomId" items="${paramValues.roomIds}">
+                                                                <c:if test="${selectedRoomId == room.roomId}">checked</c:if>
+                                                            </c:forEach>
+                                                        </c:if>>
+                                                    <label class="form-check-label" for="r_${room.roomId}">
+                                                        Phòng ${room.roomNumber}
+                                                    </label>
                                                 </div>
                                             </c:forEach>
+
+                                            <c:if test="${empty roomList}">
+                                                <p class="text-muted text-small">Không có phòng cụ thể cho gói này (Áp dụng linh hoạt).</p>
+                                            </c:if>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Thời gian bắt đầu (Ngày & Giờ)</label>
+                                            <input type="text" id="checkInDate" name="checkInDate" value="${param.checkInDate}"
+                                                   class="form-control bg-white"
+                                                   placeholder="Chọn ngày giờ bắt đầu..." readonly required>
                                         </div>
 
                                         <div class="form-group">
-                                            <label>Ngày tổ chức</label>
-                                            <input type="date" name="checkInDate"
-                                                   class="form-control" required>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Ngày kết thúc</label>
-                                            <input type="date" name="checkOutDate"
-                                                   class="form-control" required>
+                                            <label>Thời gian kết thúc (Ngày & Giờ)</label>
+                                            <input type="text" id="checkOutDate" name="checkOutDate" value="${param.checkOutDate}"
+                                                   class="form-control bg-white"
+                                                   placeholder="Chọn ngày giờ kết thúc..." readonly required>
                                         </div>
 
                                         <div class="form-group">
                                             <label>Ghi chú</label>
-                                            <textarea name="message" class="form-control" rows="4" required>${param.note}</textarea>
+                                            <textarea name="message" class="form-control" rows="4" required>${param.message}</textarea>
                                         </div>
 
                                         <button type="submit"
@@ -153,6 +161,46 @@
             </div>
         </section>
 
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Khởi tạo cho trường KẾT THÚC (checkOutDate) TRƯỚC
+        const checkOutPicker = flatpickr("#checkOutDate", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            minDate: "today",
+            minuteIncrement: 15,
+            defaultDate: document.getElementById('checkOutDate').value // Giữ lại giá trị cũ
+        });
+
+        // Khởi tạo cho trường BẮT ĐẦU (checkInDate)
+        const checkInPicker = flatpickr("#checkInDate", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            minDate: "today",
+            minuteIncrement: 15,
+            defaultDate: document.getElementById('checkInDate').value, // Giữ lại giá trị cũ
+
+            // Xử lý giới hạn ngày/giờ: Ngày kết thúc phải sau ngày bắt đầu
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length > 0) {
+                    // Set minDate cho checkOutDate là ngày đã chọn (bao gồm cả giờ)
+                    checkOutPicker.set('minDate', selectedDates[0]);
+                }
+            }
+        });
+
+        // Điều chỉnh ban đầu: Nếu checkInDate đã có giá trị từ trước (do lỗi), cần đặt minDate cho checkOutPicker
+        const checkInDateValue = document.getElementById('checkInDate').value;
+        if (checkInDateValue) {
+            checkOutPicker.set('minDate', checkInDateValue);
+        }
+    });
+</script>
         <jsp:include page="../components/footer.jsp"/>
     </body>
 </html>

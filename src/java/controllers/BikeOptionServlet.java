@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import models.BikeRentalOption;
 import models.Service;
 
-@WebServlet(name = "BikeOptionServlet", urlPatterns = {"/bike-options"})
+@WebServlet(name = "BikeOptionServlet", urlPatterns = {"/admin/bike-options"})
 public class BikeOptionServlet extends HttpServlet {
 
     private final BikeOptionDAO optionDAO = new BikeOptionDAO();
