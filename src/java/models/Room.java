@@ -15,6 +15,7 @@ public class Room {
 
     private boolean isEventRoom; // true = Sảnh tiệc, false = Phòng ngủ
 
+    private String typeName;
     // Các trường phụ (Relation)
     private RoomType roomType;
     private List<Task> tasks;
@@ -144,6 +145,14 @@ public class Room {
 
     public void setIsEventRoom(boolean isEventRoom) {
         this.isEventRoom = isEventRoom;
+    }
+
+    public String getTypeName() {
+        return typeName;
+    }
+
+    public void setTypeName(String typeName) {
+        this.typeName = typeName;
     }
 
     @Override
