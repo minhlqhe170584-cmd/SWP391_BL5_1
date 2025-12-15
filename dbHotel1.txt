@@ -1,6 +1,7 @@
 USE master
 GO
 
+--(16/12 Update thêm attribute vào bảng booking)
 -- 1. XÓA DB CŨ NẾU CÓ
 IF EXISTS (SELECT name FROM sys.databases WHERE name = N'SmartHotelDB')
 BEGIN
