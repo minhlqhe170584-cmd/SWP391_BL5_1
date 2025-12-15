@@ -493,3 +493,17 @@ INSERT INTO Invoices (booking_id, staff_id, total_amount, payment_method, note) 
 
 GO
 PRINT N'=== TẠO DATABASE VÀ DỮ LIỆU MẪU THÀNH CÔNG ===';
+SELECT 
+    od.detail_id, 
+    od.order_id, 
+    od.service_id, 
+    od.item_name, 
+    od.quantity, 
+    od.unit_price, 
+    od.subtotal,
+    so.order_date,
+    so.status
+FROM OrderDetails od
+JOIN ServiceOrders so ON od.order_id = so.order_id
+WHERE so.room_id = 1 -- (Hoặc điều kiện khác)
+ORDER BY so.order_date DESC
