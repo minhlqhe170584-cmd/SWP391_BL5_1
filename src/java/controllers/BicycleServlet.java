@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import models.Bicycle;
 import models.Service;
 
-@WebServlet(name = "BicycleServlet", urlPatterns = {"/bicycle"})
+@WebServlet(name = "BicycleServlet", urlPatterns = {"/admin/bicycle"})
 public class BicycleServlet extends HttpServlet {
 
     private final BicycleDAO bicycleDAO = new BicycleDAO();

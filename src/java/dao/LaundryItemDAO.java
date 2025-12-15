@@ -25,7 +25,8 @@ public class LaundryItemDAO extends DBContext {
             "li.description, li.default_price, li.unit, li.is_active, s.service_name " +
             "FROM LaundryItems li " +
             "LEFT JOIN Services s ON li.service_id = s.service_id " +
-            "WHERE li.laundry_item_id = ?";
+            "WHERE li.is_active = 1 " +
+            "AND li.laundry_item_id = ?";
     
     private static final String GET_ITEMS_BY_SERVICE = "SELECT li.laundry_item_id, li.service_id, li.item_name, " +
             "li.description, li.default_price, li.unit, li.is_active " +
@@ -399,7 +400,7 @@ public class LaundryItemDAO extends DBContext {
     }
     
     // Get service by ID
-    public Service getServiceById(Long serviceId) {
+    public Service getServiceById(int serviceId) {
         try {
             PreparedStatement st = connection.prepareStatement(GET_ACTIVE_SERVICES_ID);
             st.setLong(1, serviceId);

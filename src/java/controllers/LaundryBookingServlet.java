@@ -2,7 +2,7 @@ package controllers;
 
 import dao.LaundryItemDAO;
 import dao.LaundryOrderDAO;
-import dao.ServiceOrderDAO;
+import dao.LaundryHandleDAO;
 import dao.ServiceDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -30,14 +30,14 @@ public class LaundryBookingServlet extends HttpServlet {
     
     private LaundryItemDAO itemDAO;
     private ServiceDAO serviceDAO;
-    private ServiceOrderDAO serviceOrderDAO;
+    private LaundryHandleDAO handleDAO;
     private LaundryOrderDAO laundryOrderDAO;
     
     @Override
     public void init() throws ServletException {
         itemDAO = new LaundryItemDAO();
         serviceDAO = new ServiceDAO();
-        serviceOrderDAO = new ServiceOrderDAO();
+        handleDAO = new LaundryHandleDAO();
         laundryOrderDAO = new LaundryOrderDAO();
     }
 
@@ -46,26 +46,29 @@ public class LaundryBookingServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Integer roomId = (Integer) session.getAttribute("ROOM_ID");
-        
-        // Default room for testing
+        String serviceIdRaw = request.getParameter("serviceId");
         if (roomId == null) {
-            roomId = 1;
+            roomId = 1;//test
             session.setAttribute("ROOM_ID", roomId);
         }
-        
-        String action = request.getParameter("action");
-        
-        if (action == null) {
-            action = "order";
-        }
-        
-        switch (action) {
-            case "order":
-                showOrderForm(request, response, roomId);
-                break;
-            default:
-                showOrderForm(request, response, roomId);
-                break;
+        if (serviceIdRaw == null || serviceIdRaw.trim().isEmpty()) {
+            ArrayList<Service> laundrySer = handleDAO.getAllLaundryServices();
+            request.setAttribute("laundryServices", laundrySer);
+            request.getRequestDispatcher("/WEB-INF/views/client/laundry_list.jsp").forward(request, response);
+        } else {
+            try {
+                int serviceId = Integer.parseInt(serviceIdRaw);
+                Service service = serviceDAO.getById(serviceId);
+                
+                if (service != null) {
+                    request.setAttribute("service", service);
+                    showOrderForm(request, response, roomId,serviceId);
+                } else {
+                    response.sendRedirect("laundry-book"); 
+                }
+            } catch (NumberFormatException e) {
+                response.sendRedirect("laundry-book");
+            }
         }
     }
 
@@ -74,7 +77,8 @@ public class LaundryBookingServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Integer roomId = (Integer) session.getAttribute("ROOM_ID");
-        
+        String serviceIdRaw = request.getParameter("serviceId");
+        int serviceId = Integer.parseInt(serviceIdRaw);
         if (roomId == null) {
             roomId = 1;
             session.setAttribute("ROOM_ID", roomId);
@@ -83,22 +87,17 @@ public class LaundryBookingServlet extends HttpServlet {
         String action = request.getParameter("action");
         
         if ("order".equals(action)) {
-            placeOrder(request, response, roomId);
+            placeOrder(request, response, roomId, serviceId);
         } else {
-            showOrderForm(request, response, roomId);
+            showOrderForm(request, response, roomId,serviceId);
         }
     }
     
-    /**
-     * Show order form with available items grouped by service
-     */
-    private void showOrderForm(HttpServletRequest request, HttpServletResponse response, Integer roomId)
+    private void showOrderForm(HttpServletRequest request, HttpServletResponse response, Integer roomId, Integer serviceId)
             throws ServletException, IOException {
-        // Get active services and items
-        ArrayList<Service> services = itemDAO.getActiveServices();
-        ArrayList<LaundryItem> items = itemDAO.getAllActiveItems();
+        // Get active services and items     
+        ArrayList<LaundryItem> items = itemDAO.getItemsByService(serviceId);
         
-        request.setAttribute("services", services);
         request.setAttribute("items", items);
         request.setAttribute("roomId", roomId);
         
@@ -108,7 +107,7 @@ public class LaundryBookingServlet extends HttpServlet {
     /**
      * Place new laundry order
      */
-    private void placeOrder(HttpServletRequest request, HttpServletResponse response, Integer roomId)
+    private void placeOrder(HttpServletRequest request, HttpServletResponse response, Integer roomId, Integer serviceId)
             throws ServletException, IOException {
         try {
             // Get form parameters
@@ -137,7 +136,7 @@ public class LaundryBookingServlet extends HttpServlet {
             // Validate basic arrays exist
             if (itemIds == null || quantities == null || prices == null) {
                 request.setAttribute("error", "Vui lòng chọn ít nhất một mục để đặt đơn");
-                showOrderForm(request, response, roomId);
+                showOrderForm(request, response, roomId,serviceId);
                 return;
             }
             
@@ -168,26 +167,26 @@ public class LaundryBookingServlet extends HttpServlet {
 
             if (orderDetails.isEmpty()) {
                 request.setAttribute("error", "Vui lòng chọn ít nhất một mục để đặt đơn");
-                showOrderForm(request, response, roomId);
+                showOrderForm(request, response, roomId,serviceId);
                 return;
             }
 
-            Integer laundryId = serviceOrderDAO.createLaundryOrder(roomId, pickupTime, returnTime, note, orderDetails);
+            Integer laundryId = handleDAO.createLaundryOrder(roomId, pickupTime, returnTime, note, orderDetails);
             
             if (laundryId != null) {
                 request.setAttribute("message", "Booking successful! Wait until staff go to take your stuffs.");
                 request.getRequestDispatcher("/WEB-INF/views/client/success.jsp").forward(request, response);
             } else {              
                 request.setAttribute("error", "Không thể tạo đơn hàng. Vui lòng thử lại.");
-                showOrderForm(request, response, roomId);
+                showOrderForm(request, response, roomId,serviceId);
             }
             
         } catch (NumberFormatException e) {
             request.setAttribute("error", "Dữ liệu không hợp lệ: " + e.getMessage());
-            showOrderForm(request, response, roomId);
+            showOrderForm(request, response, roomId,serviceId);
         } catch (Exception e) {
             request.setAttribute("error", "Lỗi khi đặt đơn: " + e.getMessage());
-            showOrderForm(request, response, roomId);
+            showOrderForm(request, response, roomId,serviceId);
         }
     }
 }

@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import models.Service;
 import models.ServiceCategory;
 
-@WebServlet(name = "ServiceServlet", urlPatterns = {"/service"})
+@WebServlet(name = "ServiceServlet", urlPatterns = {"/admin/service"})
 public class ServiceServlet extends HttpServlet {
 
     private final ServiceDAO serviceDAO = new ServiceDAO();

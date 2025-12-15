@@ -56,7 +56,7 @@
                     <h4>Tìm kiếm & Lọc</h4>
                 </div>
                 <div class="card-body">
-                    <form action="laundry-items" method="get" class="row">
+                    <form action="laundry-item" method="get" class="row">
                         <input type="hidden" name="action" value="list">
                         
                         <div class="form-group col-md-3">

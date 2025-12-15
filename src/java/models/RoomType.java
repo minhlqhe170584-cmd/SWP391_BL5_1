@@ -13,13 +13,13 @@ import java.math.BigDecimal;
 public class RoomType {
     // Thuộc tính ánh xạ từ bảng [RoomTypes]
     private int typeId;
-    private String typeName;        // type_name
+    private String typeName;        
     private int capacity;
     private String description;
     private String imageUrl;
-    private BigDecimal basePriceWeekday; // base_price_weekday (decimal)
-    private BigDecimal basePriceWeekend; // base_price_weekend (decimal)
-    private boolean isActive;       // is_active
+    private BigDecimal basePriceWeekday; 
+    private BigDecimal basePriceWeekend; 
+    private boolean isActive;       
 
     public RoomType() {
     }

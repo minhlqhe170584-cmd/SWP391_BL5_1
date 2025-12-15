@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import models.*;
 import dbContext.DBContext;
+import java.time.LocalDateTime;
 
 public class LaundryOrderDAO extends DBContext {
 
@@ -193,14 +194,35 @@ public class LaundryOrderDAO extends DBContext {
     }
 
     // Insert new order with details
-    public int insertOrder(LaundryOrder order) {
+    public int insertOrder(LaundryOrder order, int roomId) {
         int generatedId = 0;
         try {
             connection.setAutoCommit(false);
 
+            double totalAmount = 0.0;
+            for (LaundryOrderDetail detail : order.getOrderDetails()) {
+                totalAmount += detail.getSubtotal();
+            }
+            String insertServiceOrder = "INSERT INTO ServiceOrders(room_id, order_date, total_amount, status, note) " +
+                                       "VALUES(?, ?, ?, ?, ?)";
+            PreparedStatement stServiceOrder = connection.prepareStatement(insertServiceOrder, Statement.RETURN_GENERATED_KEYS);
+            stServiceOrder.setInt(1, roomId);
+            stServiceOrder.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            stServiceOrder.setDouble(3, totalAmount);
+            stServiceOrder.setString(4, "Pending");
+            stServiceOrder.setString(5, order.getNote());
+            
+            stServiceOrder.executeUpdate();
+            ResultSet rsServiceOrder = stServiceOrder.getGeneratedKeys();
+            
+            Integer orderId = null;
+            if (rsServiceOrder.next()) {
+                orderId = rsServiceOrder.getInt(1);
+            }
+            
             // Insert order
             PreparedStatement st = connection.prepareStatement(INSERT_ORDER, Statement.RETURN_GENERATED_KEYS);
-            st.setLong(1, order.getOrderId());
+            st.setInt(1, orderId);
             st.setTimestamp(2, order.getPickupTime() != null ? Timestamp.valueOf(order.getPickupTime()) : null);
             st.setTimestamp(3, order.getExpectedPickupTime() != null ? Timestamp.valueOf(order.getExpectedPickupTime()) : null);
             st.setTimestamp(4, order.getExpectedReturnTime() != null ? Timestamp.valueOf(order.getExpectedReturnTime()) : null);
@@ -495,7 +517,7 @@ public class LaundryOrderDAO extends DBContext {
         }else{
             switch (filter){
                 case "Canceled":
-                    sql.append(" AND so.status LIKE N'%Canceled%' ");
+                    sql.append(" AND so.status LIKE N'%Canceled%' OR so.status LIKE N'%Cancelled%' OR so.status LIKE N'%CANCELLED%' ");
                     break;
                 case "Completed":
                     sql.append(" AND so.status LIKE N'%Completed%' ");
