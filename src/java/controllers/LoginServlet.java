@@ -42,7 +42,7 @@ public class LoginServlet extends HttpServlet {
                 if (staff.getRole() != null && staff.getRole().getRoleName().equals("Admin")) {
                     response.sendRedirect("staffs"); 
                 } else {
-                    response.sendRedirect("staffs"); 
+                    response.sendRedirect("receptionist/payment"); 
                 }
                 return;
             }
