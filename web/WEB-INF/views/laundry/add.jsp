@@ -42,27 +42,37 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6">
+                               <!-- <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Mã đơn dịch vụ <span class="text-danger">*</span></label>
                                             <input type="number" name="orderId" class="form-control" 
                                                    value="${order.orderId}" required
                                                    ${not empty order ? 'readonly' : ''}>
                                         </div>
+                                    </div>-->
+                                                   
+                                    <div class="col-md-6">
+                                        <label>Số Phòng <span class="text-danger">*</span></label>
+                                        <select name="roomId" class="form-control">
+                                           <option value="">-- All Room --</option>
+                                           <c:forEach items="${rooms}" var="r">
+                                               <option value="${r.roomId}" <c:if test="${roomId == r.roomId}">selected</c:if>>
+                                                   ${r.roomNumber}
+                                               </option>
+                                           </c:forEach> 
+                                        </select>
                                     </div>
 
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Trạng thái <span class="text-danger">*</span></label>
                                             <select name="status" class="form-control" required>
-                                                <option value="PENDING" ${order.status == 'PENDING' ? 'selected' : ''}>Chờ xử lý</option>
-                                                <option value="PROCESSING" ${order.status == 'PROCESSING' ? 'selected' : ''}>Đang xử lý</option>
-                                                <option value="WASHING" ${order.status == 'WASHING' ? 'selected' : ''}>Đang giặt</option>
-                                                <option value="DRYING" ${order.status == 'DRYING' ? 'selected' : ''}>Đang sấy</option>
-                                                <option value="READY" ${order.status == 'READY' ? 'selected' : ''}>Sẵn sàng</option>
-                                                <option value="DELIVERED" ${order.status == 'DELIVERED' ? 'selected' : ''}>Đã giao</option>
-                                                <option value="COMPLETED" ${order.status == 'COMPLETED' ? 'selected' : ''}>Hoàn thành</option>
-                                                <option value="CANCELLED" ${order.status == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
+                                                <option value="Pending" ${order.status == 'Pending' ? 'selected' : ''}>Chờ xử lý</option>
+                                                <option value="Washing" ${order.status == 'Washing' ? 'selected' : ''}>Đang giặt</option>
+                                                <option value="Ready" ${order.status == 'Ready' ? 'selected' : ''}>Sẵn sàng</option>
+                                                <option value="Delivered" ${order.status == 'Delivered' ? 'selected' : ''}>Đã giao</option>
+                                                <option value="Completed" ${order.status == 'Completed' ? 'selected' : ''}>Hoàn thành</option>
+                                                <option value="Cancelled" ${order.status == 'Canceled' ? 'selected' : ''}>Đã hủy</option>
                                             </select>
                                         </div>
                                     </div>

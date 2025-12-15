@@ -48,6 +48,26 @@ public class RoomDAO extends DBContext {
         }
         return roomList;
     }
+    
+    public List<Room> getAllActiveLoginRooms() {
+        List<Room> roomList = new ArrayList<>();
+        // THÊM: WHERE r.isEventRoom = 0
+        String sql = "SELECT r.*, t.type_name, t.capacity, t.description, t.base_price_weekday, t.base_price_weekend "
+                   + "FROM Rooms r "
+                   + "INNER JOIN RoomTypes t ON r.type_id = t.type_id "
+                   + "WHERE r.isEventRoom = 0 AND r.is_active_login = 1 " 
+                   + "ORDER BY r.room_number ASC";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                roomList.add(mapRoom(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getAllRooms: " + e.getMessage());
+        }
+        return roomList;
+    }
 
     // 3. Phân trang (Chỉ lấy phòng thường)
     public List<Room> pagingRooms(int index) {

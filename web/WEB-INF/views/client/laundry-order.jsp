@@ -181,13 +181,13 @@
                     <div class="room-info-box">
                         <div class="row align-items-center">
                             <div class="col-md-8">
-                                <h4 class="mb-2"><i class="fa fa-door-open"></i> Phòng ${roomId}</h4>
+                                <h4 class="mb-2"><i class="fa fa-door-open"></i> Mã Phòng ${roomId}</h4>
                                 <p class="mb-0 text-muted">Vui lòng chọn các mục giặt ủi bạn muốn đặt và điền số lượng</p>
                             </div>
                             <div class="col-md-4 text-right">
-                                <a href="laundry?action=history" class="btn btn-outline-primary">
+<!--                                <a href="laundry?action=history" class="btn btn-outline-primary">
                                     <i class="fa fa-history"></i> Lịch sử đơn hàng
-                                </a>
+                                </a>-->
                             </div>
                         </div>
                     </div>
@@ -200,7 +200,7 @@
 
                     <form action="laundry-book" method="POST" class="contact-form">
                         <input type="hidden" name="action" value="order">
-
+                        <input type="hidden" name="serviceId" value="${service.serviceId}">
                         <c:choose>
                             <c:when test="${not empty items}">
                                 <c:set var="currentService" value="" />

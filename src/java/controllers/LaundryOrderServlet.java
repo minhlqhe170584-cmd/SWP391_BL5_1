@@ -6,6 +6,7 @@ package controllers;
 
 import dao.LaundryItemDAO;
 import dao.LaundryOrderDAO;
+import dao.RoomDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import models.LaundryItem;
 import models.LaundryOrder;
 import models.LaundryOrderDetail;
+import models.Room;
 
 /**
  *
@@ -28,11 +30,13 @@ import models.LaundryOrderDetail;
 public class LaundryOrderServlet extends HttpServlet {
     private LaundryOrderDAO orderDAO;
     private LaundryItemDAO itemDAO;
+    private RoomDAO roomDao;
     
     @Override
     public void init() throws ServletException {
         orderDAO = new LaundryOrderDAO();
         itemDAO = new LaundryItemDAO();
+        roomDao = new RoomDAO();
     }
 
     @Override
@@ -160,7 +164,9 @@ public class LaundryOrderServlet extends HttpServlet {
     private void showAddForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         ArrayList<LaundryItem> items = itemDAO.getAllActiveItems();
+        ArrayList<Room> rooms = (ArrayList<Room>) roomDao.getAllActiveLoginRooms();
         request.setAttribute("items", items);
+        request.setAttribute("rooms", rooms);
         request.getRequestDispatcher("/WEB-INF/views/laundry/add.jsp").forward(request, response);
     }
     
@@ -168,7 +174,7 @@ public class LaundryOrderServlet extends HttpServlet {
     private void addOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            Integer orderId = Integer.valueOf(request.getParameter("orderId"));
+            Integer roomId = Integer.valueOf(request.getParameter("roomId"));
             String pickupTimeStr = request.getParameter("pickupTime");
             String deliveryTimeStr = request.getParameter("deliveryTime");
             String returnTimeStr = request.getParameter("returnTime");
@@ -176,7 +182,6 @@ public class LaundryOrderServlet extends HttpServlet {
             String note = request.getParameter("note");
             
             LaundryOrder order = new LaundryOrder();
-            order.setOrderId(orderId);
             order.setStatus(status != null && !status.isEmpty() ? status : "PENDING");
             order.setNote(note);
             
@@ -205,7 +210,7 @@ public class LaundryOrderServlet extends HttpServlet {
                         quantities[i] != null && !quantities[i].isEmpty()) {
                         
                         LaundryOrderDetail detail = new LaundryOrderDetail();
-                        detail.setLaundryItemId(Integer.valueOf(itemIds[i]));
+                        detail.setLaundryItemId(Integer.parseInt(itemIds[i]));
                         detail.setQuantity(Integer.valueOf(quantities[i]));
                         detail.setUnitPrice(Double.valueOf(prices[i]));
                         detail.setSubtotal(detail.getQuantity() * detail.getUnitPrice());
@@ -213,11 +218,10 @@ public class LaundryOrderServlet extends HttpServlet {
                         details.add(detail);
                     }
                 }
-            }
-            
+            }           
             order.setOrderDetails(details);
             
-            Integer newId = orderDAO.insertOrder(order);
+            Integer newId = orderDAO.insertOrder(order, roomId);
             
             if (newId != null) {
                 request.setAttribute("success", "Order added successfully!");

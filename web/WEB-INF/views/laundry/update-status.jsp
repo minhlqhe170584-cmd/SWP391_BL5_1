@@ -120,22 +120,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- PROCESSING -->
-                                    <div class="col-md-6">
-                                        <div class="status-card status-PROCESSING ${order.status == 'PROCESSING' ? 'selected' : ''}" 
-                                             onclick="selectStatus(this, 'PROCESSING')">
-                                            <input type="radio" name="status" value="PROCESSING" id="statusPROCESSING"
-                                                   ${order.status == 'PROCESSING' ? 'checked' : ''}>
-                                            <label for="statusPROCESSING" class="w-100 mb-0">
-                                                <div class="status-icon">
-                                                    <i class="fas fa-tasks text-info"></i>
-                                                </div>
-                                                <h5>ĐANG XỬ LÝ</h5>
-                                                <p class="text-muted mb-0">Đang chuẩn bị giặt</p>
-                                            </label>
-                                        </div>
-                                    </div>
-
                                     <!-- WASHING -->
                                     <div class="col-md-6">
                                         <div class="status-card status-WASHING ${order.status == 'WASHING' ? 'selected' : ''}" 
@@ -148,22 +132,6 @@
                                                 </div>
                                                 <h5>ĐANG GIẶT</h5>
                                                 <p class="text-muted mb-0">Đang trong quá trình giặt</p>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- DRYING -->
-                                    <div class="col-md-6">
-                                        <div class="status-card status-DRYING ${order.status == 'DRYING' ? 'selected' : ''}" 
-                                             onclick="selectStatus(this, 'DRYING')">
-                                            <input type="radio" name="status" value="DRYING" id="statusDRYING"
-                                                   ${order.status == 'DRYING' ? 'checked' : ''}>
-                                            <label for="statusDRYING" class="w-100 mb-0">
-                                                <div class="status-icon">
-                                                    <i class="fas fa-wind text-secondary"></i>
-                                                </div>
-                                                <h5>ĐANG SẤY</h5>
-                                                <p class="text-muted mb-0">Đang trong quá trình sấy khô</p>
                                             </label>
                                         </div>
                                     </div>

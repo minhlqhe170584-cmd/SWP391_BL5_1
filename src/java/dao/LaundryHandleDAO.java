@@ -1,71 +1,26 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package dao;
 
 import dbContext.DBContext;
-import models.ServiceHistory;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.*;
-import java.time.LocalDate;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.List;
 import models.LaundryOrderDetail;
+import models.Service;
 
-public class ServiceOrderDAO extends DBContext {
-
-    // Hàm lấy lịch sử dịch vụ (Chỉ lấy các đơn chưa thanh toán - Cho khách đang ở)
-    public List<ServiceHistory> getHistoryByRoomId(int roomId) {
-        List<ServiceHistory> list = new ArrayList<>();
-        
-        /* LOGIC SQL:
-           1. JOIN 3 bảng: ServiceOrders (Đơn), OrderDetails (Chi tiết), Services (Tên món)
-           2. Điều kiện WHERE: 
-              - room_id = ?: Của phòng đang đăng nhập
-              - is_paid = 0: CHỈ hiển thị đơn chưa thanh toán (Khách hiện tại). 
-                             Đơn cũ đã thanh toán (của khách trước) sẽ bị ẩn.
-        */
-        String sql = "SELECT " +
-                     "    so.order_date, " +
-                     "    s.service_name, " +
-                     "    od.quantity, " +
-                     "    (od.quantity * od.price_at_order) AS item_total_price, " +
-                     "    so.status " +
-                     "FROM ServiceOrders so " +
-                     "JOIN OrderDetails od ON so.order_id = od.order_id " +
-                     "JOIN Services s ON od.service_id = s.service_id " +
-                     "WHERE so.room_id = ? AND so.is_paid = 0 " + 
-                     "ORDER BY so.order_date DESC";
-
-        try {
-            // Sử dụng biến 'connection' được kế thừa từ DBContext cũ
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, roomId);
-            
-            ResultSet rs = ps.executeQuery();
-            
-            while (rs.next()) {
-                ServiceHistory h = new ServiceHistory();
-                
-                // Map dữ liệu từ SQL vào Object ServiceHistory
-                h.setOrderDate(rs.getTimestamp("order_date"));
-                h.setServiceName(rs.getString("service_name"));
-                h.setQuantity(rs.getInt("quantity"));
-                h.setTotalPrice(rs.getDouble("item_total_price"));
-                h.setStatus(rs.getString("status"));
-                
-                list.add(h);
-            }
-            
-            // Quan trọng: Đóng kết nối sau khi lấy xong dữ liệu (theo style DBContext cũ)
-            connection.close();
-            
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
+/**
+ *
+ * @author Acer
+ */
+public class LaundryHandleDAO extends DBContext {
     public Integer createLaundryOrder(Integer roomId, LocalDateTime expectedPickupTime, LocalDateTime expectedReturnTime, String note, 
                                    ArrayList<LaundryOrderDetail> orderDetails) {
         Connection conn = null;
@@ -88,7 +43,7 @@ public class ServiceOrderDAO extends DBContext {
             stServiceOrder.setInt(1, roomId);
             stServiceOrder.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             stServiceOrder.setDouble(3, totalAmount);
-            stServiceOrder.setString(4, "Pending");
+            stServiceOrder.setString(4, "PENDING");
             stServiceOrder.setString(5, note);
             
             stServiceOrder.executeUpdate();
@@ -172,17 +127,29 @@ public class ServiceOrderDAO extends DBContext {
         
         return laundryId;
     }
-    public static void main(String[] args) {
-        int res = 0;
-        ServiceOrderDAO dao = new ServiceOrderDAO();
-        LaundryOrderDetail detail = new LaundryOrderDetail();
-                    detail.setLaundryItemId(1);
-                    detail.setQuantity(1);
-                    detail.setUnitPrice(20000.0);
-                    detail.setSubtotal(20000.0);
-        ArrayList<LaundryOrderDetail> list = new ArrayList<>();
-        list.add(detail);
-//        res = dao.createLaundryOrder(1, LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), LocalTime.of(16, 30)), "abc", list);
-//        System.out.println(res);
+    
+    public ArrayList<Service> getAllLaundryServices() {
+        ArrayList<Service> list = new ArrayList<>();
+        String sql = "SELECT s.* FROM Services s " +
+                     "JOIN ServiceCategories c ON s.category_id = c.category_id " +
+                     "WHERE (c.category_name LIKE N'%Giặt Là%' OR c.category_name LIKE '%Laundry%' OR c.category_name LIKE '%LAUNDRY%') " +
+                     "AND s.is_active = 1 AND s.is_deleted = 0";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                list.add(new Service(
+                    rs.getInt("service_id"), 
+                    rs.getString("service_name"), 
+                    rs.getString("image_url"), 
+                    rs.getBoolean("is_active"), 
+                    rs.getInt("category_id"), 
+                    rs.getBoolean("is_deleted")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

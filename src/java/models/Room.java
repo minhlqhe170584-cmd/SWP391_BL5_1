@@ -7,7 +7,7 @@ public class Room {
     private int roomId;
     private String roomNumber;
     private int typeId;
-    private String status;        // Map với cột 'room_status'
+    private String status;        
     private String roomPassword;  
     private boolean isActiveLogin; 
     private Timestamp lastCleanedAt; 

@@ -168,9 +168,9 @@
                                     <th>ID</th>
                                     <th>Order Ref</th>
                                     <th>Room</th>
-                                    <th>Pickup Time</th>
                                     <th>Expected Pickup</th>
-                                    <th>Status</th>
+                                    <th>Pickup Time</th>
+                                    <th>Laundry Progress</th>
                                     <th>Note</th>
                                     <th class="text-right">Actions</th>
                                 </tr>
@@ -186,14 +186,14 @@
                                             </c:if>
                                         </td>
                                         <td>
-                                            <c:if test="${not empty order.pickupTime}">
-                                                ${order.formattedPickupTime}
-                                            </c:if>                                       
-                                        </td>
-                                        <td>
                                             <c:if test="${not empty order.expectedPickupTime}">
                                                 ${order.formattedExpectedPickupTime}
                                             </c:if>
+                                        </td>
+                                        <td>
+                                            <c:if test="${not empty order.pickupTime}">
+                                                ${order.formattedPickupTime}
+                                            </c:if>                                       
                                         </td>
                                         <td>
                                             <span class="status-badge status-${order.status}">
