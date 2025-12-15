@@ -258,7 +258,8 @@
                     </div>
                 </c:if>
 
-            </div> <c:if test="${totalPages > 1}">
+            </div> 
+                <c:if test="${totalPages > 1}">
                 <div class="room-pagination">
                     <c:if test="${currentPage > 1}">
                         <a href="services?page=${currentPage - 1}"><i class="fa fa-angle-left"></i></a>
@@ -272,7 +273,7 @@
                         <a href="services?page=${currentPage + 1}"><i class="fa fa-angle-right"></i></a>
                     </c:if>
                 </div>
-
+                </c:if>
                 <div class="col-lg-3 col-md-6">
                     <div class="service-item">
                         <img src="https://www.vietnambooking.com/wp-content/uploads/2023/08/to-chuc-su-kien-1.jpg" alt="Tổ chức sự kiện">
