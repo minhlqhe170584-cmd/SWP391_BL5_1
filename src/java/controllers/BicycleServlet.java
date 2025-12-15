@@ -1,6 +1,7 @@
 package controllers;
 
 import dao.BicycleDAO;
+import dao.BikeTransactionDAO;
 import dao.ServiceDAO;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import models.Service;
 public class BicycleServlet extends HttpServlet {
 
     private final BicycleDAO bicycleDAO = new BicycleDAO();
-    private final ServiceDAO serviceDAO = new ServiceDAO();
+    private final BikeTransactionDAO bikeTransactionDAO = new BikeTransactionDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -93,7 +94,7 @@ public class BicycleServlet extends HttpServlet {
             }
         }
 
-        ArrayList<Service> services = serviceDAO.getAll();
+        ArrayList<Service> services = bikeTransactionDAO.getAllBikeServices();
         
         request.setAttribute("bicycle", b);
         request.setAttribute("services", services);
@@ -173,7 +174,7 @@ public class BicycleServlet extends HttpServlet {
 
         if (errorMessage != null) {
             request.setAttribute("bicycle", b);
-            request.setAttribute("services", serviceDAO.getAll());
+            request.setAttribute("services", bikeTransactionDAO.getAllBikeServices());
             request.setAttribute("errorMessage", errorMessage);
             request.getRequestDispatcher("/WEB-INF/views/bicycle/detail.jsp").forward(request, response);
             return;
@@ -192,7 +193,7 @@ public class BicycleServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("bicycle", b);
-            request.setAttribute("services", serviceDAO.getAll());
+            request.setAttribute("services", bikeTransactionDAO.getAllBikeServices());
             request.setAttribute("errorMessage", "Database error: " + e.getMessage());
             request.getRequestDispatcher("/WEB-INF/views/bicycle/detail.jsp").forward(request, response);
         }
