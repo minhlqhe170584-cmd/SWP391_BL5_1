@@ -146,7 +146,7 @@ public class EventDAO extends DBContext {
     public boolean insertEventRequest(EventRequest er) {
         String sql = """
             INSERT INTO EventRequest
-            (eventId, roomIds, check_in_date, check_out_date, message, status, customer_id, created_date)
+            (eventId, roomIds, check_in_date, check_out_date, message, status, room_id, created_date)
             VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
         """;
 
@@ -157,7 +157,7 @@ public class EventDAO extends DBContext {
             st.setString(4, er.getCheckOutDate());
             st.setString(5, er.getMessage());
             st.setString(6, er.getStatus());
-            st.setInt(7, er.getCustomerId());
+            st.setInt(7, er.getRoomId());
 
             int rows = st.executeUpdate();
             return rows > 0;

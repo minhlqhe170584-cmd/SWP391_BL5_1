@@ -625,7 +625,7 @@ public class RoomDAO extends DBContext {
         }
         // SQL dùng toán tử IN (cần cẩn thận SQL Injection nếu nối chuỗi, 
         // nhưng ở đây ids lấy từ database nên tạm chấp nhận hoặc dùng STRING_SPLIT an toàn hơn)
-        String sql = "SELECT * FROM Rooms WHERE room_id IN (SELECT value FROM STRING_SPLIT(?, ','))";
+        String sql = "SELECT * FROM Rooms WHERE is_active_login = 1 AND room_id IN (SELECT value FROM STRING_SPLIT(?, ','))";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, ids);

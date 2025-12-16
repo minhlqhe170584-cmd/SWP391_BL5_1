@@ -24,7 +24,7 @@
 
                                 <input type="hidden" name="action" value="UPDATE">
                                 <input type="hidden" name="eventId" value="${event.eventId}">
-                                <input type="hidden" name="eventCatId" value="1">
+                                <input type="hidden" name="eventCatId" value="5">
 
                                 <div class="form-group">
                                     <label>Package Name <span class="text-danger">*</span></label>

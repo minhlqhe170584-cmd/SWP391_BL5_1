@@ -261,7 +261,7 @@ CREATE TABLE Events (
 CREATE TABLE EventRequest (
     requestId INT IDENTITY(1,1) PRIMARY KEY,
     eventId INT NOT NULL,
-    customer_id INT NOT NULL,
+    room_id INT NOT NULL,
     status NVARCHAR(50) DEFAULT 'PENDING',
     roomIds NVARCHAR(MAX),
     check_in_date DATETIME NOT NULL,
@@ -272,7 +272,7 @@ CREATE TABLE EventRequest (
     created_date DATETIME DEFAULT GETDATE(),
     updated_date DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_EventRequest_Events FOREIGN KEY (eventId) REFERENCES Events(eventId),
-    CONSTRAINT FK_EventRequest_Customers FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+    CONSTRAINT FK_EventRequest_Customers FOREIGN KEY (room_id) REFERENCES Rooms(room_id)
 );
 
 /* ============================================================
@@ -478,7 +478,7 @@ INSERT INTO Events (name, price, serviceCategoryId, roomIds) VALUES
 (N'Sinh Nhật Bé Yêu', 3000000, 5, '4'),
 (N'Year End Party', 15000000, 5, '5');
 
-INSERT INTO EventRequest (eventId, customer_id, status, roomIds, check_in_date, check_out_date, message) VALUES 
+INSERT INTO EventRequest (eventId, room_id, status, roomIds, check_in_date, check_out_date, message) VALUES 
 (1, 1, 'PENDING', '4', GETDATE()+10, GETDATE()+10, N'Cần hoa tươi'),
 (2, 2, 'APPROVED', '5', GETDATE()+20, GETDATE()+20, N'Đã cọc 50%'),
 (3, 3, 'CANCELLED', '4', GETDATE()+5, GETDATE()+5, N'Hủy do bận'),

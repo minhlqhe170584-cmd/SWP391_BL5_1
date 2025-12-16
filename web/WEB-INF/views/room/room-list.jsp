@@ -117,7 +117,7 @@
                                     <tr>
                                         <td><strong>${room.roomNumber}</strong></td>
                                         <td>${room.roomType.typeName}</td>
-                                        
+
                                         <td class="text-center">
                                             <c:choose>
                                                 <c:when test="${room.activeLogin}">
@@ -157,8 +157,8 @@
                                                         </a>
                                                     </c:otherwise>
                                                 </c:choose>
-                                                
-                                                </div>
+
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -178,14 +178,24 @@
                                         </li>
                                     </c:if>
 
-                                    <c:forEach begin="1" end="${endPage}" var="i">
-                                        <li class="page-item ${tag == i ? 'active' : ''}">
-                                            <a class="page-link" href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
-                                                ${i}
-                                            </a>
-                                        </li>
-                                    </c:forEach>
-
+                                    <c:if test="${tag + 2 >= endPage}">
+                                        <c:forEach begin="${endPage - 2}" end="${endPage}" var="i">
+                                            <li class="page-item ${tag == i ? 'active' : ''}">
+                                                <a class="page-link" href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                    ${i}
+                                                </a>
+                                            </li>
+                                        </c:forEach>
+                                    </c:if>
+                                    <c:if test="${tag + 2 < endPage}">
+                                        <c:forEach begin="${tag}" end="${tag + 2}" var="i">
+                                            <li class="page-item ${tag == i ? 'active' : ''}">
+                                                <a class="page-link" href="rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                    ${i}
+                                                </a>
+                                            </li>
+                                        </c:forEach>
+                                    </c:if>
                                     <c:if test="${tag < endPage}">
                                         <li class="page-item">
                                             <a class="page-link" href="rooms?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
@@ -208,42 +218,42 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function confirmLock(event, roomNumber, action, link) {
-        event.preventDefault();
+                                                               function confirmLock(event, roomNumber, action, link) {
+                                                                   event.preventDefault();
 
-        let titleInfo = "";
-        let textInfo = "";
-        let iconType = "";
-        let confirmColor = "";
-        let btnText = "";
+                                                                   let titleInfo = "";
+                                                                   let textInfo = "";
+                                                                   let iconType = "";
+                                                                   let confirmColor = "";
+                                                                   let btnText = "";
 
-        if (action === 'lock') {
-            titleInfo = "Lock Room " + roomNumber + "?";
-            textInfo = "Room account will NOT be able to login!";
-            iconType = "warning";
-            confirmColor = "#6c757d"; // Màu xám cho nút khóa
-            btnText = "Yes, Lock it!";
-        } else {
-            titleInfo = "Unlock Room " + roomNumber + "?";
-            textInfo = "Room account will be able to login again!";
-            iconType = "question";
-            confirmColor = "#28a745"; // Màu xanh cho nút mở
-            btnText = "Yes, Unlock it!";
-        }
+                                                                   if (action === 'lock') {
+                                                                       titleInfo = "Lock Room " + roomNumber + "?";
+                                                                       textInfo = "Room account will NOT be able to login!";
+                                                                       iconType = "warning";
+                                                                       confirmColor = "#6c757d"; // Màu xám cho nút khóa
+                                                                       btnText = "Yes, Lock it!";
+                                                                   } else {
+                                                                       titleInfo = "Unlock Room " + roomNumber + "?";
+                                                                       textInfo = "Room account will be able to login again!";
+                                                                       iconType = "question";
+                                                                       confirmColor = "#28a745"; // Màu xanh cho nút mở
+                                                                       btnText = "Yes, Unlock it!";
+                                                                   }
 
-        Swal.fire({
-            title: titleInfo,
-            text: textInfo,
-            icon: iconType,
-            showCancelButton: true,
-            confirmButtonColor: confirmColor,
-            cancelButtonColor: '#d33',
-            confirmButtonText: btnText,
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = link;
-            }
-        });
-    }
+                                                                   Swal.fire({
+                                                                       title: titleInfo,
+                                                                       text: textInfo,
+                                                                       icon: iconType,
+                                                                       showCancelButton: true,
+                                                                       confirmButtonColor: confirmColor,
+                                                                       cancelButtonColor: '#d33',
+                                                                       confirmButtonText: btnText,
+                                                                       cancelButtonText: 'Cancel'
+                                                                   }).then((result) => {
+                                                                       if (result.isConfirmed) {
+                                                                           window.location.href = link;
+                                                                       }
+                                                                   });
+                                                               }
 </script>
