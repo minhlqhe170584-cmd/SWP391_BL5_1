@@ -22,7 +22,7 @@
                                 </c:if>
 
                                 <input type="hidden" name="action" value="INSERT">
-                                <input type="hidden" name="eventCatId" value="1"> 
+                                <input type="hidden" name="eventCatId" value="5"> 
 
                                 <div class="form-group">
                                     <label>Package Name <span class="text-danger">*</span></label>

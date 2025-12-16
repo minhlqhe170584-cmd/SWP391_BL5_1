@@ -57,7 +57,7 @@
                                     <label>Category <span class="text-danger">*</span></label>
                                     <select class="form-control" disabled>
                                         <c:forEach var="cat" items="${categories}">
-                                            <c:if test="${cat.eventCatId == 1}">
+                                            <c:if test="${cat.eventCatId == 5}">
                                                 <option selected>
                                                     ${cat.categoryName}
                                                 </option>
