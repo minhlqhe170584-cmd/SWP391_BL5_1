@@ -26,7 +26,7 @@ pageEncoding="UTF-8"%>
                             <h4>Tìm kiếm Booking</h4>
                             <div class="card-header-action">
                                 <a
-                                    href="${pageContext.request.contextPath}/admin/frontdesk"
+                                    href="${pageContext.request.contextPath}/receptionist/frontdesk"
                                     class="btn btn-light">
                                     <i class="fas fa-arrow-left"></i> Về Front
                                     Desk
@@ -37,7 +37,7 @@ pageEncoding="UTF-8"%>
                             <h6 class="mb-2 font-weight-bold">Theo mã
                                 Booking</h6>
                             <form method="get"
-                                action="${pageContext.request.contextPath}/admin/checkin"
+                                action="${pageContext.request.contextPath}/receptionist/checkin"
                                 class="mb-4">
                                 <div class="form-group">
                                     <label for="code">Mã Booking</label>
@@ -53,7 +53,7 @@ pageEncoding="UTF-8"%>
                             <h6 class="mb-2 font-weight-bold">Theo tên khách +
                                 ngày nhận phòng</h6>
                             <form method="get"
-                                action="${pageContext.request.contextPath}/admin/checkin">
+                                action="${pageContext.request.contextPath}/receptionist/checkin">
                                 <div class="form-group">
                                     <label for="customer">Tên khách hàng</label>
                                     <input type="text" id="customer"
@@ -108,10 +108,10 @@ pageEncoding="UTF-8"%>
                                     ${booking.room.roomNumber} -
                                     ${booking.room.roomType.typeName}</p>
                                 <p><strong>Thời gian dự kiến:</strong>
-                                    <fmt:formatdate
+                                    <fmt:formatDate
                                         value="${booking.checkInDate}"
                                         pattern="dd/MM/yyyy HH:mm" /> -
-                                    <fmt:formatdate
+                                    <fmt:formatDate
                                         value="${booking.checkOutDate}"
                                         pattern="dd/MM/yyyy HH:mm" />
                                 </p>
@@ -119,7 +119,7 @@ pageEncoding="UTF-8"%>
                                     ${booking.status}</p>
 
                                 <form method="post"
-                                    action="${pageContext.request.contextPath}/admin/checkin"
+                                    action="${pageContext.request.contextPath}/receptionist/checkin"
                                     class="mt-3">
                                     <input type="hidden" name="bookingId"
                                         value="${booking.bookingId}" />
@@ -154,25 +154,25 @@ pageEncoding="UTF-8"%>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <c:foreach var="b"
+                                            <c:forEach var="b"
                                                 items="${bookingList}">
                                                 <tr>
                                                     <td>${b.bookingCode}</td>
                                                     <td>${b.customer.fullName}</td>
                                                     <td>${b.room.roomNumber}</td>
-                                                    <td><fmt:formatdate
+                                                    <td><fmt:formatDate
                                                             value="${b.checkInDate}"
                                                             pattern="dd/MM/yyyy" /></td>
                                                     <td>${b.status}</td>
                                                     <td>
                                                         <a
                                                             class="btn btn-sm btn-primary"
-                                                            href="${pageContext.request.contextPath}/admin/checkin?code=${b.bookingCode}">
+                                                            href="${pageContext.request.contextPath}/receptionist/checkin?code=${b.bookingCode}">
                                                             Chọn
                                                         </a>
                                                     </td>
                                                 </tr>
-                                            </c:foreach>
+                                            </c:forEach>>
                                         </tbody>
                                     </table>
                                 </div>

@@ -31,7 +31,7 @@ public class CheckInOutServlet extends HttpServlet {
         BookingCheckInDAO dao = new BookingCheckInDAO();
 
         try {
-            if ("/admin/checkin".equals(servletPath)) {
+            if ("/receptionist/checkin".equals(servletPath)) {
                 // --- MÀN CHECK-IN ---
                 String code = request.getParameter("code");
                 String customerName = request.getParameter("customer");
