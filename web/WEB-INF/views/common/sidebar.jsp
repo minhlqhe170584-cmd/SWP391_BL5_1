@@ -108,13 +108,6 @@
                         <i class="fas fa-cocktail nav-icon"></i> <p>Drink</p>
                     </a>
                 </li>
-
-                <li class="menu-header">Task Management</li>
-                <li>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/task">
-                        <i class="fas fa-users"></i> <span>Task</span>
-                    </a>
-                </li>
             </c:if>
 
             <%-- ======================================================== --%>
@@ -142,6 +135,12 @@
             <%-- PHẦN DÀNH CHO STAFF (Giữ nguyên)                         --%>
             <%-- ======================================================== --%>
             <c:if test="${sessionScope.USER.role.roleName == 'Staff'}">
+                <li class="menu-header">Task Management</li>
+                <li>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/task">
+                        <i class="fas fa-users"></i> <span>Task</span>
+                    </a>
+                </li>
                 <li class="menu-header">Staff Operations</li>
                 <li>
                     <a class="nav-link" href="${pageContext.request.contextPath}/bike-ops">

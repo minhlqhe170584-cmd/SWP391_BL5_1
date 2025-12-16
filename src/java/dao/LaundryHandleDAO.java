@@ -102,7 +102,45 @@ public class LaundryHandleDAO extends DBContext {
                 stDetail.setDouble(4, detail.getUnitPrice());              
                 stDetail.executeUpdate();
             }
-            
+
+            // ========= Auto-assign a task to the least busy active staff==============
+            //========== Tự động assign task cho account staff hoạt dộng ít việc nhất =====
+            Integer staffId = null;
+            String findStaffSql = "SELECT TOP 1 s.staff_id " +
+                                  "FROM Staff s " +
+                                  "LEFT JOIN Tasks t ON s.staff_id = t.staff_id " +
+                                  "JOIN StaffRoles sr ON s.role_id = sr.role_id " +
+                                  "WHERE s.is_active = 1 " +
+                                  "AND sr.role_name = 'Staff' " +
+                                  "GROUP BY s.staff_id " +
+                                  "ORDER BY COUNT(t.task_id) ASC, s.staff_id ASC";
+            try (PreparedStatement stFindStaff = conn.prepareStatement(findStaffSql);
+                 ResultSet rsStaff = stFindStaff.executeQuery()) {
+                if (rsStaff.next()) {
+                    staffId = rsStaff.getInt("staff_id");
+                }
+            }
+
+            // Only create task if we found at least one active staff
+            if (staffId != null) {
+                String taskName = "Laundry order #" + orderId;
+                String taskDescription = (note != null && !note.trim().isEmpty())
+                        ? note
+                        : "Handle laundry order #" + orderId + " for room " + roomId;
+
+                String insertTaskSql = "INSERT INTO Tasks (task_name, description, order_id, staff_id, status, created_at) "
+                                     + "VALUES (?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement stTask = conn.prepareStatement(insertTaskSql)) {
+                    stTask.setString(1, taskName);
+                    stTask.setString(2, taskDescription);
+                    stTask.setInt(3, orderId);
+                    stTask.setInt(4, staffId);
+                    stTask.setString(5, "Assigned");
+                    stTask.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
+                    stTask.executeUpdate();
+                }
+            }
+
             conn.commit();
             
         } catch (SQLException e) {
@@ -127,6 +165,7 @@ public class LaundryHandleDAO extends DBContext {
         
         return laundryId;
     }
+   //============================END Auto-assign===============================
     
     public ArrayList<Service> getAllLaundryServices() {
         ArrayList<Service> list = new ArrayList<>();

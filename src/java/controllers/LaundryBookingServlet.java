@@ -62,6 +62,7 @@ public class LaundryBookingServlet extends HttpServlet {
                 
                 if (service != null) {
                     request.setAttribute("service", service);
+                    //hiện các item của service
                     showOrderForm(request, response, roomId,serviceId);
                 } else {
                     response.sendRedirect("laundry-book"); 
