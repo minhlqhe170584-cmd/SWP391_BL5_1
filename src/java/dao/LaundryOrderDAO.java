@@ -392,7 +392,7 @@ public class LaundryOrderDAO extends DBContext {
             PreparedStatement st = connection.prepareStatement(UPDATE_ORDER_STATUS);
             st.setString(1, status);
             st.setInt(2, laundryId);
-
+            
             int rowsAffected = st.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -513,17 +513,17 @@ public class LaundryOrderDAO extends DBContext {
 //            sql.append(" AND is_deleted = 0 ");
         
         if(filter == null || filter.isEmpty()){
-            sql.append(" AND so.status LIKE N'%Pending%' ");
+            sql.append(" AND so.status LIKE N'%Pending%' OR so.status LIKE N'%PENDING%'");
         }else{
             switch (filter){
                 case "Canceled":
                     sql.append(" AND so.status LIKE N'%Canceled%' OR so.status LIKE N'%Cancelled%' OR so.status LIKE N'%CANCELLED%' ");
                     break;
                 case "Completed":
-                    sql.append(" AND so.status LIKE N'%Completed%' ");
+                    sql.append(" AND so.status LIKE N'%Completed%' OR so.status LIKE N'%Paid%' ");
                     break;
                 default:
-                    sql.append(" AND so.status LIKE N'%Pending%' ");
+                    sql.append(" AND so.status LIKE N'%Pending%' OR so.status LIKE N'%PENDING%' ");
                     break;
             }
         }
@@ -645,17 +645,17 @@ public class LaundryOrderDAO extends DBContext {
         }
 
         if(filter == null || filter.isEmpty()){
-            sql.append(" AND so.status LIKE N'%Pending%' ");
+            sql.append(" AND so.status LIKE N'%Pending%' OR so.status LIKE N'%PENDING%'");
         }else{
             switch (filter){
                 case "Canceled":
-                    sql.append(" AND so.status LIKE N'%Canceled%' ");
+                    sql.append(" AND so.status LIKE N'%Canceled%' OR so.status LIKE N'%Cancelled%' OR so.status LIKE N'%CANCELLED%' ");
                     break;
                 case "Completed":
-                    sql.append(" AND so.status LIKE N'%Completed%' ");
+                    sql.append(" AND so.status LIKE N'%Completed%' OR so.status LIKE N'%Paid%' ");
                     break;
                 default:
-                    sql.append(" AND so.status LIKE N'%Pending%' ");
+                    sql.append(" AND so.status LIKE N'%Pending%' OR so.status LIKE N'%PENDING%' ");
                     break;
             }
         }

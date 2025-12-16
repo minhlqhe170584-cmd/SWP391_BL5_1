@@ -103,13 +103,11 @@
                         </div>
                         
                         <div class="col-md-3 mb-3">
-                            <label>Status</label>
+                            <label>Progress</label>
                             <select name="status" class="form-control">
                                 <option value="">All Status</option>
-                                <option value="PENDING" ${status == 'PENDING' ? 'selected' : ''}>Pending</option>
-                                <option value="PROCESSING" ${status == 'PROCESSING' ? 'selected' : ''}>Processing</option>
-                                <option value="WASHING" ${status == 'WASHING' ? 'selected' : ''}>Washing</option>
-                                <option value="DRYING" ${status == 'DRYING' ? 'selected' : ''}>Drying</option>
+                                <option value="PENDING" ${status == 'PENDING' ? 'selected' : ''}>Pending</option>                             
+                                <option value="WASHING" ${status == 'WASHING' ? 'selected' : ''}>Washing</option>                               
                                 <option value="READY" ${status == 'READY' ? 'selected' : ''}>Ready</option>
                                 <option value="DELIVERED" ${status == 'DELIVERED' ? 'selected' : ''}>Delivered</option>
                                 <option value="COMPLETED" ${status == 'COMPLETED' ? 'selected' : ''}>Completed</option>
@@ -141,7 +139,7 @@
         <ul class="nav nav-tabs mb-3">
             <li class="nav-item">
                 <a class="nav-link ${empty view ? 'active' : ''}" 
-                   href="laundry-order?status=Pending&search=${param.search}">
+                   href="laundry-order?view=Pending&search=${param.search}">
                     <i class="fas fa-clock"></i> Pending
                 </a>
             </li>
