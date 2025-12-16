@@ -41,7 +41,13 @@ public class LoginServlet extends HttpServlet {
                 session.setMaxInactiveInterval(1800); 
                 if (staff.getRole() != null && staff.getRole().getRoleName().equals("Admin")) {
                     response.sendRedirect("staffs"); 
-                } else {
+                } 
+                else if(staff.getRole() != null && staff.getRole().getRoleName().equals("Staff"))
+                {
+                    response.sendRedirect("bike-ops");
+                }
+                else
+                {
                     response.sendRedirect("receptionist/payment"); 
                 }
                 return;
