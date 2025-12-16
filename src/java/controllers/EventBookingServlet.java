@@ -5,6 +5,7 @@
 package controllers;
 
 import dao.EventDAO;
+import dao.OrderDAO;
 import dao.RoomDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,41 +27,6 @@ import models.Room;
 @WebServlet(name = "EventBookingServlet", urlPatterns = {"/event-booking"})
 public class EventBookingServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet EventBookingServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet EventBookingServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -74,19 +40,19 @@ public class EventBookingServlet extends HttpServlet {
         if (eventIdRaw != null) {
             int eventId = Integer.parseInt(eventIdRaw);
             Event event = eventDAO.getEventById(eventId);
-            
-            String roomIdsStr = event.getLocation(); 
-            
+
+            String roomIdsStr = event.getLocation();
+
             // 1. Lấy danh sách tên phòng 
             dao.RoomDAO roomDAO = new dao.RoomDAO();
             request.setAttribute("roomList", roomDAO.getRoomsByIds(roomIdsStr));
             request.setAttribute("event", event);
-            
+
             // 2. [MỚI] Lấy danh sách ngày đã kín lịch để chặn
             List<String> bookedRanges = eventDAO.getBookedRanges(roomIdsStr);
             // Chuyển List thành chuỗi JSON mảng: [ {from:..}, {from:..} ]
             String jsonDisable = "[" + String.join(",", bookedRanges) + "]";
-            
+
             request.setAttribute("disableDates", jsonDisable);
         }
 
@@ -107,7 +73,7 @@ public class EventBookingServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // 1. Check login
-        Customer u = (Customer) request.getSession().getAttribute("USER");
+        Room u = (Room) request.getSession().getAttribute("USER");
         if (u == null) {
             response.sendRedirect("/WEB-INF/views/user/login.jsp");
             return;
@@ -125,7 +91,7 @@ public class EventBookingServlet extends HttpServlet {
             er.setRoomIds(String.join(",", roomIds));
 
             // 2. set customer đã login
-            er.setCustomerId(u.getCustomerId());
+            er.setRoomId(u.getRoomId());
 
             er.setCheckInDate(request.getParameter("checkInDate"));
             er.setCheckOutDate(request.getParameter("checkOutDate"));
@@ -134,7 +100,10 @@ public class EventBookingServlet extends HttpServlet {
 
             EventDAO eventDAO = new EventDAO();
             boolean success = eventDAO.insertEventRequest(er);
-
+            OrderDAO dbOrder = new OrderDAO();
+            int orderId = dbOrder.createOrder(er.getRoomId(), er.getMessage());
+            Event event = eventDAO.getEventById(er.getEventId());
+            dbOrder.createOrderDetail(orderId, 5, event.getEventName(), 1, Double.parseDouble(event.getPricePerTable().toString()));
             if (!success) {
                 throw new Exception("Insert failed");
             }
@@ -151,15 +120,5 @@ public class EventBookingServlet extends HttpServlet {
                     .forward(request, response);
         }
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
 
 }

@@ -172,6 +172,34 @@ public class ServiceOrderDAO extends DBContext {
         
         return laundryId;
     }
+    
+    
+    public int createServiceOrder(int roomId, String note) {
+        int orderId = 0;
+        String sql = """
+                        INSERT INTO ServiceOrders(room_id, order_date, total_amount, status, note) " +
+                                                           "VALUES(?,  GETDATE(), 0, ?, ?)
+                    """;
+        try (PreparedStatement st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            st.setInt(1, roomId);
+            st.setString(2, "PENDING");
+            st.setString(3, note);
+            int affectedRows = st.executeUpdate();
+
+        if (affectedRows > 0) {
+            // Lấy ID tự động tăng (Identity) vừa được tạo
+            try (ResultSet rs = st.getGeneratedKeys()) {
+                if (rs.next()) {
+                    orderId = rs.getInt(1);
+                }
+            }
+        }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return orderId;
+    }
+    
     public static void main(String[] args) {
         int res = 0;
         ServiceOrderDAO dao = new ServiceOrderDAO();

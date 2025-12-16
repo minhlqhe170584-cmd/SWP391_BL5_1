@@ -11,7 +11,7 @@ package models;
 public class EventRequest {
     private int requestId;
     private int eventId;
-    private int customerId;
+    private int roomId;
     private String roomIds;
     private String checkInDate;
     private String checkOutDate;
@@ -34,7 +34,7 @@ public class EventRequest {
     public EventRequest(int requestId, int eventId, int customerId, String roomIds, String checkInDate, String checkOutDate, String message, String status) {
         this.requestId = requestId;
         this.eventId = eventId;
-        this.customerId = customerId;
+        this.roomId = customerId;
         this.roomIds = roomIds;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
@@ -42,12 +42,12 @@ public class EventRequest {
         this.status = status;
     }
 
-    public int getCustomerId() {
-        return customerId;
+    public int getRoomId() {
+        return roomId;
     }
 
-    public void setCustomerId(int customerId) {
-        this.customerId = customerId;
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
     
     
