@@ -42,7 +42,7 @@ pageEncoding="UTF-8"%>
                                 <h4>Thông tin Booking</h4>
                                 <div class="card-header-action">
                                     <a
-                                        href="${pageContext.request.contextPath}/admin/frontdesk?view=checkout"
+                                        href="${pageContext.request.contextPath}/receptionist/frontdesk?view=checkout"
                                         class="btn btn-light">
                                         <i class="fas fa-arrow-left"></i> Về
                                         Front Desk
@@ -70,7 +70,7 @@ pageEncoding="UTF-8"%>
                                     ${booking.status}</p>
 
                                 <form method="post"
-                                    action="${pageContext.request.contextPath}/admin/checkout"
+                                    action="${pageContext.request.contextPath}/receptionist/checkout"
                                     class="mt-3">
                                     <input type="hidden" name="bookingId"
                                         value="${booking.bookingId}" />

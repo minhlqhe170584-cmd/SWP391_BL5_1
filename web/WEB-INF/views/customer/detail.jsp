@@ -9,7 +9,7 @@
         
         <div class="section-header">
             <div class="section-header-back">
-                <a href="customer" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
+                <a href="${pageContext.request.contextPath}/admin/customer" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
             </div>
             <h1>${customer != null ? 'Update Customer' : 'Add New Customer'}</h1>
             <div class="section-header-breadcrumb">

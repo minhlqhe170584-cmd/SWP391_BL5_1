@@ -41,9 +41,9 @@
                             </div>
                             <div class="card-body">
                                 <div class="form-group">
-                                    <label>Dịch vụ <span class="text-danger">*</span></label>
+                                    <label>Thuộc Dịch vụ Giặt Là<span class="text-danger">*</span></label>
                                     <select name="serviceId" class="form-control" required>
-                                        <option value="">Chọn dịch vụ</option>
+                                        <option value="">Chọn loại</option>
                                         <c:forEach var="service" items="${services}">
                                             <option value="${service.serviceId}" 
                                                     ${item.serviceId == service.serviceId ? 'selected' : ''}>
@@ -72,7 +72,7 @@
                                             <label>Đơn giá <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Đ</span>
                                                 </div>
                                                 <input type="number" name="defaultPrice" class="form-control" 
                                                        step="0.01" min="0" value="${item.defaultPrice}" required

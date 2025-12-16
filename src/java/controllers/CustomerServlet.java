@@ -22,7 +22,7 @@ import utils.UpdateCustomerValidator;
  *
  * @author Acer
  */
-@WebServlet(name = "CustomerServlet", urlPatterns = {"/customer"})
+@WebServlet(name = "CustomerServlet", urlPatterns = {"/admin/customer"})
 public class CustomerServlet extends HttpServlet {
 
 
@@ -117,14 +117,14 @@ private final CustomerDAO customerDAO = new CustomerDAO(); // Or use Dependency 
                 updateCustomer(request, response);
                 break;   
             default:
-                response.sendRedirect("customer");
+                response.sendRedirect("admin/customer");
                 break;
             }
         } 
         catch (SQLException ex) 
         {
             request.getSession().setAttribute("message",ex.getMessage());
-            response.sendRedirect("customers");
+            response.sendRedirect("admin/customer");
             System.getLogger(CustomerServlet.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
         }
     }
@@ -203,10 +203,5 @@ private final CustomerDAO customerDAO = new CustomerDAO(); // Or use Dependency 
         request.setAttribute("customer", customer);
         request.getRequestDispatcher("/WEB-INF/views/customer/detail.jsp").forward(request, response);
         }
-    }
-
-    @Override
-    public String getServletInfo() {
-        return "Short description";
     }
 }

@@ -20,7 +20,7 @@ import models.Service;
  *
  * @author Acer
  */
-@WebServlet(name = "LaundryItemServlet", urlPatterns = {"/laundry-item"})
+@WebServlet(name = "LaundryItemServlet", urlPatterns = {"/admin/laundry-item"})
 public class LaundryItemServlet extends HttpServlet {
 
     private LaundryItemDAO itemDAO;

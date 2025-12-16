@@ -19,7 +19,7 @@ import models.Booking;
  *  - GET /admin/checkout   : Hiển thị thông tin Booking để checkout
  *  - POST /admin/checkout  : Thực hiện checkout (đổi trạng thái + thời gian + trả phòng)
  */
-@WebServlet(name = "CheckInOutServlet", urlPatterns = {"/admin/checkin", "/admin/checkout"})
+@WebServlet(name = "CheckInOutServlet", urlPatterns = {"/receptionist/checkin", "/receptionist/checkout"})
 public class CheckInOutServlet extends HttpServlet {
 
     @Override
@@ -31,7 +31,7 @@ public class CheckInOutServlet extends HttpServlet {
         BookingCheckInDAO dao = new BookingCheckInDAO();
 
         try {
-            if ("/admin/checkin".equals(servletPath)) {
+            if ("/receptionist/checkin".equals(servletPath)) {
                 // --- MÀN CHECK-IN ---
                 String code = request.getParameter("code");
                 String customerName = request.getParameter("customer");
@@ -54,7 +54,7 @@ public class CheckInOutServlet extends HttpServlet {
                 request.getRequestDispatcher("/WEB-INF/views/booking/checkin.jsp")
                         .forward(request, response);
 
-            } else if ("/admin/checkout".equals(servletPath)) {
+            } else if ("/receptionist/checkout".equals(servletPath)) {
                 // --- MÀN CHECK-OUT ---
                 String idStr = request.getParameter("bookingId");
                 if (idStr == null || idStr.trim().isEmpty()) {
@@ -95,7 +95,7 @@ public class CheckInOutServlet extends HttpServlet {
             String idStr = request.getParameter("bookingId");
             if (idStr == null || idStr.trim().isEmpty()) {
                 request.setAttribute("error", "Thiếu tham số bookingId.");
-                if ("/admin/checkin".equals(servletPath)) {
+                if ("/receptionist/checkin".equals(servletPath)) {
                     request.getRequestDispatcher("/WEB-INF/views/booking/checkin.jsp")
                             .forward(request, response);
                 } else {
@@ -116,7 +116,7 @@ public class CheckInOutServlet extends HttpServlet {
                     request.getSession().setAttribute("errorMessage",
                             "Không thể check-in. Booking phải đang ở trạng thái Confirmed.");
                 }
-                response.sendRedirect(request.getContextPath() + "/admin/frontdesk?view=checkin");
+                response.sendRedirect(request.getContextPath() + "/receptionist/frontdesk?view=checkin");
 
             } else if ("/admin/checkout".equals(servletPath)) {
                 // Thực hiện CHECK-OUT (status = CheckedOut, check_out_date = GETDATE(), trả phòng)
@@ -127,7 +127,7 @@ public class CheckInOutServlet extends HttpServlet {
                     request.getSession().setAttribute("errorMessage",
                             "Không thể check-out. Booking phải đang ở trạng thái CheckedIn.");
                 }
-                response.sendRedirect(request.getContextPath() + "/admin/frontdesk?view=checkout");
+                response.sendRedirect(request.getContextPath() + "/receptionist/frontdesk?view=checkout");
             }
 
         } catch (NumberFormatException e) {

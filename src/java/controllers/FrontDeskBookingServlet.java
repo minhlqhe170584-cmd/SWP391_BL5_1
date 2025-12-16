@@ -13,14 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import models.Booking;
 
-/**
- * Dashboard tổng hợp cho lễ tân:
- * - Danh sách booking cần CHECK-IN trong ngày
- * - Danh sách booking cần CHECK-OUT trong ngày
- *
- * URL: /admin/frontdesk
- */
-@WebServlet(name = "FrontDeskBookingServlet", urlPatterns = {"/admin/frontdesk"})
+
+@WebServlet(name = "FrontDeskBookingServlet", urlPatterns = {"/receptionist/frontdesk"})
 public class FrontDeskBookingServlet extends HttpServlet {
 
     @Override

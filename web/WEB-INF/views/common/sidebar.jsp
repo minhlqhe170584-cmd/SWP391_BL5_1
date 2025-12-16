@@ -29,7 +29,14 @@
                         <i class="fas fa-user-tag"></i> <span>Staff Roles</span>
                     </a>
                 </li>
-
+                
+                <li class="menu-header">Customer Management</li>
+                <li>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/admin/customer">
+                        <i class="fas fa-users"></i> <span>Customer</span>
+                    </a>
+                </li>
+                
                 <li class="menu-header">Room Management</li>
                 <li>
                     <a class="nav-link" href="${pageContext.request.contextPath}/admin/rooms">
@@ -84,7 +91,13 @@
                         <i class="fas fa-cogs"></i> <span>Bicycle Rental option</span>
                     </a>
                 </li>
-
+                
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/admin/laundry-item" class="nav-link">
+                        <i class="fas fa-shirt"></i> <span>Laundry items</span>
+                    </a>
+                </li>
+                
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/admin/foods" class="nav-link">
                         <i class="fas fa-utensils nav-icon"></i> <p>Food</p>
@@ -96,12 +109,6 @@
                     </a>
                 </li>
 
-                <li class="menu-header">Customer Management</li>
-                <li>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/customer">
-                        <i class="fas fa-users"></i> <span>Customer</span>
-                    </a>
-                </li>
                 <li class="menu-header">Task Management</li>
                 <li>
                     <a class="nav-link" href="${pageContext.request.contextPath}/task">
@@ -119,6 +126,12 @@
                     <%-- Link này trỏ tới trang bike-ops như logic ở câu hỏi trước --%>
                     <a class="nav-link" href="${pageContext.request.contextPath}/bike-ops">
                         <i class="fas fa-bicycle"></i> <span>Giao và Trả xe</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/laundry-order">
+                        <i class="fas fa-tshirt"></i> <span>Laundry Order</span>
                     </a>
                 </li>
             </c:if>
