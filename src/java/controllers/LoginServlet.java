@@ -48,8 +48,8 @@ public class LoginServlet extends HttpServlet {
                 }
                 else if(staff.getRole() != null && staff.getRole().getRoleName().equals("Receptionist"))
                 {
-//                    response.sendRedirect("receptionist/payment"); 
-                    response.sendRedirect("receptionist/frontdesk"); 
+                   //response.sendRedirect("receptionist/payment"); 
+                   response.sendRedirect("receptionist/frontdesk"); 
                 }
                 return;
             }
