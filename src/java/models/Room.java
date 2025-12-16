@@ -14,7 +14,6 @@ public class Room {
     private Timestamp lastCleanedAt;
 
     private boolean isEventRoom; // true = Sảnh tiệc, false = Phòng ngủ
-
     // Các trường phụ (Relation)
     private RoomType roomType;
     private List<Task> tasks;
@@ -145,7 +144,7 @@ public class Room {
     public void setIsEventRoom(boolean isEventRoom) {
         this.isEventRoom = isEventRoom;
     }
-
+    
     @Override
     public String toString() {
         return "Room{" + "roomId=" + roomId + ", roomNumber=" + roomNumber + ", status=" + status + '}';

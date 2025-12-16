@@ -79,12 +79,12 @@
             </li>
 
             <li class="nav-item">
-                <a href="foods" class="nav-link">
+                <a href="${pageContext.request.contextPath}/admin/foods" class="nav-link">
                     <i class="fas fa-utensils nav-icon"></i> <p>Food</p>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="drinks" class="nav-link">
+                <a href="${pageContext.request.contextPath}/admin/drinks" class="nav-link">
                     <i class="fas fa-cocktail nav-icon"></i> <p>Drink</p>
                 </a>
             </li>

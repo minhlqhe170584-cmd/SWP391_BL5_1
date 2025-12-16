@@ -126,6 +126,8 @@ public class BookingServlet extends HttpServlet {
             booking.setRoomId(roomId);
             booking.setCheckInDate(checkIn);
             booking.setCheckOutDate(checkOut);
+            String randomCode = EmailUtils.generateRandomCode(8);
+            booking.setBookingCode(randomCode);
             
             if (bookingDAO.insertBooking(booking)) {
                 
@@ -134,7 +136,7 @@ public class BookingServlet extends HttpServlet {
                 roomDAO.updateRoomStatus(roomId, "Occupied");
                 
                 // === Gửi Mail ===
-                String randomCode = EmailUtils.generateRandomCode(8); 
+                
                 String subject = "Xác nhận đặt phòng thành công - Smart Hotel";
                 String body = "Xin chào " + user.getFullName() + ",\n\n"
                         + "Đặt phòng thành công!\n"
