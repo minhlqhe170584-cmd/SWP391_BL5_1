@@ -16,7 +16,7 @@
         </div>
 
         <div class="section-body">
-            
+
             <c:if test="${not empty sessionScope.successMessage}">
                 <div class="alert alert-success alert-dismissible show fade">
                     <div class="alert-body">
@@ -34,7 +34,7 @@
                         <i class="fas fa-exclamation-triangle"></i> ${sessionScope.errorMessage}
                     </div>
                 </div>
-                <% session.removeAttribute("errorMessage"); %>
+                <% session.removeAttribute("errorMessage");%>
             </c:if>
 
             <div class="row">
@@ -48,6 +48,36 @@
                                 </a>
                             </div>
                         </div>
+
+                        <div class="row mb-3 ml-2 mt-3">
+                            <div class="col-md-10">
+                                <form action="room-types" method="GET" class="form-inline">
+                                    <input type="hidden" name="action" value="LIST">
+
+                                    <input type="text" name="keyword" class="form-control mr-2" 
+                                           value="${keyword}" placeholder="Search type name...">
+                                    
+                                    
+
+                                    <select name="status" class="form-control mr-2">
+                                        <option value="">All Status</option>
+                                        <option value="Active" ${currentStatus == 'Active' ? 'selected' : ''}>Active</option>
+                                        <option value="Inactive" ${currentStatus == 'Inactive' ? 'selected' : ''}>Inactive</option>
+                                    </select>
+
+                                    <button type="submit" class="btn btn-info" title="Filter Results">
+                                        <i class="fas fa-filter"></i> Filter
+                                    </button>
+
+                                    <c:if test="${not empty keyword or not empty currentStatus}">
+                                        <a href="room-types?action=LIST" class="btn btn-secondary ml-2" title="Reset all filters">
+                                            Reset
+                                        </a>
+                                    </c:if>
+                                </form>
+                            </div>
+                        </div>
+
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-striped table-md">
@@ -105,9 +135,9 @@
                                                     <a href="room-types?action=EDIT&id=${rt.typeId}" class="btn btn-primary btn-sm" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    
+
                                                     <c:choose>
-                                                        <%-- CASE 1: Đang Active -> Hiện nút Xóa mềm --%>
+                                                        <%-- Active -> Show Soft Delete --%>
                                                         <c:when test="${rt.isActive}">
                                                             <a href="room-types?action=DELETE&id=${rt.typeId}" 
                                                                class="btn btn-danger btn-sm" 
@@ -116,8 +146,8 @@
                                                                 <i class="fas fa-lock"></i>
                                                             </a>
                                                         </c:when>
-                                                        
-                                                        <%-- CASE 2: Đang Inactive -> Hiện nút Khôi phục --%>
+
+                                                        <%-- Inactive -> Show Restore --%>
                                                         <c:otherwise>
                                                             <a href="room-types?action=RESTORE&id=${rt.typeId}" 
                                                                class="btn btn-success btn-sm" 
@@ -130,18 +160,60 @@
                                                 </td>
                                             </tr>
                                         </c:forEach>
-                                        
+
                                         <c:if test="${empty listRoomTypes}">
                                             <tr>
                                                 <td colspan="8" class="text-center text-muted py-4">
                                                     <i class="fas fa-box-open fa-2x mb-2"></i><br>
-                                                    No room types found. Please add a new one.
+                                                    No room types found matching your criteria.
                                                 </td>
                                             </tr>
                                         </c:if>
                                     </tbody>
                                 </table>
                             </div>
+
+                            <c:if test="${endPage > 1}">
+                                <div class="card-footer text-right">
+                                    <nav class="d-inline-block">
+                                        <ul class="pagination mb-0">
+                                            <c:if test="${tag > 1}">
+                                                <li class="page-item">
+                                                    <a class="page-link" href="room-types?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </a>
+                                                </li>
+                                            </c:if>
+
+                                            <c:if test="${tag + 2 >= endPage}">
+                                                <c:forEach begin="${endPage - 2}" end="${endPage}" var="i">
+                                                    <li class="page-item ${tag == i ? 'active' : ''}">
+                                                        <a class="page-link" href="room-types?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                            ${i}
+                                                        </a>
+                                                    </li>
+                                                </c:forEach>
+                                            </c:if>
+                                            <c:if test="${tag + 2 < endPage}">
+                                                <c:forEach begin="${tag}" end="${tag + 2}" var="i">
+                                                    <li class="page-item ${tag == i ? 'active' : ''}">
+                                                        <a class="page-link" href="room-types?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                            ${i}
+                                                        </a>
+                                                    </li>
+                                                </c:forEach>
+                                            </c:if>
+                                            <c:if test="${tag < endPage}">
+                                                <li class="page-item">
+                                                    <a class="page-link" href="room-types?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </a>
+                                                </li>
+                                            </c:if>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </c:if>
                         </div>
                     </div>
                 </div>
@@ -153,46 +225,44 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    function confirmRoomTypeAction(event, typeName, actionType, link) {
-        event.preventDefault(); // Ngăn chuyển trang ngay lập tức
+                                                                   function confirmRoomTypeAction(event, typeName, actionType, link) {
+                                                                       event.preventDefault();
 
-        let titleInfo = "";
-        let textInfo = "";
-        let iconType = "";
-        let confirmColor = "";
-        let btnText = "";
+                                                                       let titleInfo = "";
+                                                                       let textInfo = "";
+                                                                       let iconType = "";
+                                                                       let confirmColor = "";
+                                                                       let btnText = "";
 
-        if (actionType === 'delete') {
-            // Cấu hình cho hành động XÓA (Deactivate)
-            titleInfo = "Deactivate " + typeName + "?";
-            textInfo = "This room type will be hidden from new bookings!";
-            iconType = "warning";
-            confirmColor = "#d33"; // Màu đỏ
-            btnText = "Yes";
-        } else {
-            // Cấu hình cho hành động KHÔI PHỤC (Restore)
-            titleInfo = "Restore " + typeName + "?";
-            textInfo = "This room type will be available for booking again!";
-            iconType = "question";
-            confirmColor = "#28a745"; // Màu xanh
-            btnText = "Yes";
-        }
+                                                                       if (actionType === 'delete') {
+                                                                           titleInfo = "Deactivate " + typeName + "?";
+                                                                           textInfo = "This room type will be hidden from new bookings!";
+                                                                           iconType = "warning";
+                                                                           confirmColor = "#d33";
+                                                                           btnText = "Yes";
+                                                                       } else {
+                                                                           titleInfo = "Restore " + typeName + "?";
+                                                                           textInfo = "This room type will be available for booking again!";
+                                                                           iconType = "question";
+                                                                           confirmColor = "#28a745";
+                                                                           btnText = "Yes";
+                                                                       }
 
-        Swal.fire({
-            title: titleInfo,
-            text: textInfo,
-            icon: iconType,
-            showCancelButton: true,
-            confirmButtonColor: confirmColor,
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: btnText,
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = link; // Chuyển trang nếu người dùng bấm Yes
-            }
-        });
-    }
+                                                                       Swal.fire({
+                                                                           title: titleInfo,
+                                                                           text: textInfo,
+                                                                           icon: iconType,
+                                                                           showCancelButton: true,
+                                                                           confirmButtonColor: confirmColor,
+                                                                           cancelButtonColor: '#6c757d',
+                                                                           confirmButtonText: btnText,
+                                                                           cancelButtonText: 'Cancel'
+                                                                       }).then((result) => {
+                                                                           if (result.isConfirmed) {
+                                                                               window.location.href = link;
+                                                                           }
+                                                                       });
+                                                                   }
 </script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

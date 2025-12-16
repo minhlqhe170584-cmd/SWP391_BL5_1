@@ -16,6 +16,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import models.Room;
 
@@ -57,7 +58,7 @@ public class EventPackageServlet extends HttpServlet {
                     // 3. Chuyển sang form THÊM MỚI
                     request.getRequestDispatcher("/WEB-INF/views/event/event-package-add.jsp").forward(request, response);
                     break;
-                    
+
                 case "EDIT":
                     String idStr = request.getParameter("id");
                     if (idStr != null && idStr.matches("\\d+")) {
@@ -66,15 +67,15 @@ public class EventPackageServlet extends HttpServlet {
                         if (event != null) {
                             request.setAttribute("event", event); // Đẩy đối tượng Event lên form
                             request.setAttribute("categories", eventDAO.getAllEventCategories());
-                            
+
                             // ----------------------------------------------------------------
                             // !!! PHẦN BỔ SUNG CẦN THIẾT !!!
                             // 1. Lấy danh sách SẢNH TIỆC (Event Rooms)
                             eventRooms = roomDAO.getAllEventRooms();
                             // 2. Đẩy danh sách phòng vào request scope để JSP sử dụng
-                            request.setAttribute("rooms", eventRooms); 
+                            request.setAttribute("rooms", eventRooms);
                             // ----------------------------------------------------------------
-                            
+
                             // Chuyển sang form CHỈNH SỬA (event-package-edit.jsp)
                             request.getRequestDispatcher("/WEB-INF/views/event/event-package-edit.jsp").forward(request, response);
                         } else {
@@ -85,11 +86,11 @@ public class EventPackageServlet extends HttpServlet {
                         response.sendRedirect("event-packages?action=LIST");
                     }
                     break;
-                    
-                    case "DEACTIVATE":
+
+                case "DEACTIVATE":
                 case "ACTIVATE":
                     String idStrStatus = request.getParameter("id");
-                    
+
                     // Xác định trạng thái mới và động từ cho thông báo
                     String newStatus = action.equalsIgnoreCase("ACTIVATE") ? "Active" : "Inactive";
                     String verb = action.equalsIgnoreCase("ACTIVATE") ? "activated" : "deactivated";
@@ -98,37 +99,67 @@ public class EventPackageServlet extends HttpServlet {
                         int id = Integer.parseInt(idStrStatus);
 
                         // Gọi DAO để cập nhật trạng thái
-                        boolean success = eventDAO.updateEventStatus(id, newStatus); 
+                        boolean success = eventDAO.updateEventStatus(id, newStatus);
 
                         if (success) {
-                             request.getSession().setAttribute("successMessage", "Successfully " + verb + " Event Package ID: " + id);
+                            request.getSession().setAttribute("successMessage", "Successfully " + verb + " Event Package ID: " + id);
                         } else {
-                             request.getSession().setAttribute("errorMessage", "Failed to " + verb + " Event Package ID: " + id + ". Database error.");
+                            request.getSession().setAttribute("errorMessage", "Failed to " + verb + " Event Package ID: " + id + ". Database error.");
                         }
                     } else {
-                         request.getSession().setAttribute("errorMessage", "Invalid Event ID provided for status update.");
+                        request.getSession().setAttribute("errorMessage", "Invalid Event ID provided for status update.");
                     }
                     response.sendRedirect("event-packages?action=LIST");
                     break;
-                    
 
                 case "LIST":
-                    // 1. Gọi DAO lấy tất cả gói
-                    List<Event> list = eventDAO.getAllEventPackages();
+                default:
+                    // --- BẮT ĐẦU LOGIC MỚI: SEARCH & PAGINATION ---
 
-                    // 2. Đẩy dữ liệu sang JSP
-                    request.setAttribute("packages", list);
+                    // 1. Lấy tham số
+                    String keyword = request.getParameter("keyword");
+                    String status = request.getParameter("status");
+                    String indexPage = request.getParameter("index");
+
+                    if (indexPage == null) {
+                        indexPage = "1";
+                    }
+                    int index = Integer.parseInt(indexPage);
+
+                    // 2. Gọi DAO lấy danh sách FULL (theo điều kiện search)
+                    List<Event> fullList = eventDAO.searchEventPackages(keyword, status);
+
+                    // 3. Phân trang (SubList)
+                    int count = fullList.size();
+                    int pageSize = 5; // Số dòng mỗi trang
+                    int endPage = count / pageSize;
+                    if (count % pageSize != 0) {
+                        endPage++;
+                    }
+
+                    int start = (index - 1) * pageSize;
+                    int end = Math.min(start + pageSize, count);
+
+                    List<Event> pagedList = new ArrayList<>();
+                    if (start < count) {
+                        pagedList = fullList.subList(start, end);
+                    }
+
+                    // 4. Đẩy dữ liệu ra JSP
+                    request.setAttribute("listEventPackages", pagedList);
+                    request.setAttribute("endPage", endPage);
+                    request.setAttribute("tag", index);
+
+                    // Giữ giá trị Search/Filter
+                    request.setAttribute("keyword", keyword);
+                    request.setAttribute("status", status);
+
                     request.getRequestDispatcher("/WEB-INF/views/event/event-package-list.jsp").forward(request, response);
                     break;
-
-//                
-                default:
-                    response.sendRedirect("event-packages?action=LIST");
-                    break;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect("error.jsp");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            response.sendRedirect("event-packages?error=true");
         }
     }
 

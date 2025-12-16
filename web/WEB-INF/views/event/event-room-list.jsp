@@ -201,30 +201,46 @@
                             </div>
 
                             <c:if test="${endPage > 1}">
-                                <div class="card-footer text-right">
-                                    <nav class="d-inline-block">
-                                        <ul class="pagination mb-0">
-                                            <li class="page-item ${tag <= 1 ? 'disabled' : ''}">
-                                                <a class="page-link" href="event-rooms?action=LIST&index=${tag-1}&keyword=${keyword}&typeId=${currentType}&minCapacity=${minCapacity}&maxCapacity=${maxCapacity}">
-                                                    <i class="fas fa-chevron-left"></i>
+                        <div class="card-footer text-right">
+                            <nav class="d-inline-block">
+                                <ul class="pagination mb-0">
+                                    <c:if test="${tag > 1}">
+                                        <li class="page-item">
+                                            <a class="page-link" href="event-rooms?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    </c:if>
+
+                                    <c:if test="${tag + 2 >= endPage}">
+                                        <c:forEach begin="${endPage - 2}" end="${endPage}" var="i">
+                                            <li class="page-item ${tag == i ? 'active' : ''}">
+                                                <a class="page-link" href="event-rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                    ${i}
                                                 </a>
                                             </li>
-                                            <c:forEach begin="1" end="${endPage}" var="i">
-                                                <li class="page-item ${tag == i ? 'active' : ''}">
-                                                    <a class="page-link" href="event-rooms?action=LIST&index=${i}&keyword=${keyword}&typeId=${currentType}&minCapacity=${minCapacity}&maxCapacity=${maxCapacity}">
-                                                        ${i}
-                                                    </a>
-                                                </li>
-                                            </c:forEach>
-                                            <li class="page-item ${tag >= endPage ? 'disabled' : ''}">
-                                                <a class="page-link" href="event-rooms?action=LIST&index=${tag+1}&keyword=${keyword}&typeId=${currentType}&minCapacity=${minCapacity}&maxCapacity=${maxCapacity}">
-                                                    <i class="fas fa-chevron-right"></i>
+                                        </c:forEach>
+                                    </c:if>
+                                    <c:if test="${tag + 2 < endPage}">
+                                        <c:forEach begin="${tag}" end="${tag + 2}" var="i">
+                                            <li class="page-item ${tag == i ? 'active' : ''}">
+                                                <a class="page-link" href="event-rooms?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                    ${i}
                                                 </a>
                                             </li>
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </c:if>
+                                        </c:forEach>
+                                    </c:if>
+                                    <c:if test="${tag < endPage}">
+                                        <li class="page-item">
+                                            <a class="page-link" href="event-rooms?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    </c:if>
+                                </ul>
+                            </nav>
+                        </div>
+                    </c:if>
 
                         </div>
                     </div>

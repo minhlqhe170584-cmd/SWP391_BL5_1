@@ -20,11 +20,23 @@ public class EventRequestView {
     private Date checkOutDate;
     private String message;
     private Date createdDate;
+    private String bookedRoomName; // <--- CẦN THÊM THUỘC TÍNH NÀY
+
+    // Getter và Setter cho bookedRoomName
+    public String getBookedRoomName() {
+        return bookedRoomName;
+    }
+
+    public void setBookedRoomName(String bookedRoomName) {
+        this.bookedRoomName = bookedRoomName;
+    }
 
     public EventRequestView() {
     }
 
-    public EventRequestView(int requestId, String eventName, String customerName, String roomNames, String status, Date checkInDate, Date checkOutDate, String message, Date createdDate) {
+    
+
+    public EventRequestView(int requestId, String eventName, String customerName, String roomNames, String status, Date checkInDate, Date checkOutDate, String message, Date createdDate, String bookedRoomName) {
         this.requestId = requestId;
         this.eventName = eventName;
         this.customerName = customerName;
@@ -34,7 +46,10 @@ public class EventRequestView {
         this.checkOutDate = checkOutDate;
         this.message = message;
         this.createdDate = createdDate;
+        this.bookedRoomName = bookedRoomName;
     }
+    
+    
 
     public int getRequestId() {
         return requestId;
