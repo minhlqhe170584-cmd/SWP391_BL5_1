@@ -315,6 +315,40 @@ public class RoomDAO extends DBContext {
         return 0;
     }
 
+    // --- [NEW] Thống kê cho Front Desk (chỉ phòng khách isEventRoom = 0) ---
+    public int countAvailableRooms() {
+        String sql = "SELECT COUNT(*) FROM Rooms WHERE isEventRoom = 0 AND room_status = 'Available'";
+        try (PreparedStatement st = connection.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            System.err.println("Error countAvailableRooms: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countReservedRooms() {
+        String sql = "SELECT COUNT(*) FROM Rooms WHERE isEventRoom = 0 AND room_status = 'Reserved'";
+        try (PreparedStatement st = connection.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            System.err.println("Error countReservedRooms: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countOccupiedRooms() {
+        String sql = "SELECT COUNT(*) FROM Rooms WHERE isEventRoom = 0 AND room_status = 'Occupied'";
+        try (PreparedStatement st = connection.prepareStatement(sql);
+             ResultSet rs = st.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            System.err.println("Error countOccupiedRooms: " + e.getMessage());
+        }
+        return 0;
+    }
+
     public List<Integer> getExistingFloors() {
         List<Integer> floors = new ArrayList<>();
         // CẬP NHẬT: Thêm điều kiện 'AND isEventRoom = 0'
