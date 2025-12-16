@@ -84,8 +84,8 @@ public class StaffDAO extends DBContext {
     public boolean createStaff(Staff staff) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(INSERT_STAFF)) {
             ps.setInt(1, staff.getRole().getRoleId());
-            ps.setString(2, staff.getFullName());
-            ps.setString(3, staff.getEmail());
+            ps.setString(2, staff.getFullName().trim());
+            ps.setString(3, staff.getEmail().trim());
             ps.setString(4, staff.getPassWordHash());
             return ps.executeUpdate() > 0;
         }
