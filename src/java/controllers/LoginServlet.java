@@ -46,9 +46,9 @@ public class LoginServlet extends HttpServlet {
                 {
                     response.sendRedirect("bike-ops");
                 }
-                else if(staff.getRole() != null && staff.getRole().getRoleName().equals("Reception"))
+                else if(staff.getRole() != null && staff.getRole().getRoleName().equals("Receptionist"))
                 {
-                    //response.sendRedirect("receptionist/payment"); 
+//                    response.sendRedirect("receptionist/payment"); 
                     response.sendRedirect("receptionist/frontdesk"); 
                 }
                 return;
