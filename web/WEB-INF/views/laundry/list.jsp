@@ -138,8 +138,8 @@
                             
         <ul class="nav nav-tabs mb-3">
             <li class="nav-item">
-                <a class="nav-link ${empty view ? 'active' : ''}" 
-                   href="laundry-order?view=Pending&search=${param.search}">
+                <a class="nav-link ${empty view || view == 'Pending' ? 'active' : ''}" 
+                   href="laundry-order?view=Pending">
                     <i class="fas fa-clock"></i> Pending
                 </a>
             </li>
@@ -164,7 +164,6 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Order Ref</th>
                                     <th>Room</th>
                                     <th>Expected Pickup</th>
                                     <th>Pickup Time</th>
@@ -177,7 +176,6 @@
                                 <c:forEach var="order" items="${orders}">
                                     <tr>
                                         <td><strong>#${order.laundryId}</strong></td>
-                                        <td>#${order.orderId}</td>
                                         <td>
                                             <c:if test="${not empty order.serviceOrder}">
                                                 <span class="badge badge-light">Room ${order.serviceOrder.roomId}</span>
