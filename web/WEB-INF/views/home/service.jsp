@@ -64,7 +64,7 @@
                         </c:if>
                     </div>
                 </div>
-                </c:if>
+
                 <div class="col-lg-3 col-md-6">
                     <div class="service-item">
                         <img src="https://images.unsplash.com/photo-1525610553991-2bede1a236e2?q=80&w=400&auto=format&fit=crop" 
