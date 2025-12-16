@@ -70,7 +70,7 @@ pageEncoding="UTF-8"%>
             <div class="row mb-4">
                 <div class="col-md-12">
                     <form method="get"
-                        action="${pageContext.request.contextPath}/admin/frontdesk"
+                        action="${pageContext.request.contextPath}/receptionist/frontdesk"
                         class="form-row">
                         <div class="col-md-3 mb-2">
                             <label>Ngày</label>
@@ -107,13 +107,13 @@ pageEncoding="UTF-8"%>
             <ul class="nav nav-tabs mb-3">
                 <li class="nav-item">
                     <a class="nav-link ${view == 'checkin' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin/frontdesk?view=checkin&date=${selectedDate}&search=${search}">
+                        href="${pageContext.request.contextPath}/receptionist/frontdesk?view=checkin&date=${selectedDate}&search=${search}">
                         Cần Check-in
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link ${view == 'checkout' ? 'active' : ''}"
-                        href="${pageContext.request.contextPath}/admin/frontdesk?view=checkout&date=${selectedDate}&search=${search}">
+                        href="${pageContext.request.contextPath}/receptionist/frontdesk?view=checkout&date=${selectedDate}&search=${search}">
                         Cần Check-out
                     </a>
                 </li>
@@ -190,14 +190,14 @@ pageEncoding="UTF-8"%>
                                                     test="${view == 'checkout'}">
                                                     <a
                                                         class="btn btn-sm btn-danger"
-                                                        href="${pageContext.request.contextPath}/admin/checkout?bookingId=${b.bookingId}">
+                                                        href="${pageContext.request.contextPath}/receptionist/checkout?bookingId=${b.bookingId}">
                                                         Check-out
                                                     </a>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <a
                                                         class="btn btn-sm btn-primary"
-                                                        href="${pageContext.request.contextPath}/admin/checkin?code=${b.bookingCode}">
+                                                        href="${pageContext.request.contextPath}/receptionist/checkin?code=${b.bookingCode}">
                                                         Check-in
                                                     </a>
                                                 </c:otherwise>

@@ -13,7 +13,7 @@
         <ul class="sidebar-menu">
 
             <%-- ======================================================== --%>
-            <%-- PHẦN DÀNH CHO ADMIN (Hiện toàn bộ menu cũ)               --%>
+            <%-- PHẦN DÀNH CHO ADMIN (Giữ nguyên toàn bộ)                 --%>
             <%-- ======================================================== --%>
             <c:if test="${sessionScope.USER.role.roleName == 'Admin'}">
                 
@@ -118,12 +118,32 @@
             </c:if>
 
             <%-- ======================================================== --%>
-            <%-- PHẦN DÀNH CHO STAFF (Chỉ hiện giao/trả xe)               --%>
+            <%-- PHẦN DÀNH CHO RECEPTIONIST (Lễ Tân - Mới thêm vào)       --%>
+            <%-- ======================================================== --%>
+            <c:if test="${sessionScope.USER.role.roleName == 'Receptionist'}">
+                <li class="menu-header">Reception Operations</li>
+                
+                <%-- Link tới màn hình Front Desk (Sơ đồ phòng/Check-in) --%>
+                <li>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/receptionist/frontdesk">
+                        <i class="fas fa-concierge-bell"></i> <span>Front Desk</span>
+                    </a>
+                </li>
+
+                <%-- Link tới màn hình Payment (Thanh toán) --%>
+                <li>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/receptionist/payment">
+                        <i class="fas fa-file-invoice-dollar"></i> <span>Payment</span>
+                    </a>
+                </li>
+            </c:if>
+
+            <%-- ======================================================== --%>
+            <%-- PHẦN DÀNH CHO STAFF (Giữ nguyên)                         --%>
             <%-- ======================================================== --%>
             <c:if test="${sessionScope.USER.role.roleName == 'Staff'}">
                 <li class="menu-header">Staff Operations</li>
                 <li>
-                    <%-- Link này trỏ tới trang bike-ops như logic ở câu hỏi trước --%>
                     <a class="nav-link" href="${pageContext.request.contextPath}/bike-ops">
                         <i class="fas fa-bicycle"></i> <span>Giao và Trả xe</span>
                     </a>
