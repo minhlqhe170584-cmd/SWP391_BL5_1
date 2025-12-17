@@ -63,10 +63,11 @@
                                                 <i class="fas fa-door-open"></i>
                                             </div>
                                         </div>
-
+                                        <%-- THÊM value="${roomNumber}" để giữ lại giá trị --%>
                                         <input type="text"
                                                id="roomNumber"
                                                name="roomNumber"
+                                               value="${roomNumber}" 
                                                class="form-control"
                                                placeholder="Ex: 101, 205..."
                                                minlength="3">
@@ -75,7 +76,6 @@
                                     <small class="form-text text-muted">
                                         Unique identifier for the room (e.g., 101).
                                     </small>
-
                                     <small id="errorMsg" class="text-danger" style="display: none; margin-top: 5px;">
                                         Room Number cannot be null. Please enter the room number!
                                     </small>
@@ -85,7 +85,8 @@
                                     <label>Room Type</label>
                                     <select name="typeId" class="form-control selectric">
                                         <c:forEach var="t" items="${listType}">
-                                            <option value="${t.typeId}">
+                                            <%-- THÊM logic selected để chọn lại đúng loại vừa chọn --%>
+                                            <option value="${t.typeId}" ${t.typeId == typeId ? 'selected' : ''}>
                                                 ${t.typeName} (Capacity: ${t.capacity} people)
                                             </option>
                                         </c:forEach>
@@ -95,8 +96,9 @@
                                 <div class="form-group">
                                     <label>Status</label>
                                     <select name="status" class="form-control selectric">
-                                        <option value="Available">Available</option>
-                                        <option value="Maintenance">Maintenance</option>
+                                        <%-- THÊM logic selected --%>
+                                        <option value="Available" ${status == 'Available' ? 'selected' : ''}>Available</option>
+                                        <option value="Maintenance" ${status == 'Maintenance' ? 'selected' : ''}>Maintenance</option>
                                     </select>
                                 </div>
 
@@ -108,9 +110,11 @@
                                                 <i class="fas fa-key"></i>
                                             </div>
                                         </div>
+                                        <%-- THÊM value="${roomPassword}" --%>
                                         <input type="text"
                                                id="roomPassword"
                                                name="roomPassword"
+                                               value="${roomPassword}"
                                                class="form-control"
                                                placeholder="Enter a secure password">
                                     </div>
@@ -122,10 +126,12 @@
                                 <div class="form-group">
                                     <div class="control-label">Settings</div>
                                     <label class="custom-switch mt-2">
+                                        <%-- THÊM logic checked --%>
                                         <input type="checkbox"
                                                name="activeLogin"
                                                value="true"
-                                               class="custom-switch-input">
+                                               class="custom-switch-input"
+                                               ${activeLogin == 'true' ? 'checked' : ''}>
                                         <span class="custom-switch-indicator"></span>
                                         <span class="custom-switch-description">
                                             Enable Guest Login (Allow guests to access services)
@@ -154,20 +160,16 @@
 
 <script>
     function validateRoom() {
-        // 1. Lấy phần tử input và thẻ lỗi
         var inputElement = document.getElementById("roomNumber");
         var errorText = document.getElementById("errorMsg");
-
-        // Validate Password
         var passElement = document.getElementById("roomPassword");
         var errorPassText = document.getElementById("errorPassMsg");
 
-        // Kiểm tra an toàn
         if (!inputElement || !errorText) return false;
 
-        var roomInput = inputElement.value.trim(); // Cắt khoảng trắng thừa
+        var roomInput = inputElement.value.trim();
 
-        // 2. Reset trạng thái cũ (xóa lỗi trước khi check)
+        // Reset
         errorText.style.display = "none";
         inputElement.classList.remove("is-invalid");
 
@@ -176,7 +178,7 @@
             passElement.classList.remove("is-invalid");
         }
 
-        // 3. Kiểm tra Rỗng Room Number
+        // Validate Room
         if (roomInput === "") {
             errorText.innerText = "Room Number cannot be null. Please enter the room number!";
             errorText.style.display = "block";
@@ -184,7 +186,6 @@
             inputElement.classList.add("is-invalid"); 
             return false;
         } 
-        // 4. Kiểm tra Độ dài (< 3 ký tự)
         else if (roomInput.length < 3) {
             errorText.innerText = "Room Number must be at least 3 characters!";
             errorText.style.display = "block";
@@ -193,7 +194,7 @@
             return false;
         }
 
-        // 5. Kiểm tra Password Rỗng (MỚI THÊM)
+        // Validate Password
         if (passElement) {
             var passInput = passElement.value.trim();
             if (passInput === "") {
@@ -205,7 +206,6 @@
             }
         }
         
-        // Hợp lệ
         return true; 
     }
 </script>

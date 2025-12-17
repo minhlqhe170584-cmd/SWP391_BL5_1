@@ -341,24 +341,30 @@ public class EventDAO extends DBContext {
     public List<EventRequestView> searchEventRequests(String keyword, String status) {
         List<EventRequestView> list = new ArrayList<>();
 
-        // --- CÁC LỖI ĐÃ SỬA ---
-        // 1. Tên bảng: 'EventRequest' (số ít) thay vì 'EventRequests'
-        // 2. Tên cột: 'check_in_date', 'check_out_date', 'room_id' (snake_case) thay vì camelCase
-        // 3. Customer: Tạm thời set cứng tên khách vì bảng EventRequest của bạn chưa có cột customerId
-        StringBuilder sql = new StringBuilder(
-                "SELECT r.requestId, e.name AS eventName, "
-                + "r.roomIds, r.status, r.check_in_date, r.check_out_date, r.message, r.created_date, "
-                + "rm.room_number AS bookedRoomName "
-                + "FROM EventRequest r "
-                + // <--- Đã sửa tên bảng
-                "JOIN Events e ON r.eventId = e.eventId "
-                + "LEFT JOIN Rooms rm ON r.room_id = rm.room_id "
-                + // <--- Đã sửa r.room_id
-                "WHERE 1=1 ");
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT r.requestId, e.name AS eventName, ");
+
+        // --- [SỬA ĐỔI QUAN TRỌNG] ---
+        // Thay vì lấy r.roomIds, ta dùng sub-query để lấy danh sách TÊN PHÒNG
+        // Logic: Tách chuỗi ID "1,2" -> Tìm trong bảng Rooms -> Gộp lại thành "101, 102"
+        sql.append(" (SELECT STRING_AGG(sub_r.room_number, ', ') ");
+        sql.append("  FROM Rooms sub_r ");
+        sql.append("  WHERE sub_r.room_id IN (SELECT value FROM STRING_SPLIT(r.roomIds, ',')) ");
+        sql.append(" ) AS roomNamesResolved, ");
+        // ----------------------------
+
+        sql.append(" r.status, r.check_in_date, r.check_out_date, r.message, r.created_date, ");
+        sql.append(" rm.room_number AS bookedRoomName "); // Tên phòng chính (nếu có)
+
+        sql.append(" FROM EventRequest r ");
+        sql.append(" JOIN Events e ON r.eventId = e.eventId ");
+        // sql.append(" LEFT JOIN Customers c ON ... "); // Bỏ qua vì chưa có cột customerId
+        sql.append(" LEFT JOIN Rooms rm ON r.room_id = rm.room_id ");
+        sql.append(" WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
 
-        // 1. Filter theo Keyword (Chỉ tìm theo Tên sự kiện, vì chưa có thông tin Khách hàng)
+        // 1. Filter theo Keyword (Tên sự kiện)
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND e.name LIKE ? ");
             params.add("%" + keyword.trim() + "%");
@@ -370,37 +376,37 @@ public class EventDAO extends DBContext {
             params.add(status);
         }
 
-        // Sắp xếp: Mới nhất lên đầu
+        // Sắp xếp
         sql.append(" ORDER BY r.created_date DESC");
 
-        try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
+        try (java.sql.PreparedStatement st = connection.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 st.setObject(i + 1, params.get(i));
             }
 
-            ResultSet rs = st.executeQuery();
+            java.sql.ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 EventRequestView v = new EventRequestView();
                 v.setRequestId(rs.getInt("requestId"));
                 v.setEventName(rs.getString("eventName"));
+                v.setCustomerName("[Guest]"); // Mặc định
 
-                // Set tên khách mặc định (Do DB chưa có cột customerId)
-                v.setCustomerName("[Guest]");
-
-                // Xử lý hiển thị danh sách phòng (nếu cần hiển thị tên thay vì ID, cần query phức tạp hơn như getAll)
-                v.setRoomNames(rs.getString("roomIds"));
+                // --- [MAP DỮ LIỆU MỚI] ---
+                // Lấy cột roomNamesResolved thay vì roomIds
+                String names = rs.getString("roomNamesResolved");
+                v.setRoomNames(names != null ? names : "");
+                // ------------------------
 
                 v.setStatus(rs.getString("status"));
-                v.setCheckInDate(rs.getTimestamp("check_in_date"));   // <--- Đã sửa tên cột
-                v.setCheckOutDate(rs.getTimestamp("check_out_date")); // <--- Đã sửa tên cột
+                v.setCheckInDate(rs.getTimestamp("check_in_date"));
+                v.setCheckOutDate(rs.getTimestamp("check_out_date"));
                 v.setMessage(rs.getString("message"));
                 v.setCreatedDate(rs.getTimestamp("created_date"));
                 v.setBookedRoomName(rs.getString("bookedRoomName"));
 
                 list.add(v);
             }
-        } catch (SQLException e) {
-            System.err.println("Error searchEventRequests: " + e.getMessage());
+        } catch (java.sql.SQLException e) {
             e.printStackTrace();
         }
         return list;

@@ -35,22 +35,24 @@ public class RoomServlet extends HttpServlet {
     }
 
     private RoomDAO roomDAO;
-    
+
     @Override
     public void init() throws ServletException {
         roomDAO = new RoomDAO();
     }
-    
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String action = request.getParameter("action");
-        if (action == null) action = "LIST";
+        if (action == null) {
+            action = "LIST";
+        }
 
         try {
             switch (action.toUpperCase()) {
-                
+
                 // === 1. ĐỔI TỪ BAN (STATUS) SANG LOCK (ACTIVE LOGIN) ===
                 case "LOCK":
                     String idLockStr = request.getParameter("id");
@@ -59,15 +61,15 @@ public class RoomServlet extends HttpServlet {
                             int id = Integer.parseInt(idLockStr);
                             // Lấy thông tin phòng hiện tại
                             Room room = roomDAO.getRoomById(id);
-                            
+
                             if (room != null) {
                                 // Logic: Đảo ngược trạng thái Active Login (True <-> False)
                                 boolean newLockState = !room.isActiveLogin();
                                 room.setActiveLogin(newLockState);
-                                
+
                                 // Cập nhật lại vào DB (Dùng hàm updateRoom chung để lưu thay đổi)
                                 roomDAO.updateRoom(room);
-                                
+
                                 String msg = newLockState ? "Unlocked room (Login Allowed)" : "Locked room (Login Disabled)";
                                 request.getSession().setAttribute("successMessage", msg);
                             }
@@ -86,9 +88,9 @@ public class RoomServlet extends HttpServlet {
                             int id = Integer.parseInt(idEdit);
                             Room room = roomDAO.getRoomById(id);
                             List<models.RoomType> listType = roomDAO.getAllRoomTypes();
-                            
-                            request.setAttribute("room", room); 
-                            request.setAttribute("listType", listType); 
+
+                            request.setAttribute("room", room);
+                            request.setAttribute("listType", listType);
                             request.getRequestDispatcher("/WEB-INF/views/room/room-edit.jsp").forward(request, response);
                         } catch (NumberFormatException e) {
                             response.sendRedirect("rooms?action=LIST");
@@ -103,7 +105,7 @@ public class RoomServlet extends HttpServlet {
                     List<models.RoomType> listTypeNew = roomDAO.getAllRoomTypes();
                     request.setAttribute("listType", listTypeNew);
                     request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
-                    break;    
+                    break;
 
                 // === 4. XEM CHI TIẾT ===
                 case "VIEW":
@@ -126,9 +128,8 @@ public class RoomServlet extends HttpServlet {
                         response.sendRedirect("rooms?action=LIST");
                     }
                     break;
-                
-                // === ĐÃ BỎ CASE DELETE ===
 
+                // === ĐÃ BỎ CASE DELETE ===
                 // === 5. DANH SÁCH (ĐÃ BỎ LỌC STATUS) ===
                 case "LIST":
                 default:
@@ -142,41 +143,53 @@ public class RoomServlet extends HttpServlet {
                     String active = request.getParameter("active");
                     String floor = request.getParameter("floor");
 
-                    boolean isFiltering = (keyword != null && !keyword.trim().isEmpty()) ||
-                                          (typeId != null && !typeId.isEmpty()) ||
-                                          (active != null && !active.isEmpty()) ||
-                                          (floor != null && !floor.isEmpty());
-                    
+                    boolean isFiltering = (keyword != null && !keyword.trim().isEmpty())
+                            || (typeId != null && !typeId.isEmpty())
+                            || (active != null && !active.isEmpty())
+                            || (floor != null && !floor.isEmpty());
+
                     request.setAttribute("isFiltering", isFiltering);
 
                     if (isFiltering) {
                         // Truyền null vào vị trí status
                         List<Room> fullList = roomDAO.findRooms(keyword, typeId, null, active, floor);
-                        
+
                         int count = fullList.size();
-                        int endPage = count / 5; if (count % 5 != 0) endPage++;
+                        int endPage = count / 5;
+                        if (count % 5 != 0) {
+                            endPage++;
+                        }
                         String indexPage = request.getParameter("index");
-                        if (indexPage == null) indexPage = "1";
+                        if (indexPage == null) {
+                            indexPage = "1";
+                        }
                         int index = Integer.parseInt(indexPage);
                         int start = (index - 1) * 5;
                         int end = Math.min(start + 5, count);
                         List<Room> pagedList = new java.util.ArrayList<>();
-                        if (start < count) pagedList = fullList.subList(start, end);
-                        
+                        if (start < count) {
+                            pagedList = fullList.subList(start, end);
+                        }
+
                         request.setAttribute("roomsList", pagedList);
                         request.setAttribute("endPage", endPage);
                         request.setAttribute("tag", index);
-                        
+
                         request.setAttribute("keyword", keyword);
                         request.setAttribute("currentType", typeId);
                         request.setAttribute("currentActive", active);
                         request.setAttribute("currentFloor", floor);
                     } else {
                         String indexPage = request.getParameter("index");
-                        if (indexPage == null) indexPage = "1";
+                        if (indexPage == null) {
+                            indexPage = "1";
+                        }
                         int index = Integer.parseInt(indexPage);
                         int count = roomDAO.getTotalRooms();
-                        int endPage = count / 5; if (count % 5 != 0) endPage++;
+                        int endPage = count / 5;
+                        if (count % 5 != 0) {
+                            endPage++;
+                        }
                         List<Room> list = roomDAO.pagingRooms(index);
                         request.setAttribute("roomsList", list);
                         request.setAttribute("endPage", endPage);
@@ -193,10 +206,12 @@ public class RoomServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if (action == null) action = "LIST";
+        if (action == null) {
+            action = "LIST";
+        }
 
         try {
             switch (action.toUpperCase()) {
@@ -209,8 +224,11 @@ public class RoomServlet extends HttpServlet {
                     boolean isActive = request.getParameter("activeLogin") != null;
 
                     String error = null;
-                    if (!roomNumber.matches("\\d+")) error = "Room Number must contain only digits (0-9)!";
-                    else if (roomDAO.checkRoomNumberExists(roomNumber, roomId)) error = "Room Number " + roomNumber + " already exists!";
+                    if (!roomNumber.matches("\\d+")) {
+                        error = "Room Number must contain only digits (0-9)!";
+                    } else if (roomDAO.checkRoomNumberExists(roomNumber, roomId)) {
+                        error = "Room Number " + roomNumber + " already exists!";
+                    }
 
                     if (error != null) {
                         Room room = new Room();
@@ -219,14 +237,14 @@ public class RoomServlet extends HttpServlet {
                         room.setTypeId(typeId);
                         room.setRoomPassword(password);
                         room.setActiveLogin(isActive);
-                        
+
                         request.setAttribute("error", error);
-                        request.setAttribute("room", room); 
-                        request.setAttribute("listType", roomDAO.getAllRoomTypes()); 
+                        request.setAttribute("room", room);
+                        request.setAttribute("listType", roomDAO.getAllRoomTypes());
                         request.getRequestDispatcher("/WEB-INF/views/room/room-edit.jsp").forward(request, response);
-                        return; 
+                        return;
                     }
-                    
+
                     // Lấy phòng cũ để giữ lại Status cũ (vì form không còn gửi lên)
                     Room oldRoom = roomDAO.getRoomById(roomId);
                     String currentStatus = (oldRoom != null) ? oldRoom.getStatus() : "Available";
@@ -243,28 +261,35 @@ public class RoomServlet extends HttpServlet {
                     request.getSession().setAttribute("successMessage", "Update room " + roomNumber + " successfully!");
                     response.sendRedirect("rooms?action=LIST");
                     break;
-                    
+
                 case "CREATE":
-                    // 1. Nhận dữ liệu (Đã bỏ status)
                     String newRoomNumber = request.getParameter("roomNumber");
-                    int newTypeId = Integer.parseInt(request.getParameter("typeId"));
+                    String newTypeIdStr = request.getParameter("typeId");
+                    String newStatus = request.getParameter("status"); // Lấy cả status từ form
                     String newPassword = request.getParameter("roomPassword");
-                    boolean newIsActive = request.getParameter("activeLogin") != null;
+                    String activeLoginVal = request.getParameter("activeLogin"); // Lấy raw value để setAttribute
+
+                    int newTypeId = Integer.parseInt(newTypeIdStr);
+                    boolean newIsActive = (activeLoginVal != null);
 
                     String errorCreate = null;
-                    if (!newRoomNumber.matches("\\d+")) errorCreate = "Room Number must contain only digits (0-9)!";
-                    else if (roomDAO.checkRoomNumberExists(newRoomNumber, 0)) errorCreate = "Room Number " + newRoomNumber + " already exists!";
+                    if (!newRoomNumber.matches("\\d+")) {
+                        errorCreate = "Room Number must contain only digits (0-9)!";
+                    } else if (roomDAO.checkRoomNumberExists(newRoomNumber, 0)) {
+                        errorCreate = "Room Number " + newRoomNumber + " already exists!";
+                    }
 
                     if (errorCreate != null) {
-                        Room roomError = new Room();
-                        roomError.setRoomNumber(newRoomNumber);
-                        roomError.setTypeId(newTypeId);
-                        roomError.setRoomPassword(newPassword);
-                        roomError.setActiveLogin(newIsActive);
-                        
                         request.setAttribute("error", errorCreate);
-                        request.setAttribute("room", roomError); 
-                        request.setAttribute("listType", roomDAO.getAllRoomTypes()); 
+
+                        // --- QUAN TRỌNG: Gửi lại từng biến lẻ để JSP room-add.jsp nhận được ---
+                        request.setAttribute("roomNumber", newRoomNumber);
+                        request.setAttribute("typeId", newTypeId); // Tự động unbox sang int/string đều được
+                        request.setAttribute("status", newStatus);
+                        request.setAttribute("roomPassword", newPassword);
+                        request.setAttribute("activeLogin", activeLoginVal); // Gửi chuỗi "true" hoặc null
+
+                        request.setAttribute("listType", roomDAO.getAllRoomTypes());
                         request.getRequestDispatcher("/WEB-INF/views/room/room-add.jsp").forward(request, response);
                         return;
                     }
@@ -272,7 +297,7 @@ public class RoomServlet extends HttpServlet {
                     Room newRoom = new Room();
                     newRoom.setRoomNumber(newRoomNumber);
                     newRoom.setTypeId(newTypeId);
-                    newRoom.setStatus("Available"); // Mặc định status là Available
+                    newRoom.setStatus(newStatus); // Dùng status người dùng chọn
                     newRoom.setRoomPassword(newPassword);
                     newRoom.setActiveLogin(newIsActive);
 
@@ -280,10 +305,9 @@ public class RoomServlet extends HttpServlet {
                     request.getSession().setAttribute("successMessage", "Create new room " + newRoomNumber + " successfully!");
                     response.sendRedirect("rooms?action=LIST");
                     break;
-                
                 case "LIST":
                 default:
-                    response.sendRedirect(request.getContextPath() + "/rooms"); 
+                    response.sendRedirect(request.getContextPath() + "/rooms");
                     break;
             }
         } catch (Exception ex) {
