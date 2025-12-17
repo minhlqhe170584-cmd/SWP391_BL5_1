@@ -207,11 +207,9 @@ public class FoodDAO extends DBContext {
     public List<Food> getAllActiveFoods() {
         List<Food> list = new ArrayList<>();
         
-        // SỬA SELECT: THÊM f.is_vegetarian VÀO SELECT LIST VÀ DÙNG ALIAS
-        String sql = "SELECT f.food_id, s.service_id AS service_id, f.food_name, f.price, f.description, s.image_url AS image_url, s.is_active AS is_active, f.is_vegetarian "
-                + "FROM Foods f "
-                + "JOIN Services s ON f.service_id = s.service_id "
-                + "WHERE s.is_active = 1"; 
+        // SỬA: Chỉ cần lấy từ bảng Foods, không cần JOIN loằng ngoằng gây sai ảnh
+        // Lấy tất cả món ăn đang Active (is_active = 1)
+        String sql = "SELECT * FROM Foods WHERE is_active = 1 ORDER BY food_id DESC"; 
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
@@ -219,7 +217,7 @@ public class FoodDAO extends DBContext {
                 list.add(mapResultSetToFood(rs)); 
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Giữ lại để debug
+            e.printStackTrace(); 
         }
         return list;
     }

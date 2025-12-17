@@ -7,43 +7,49 @@
     <head>
         <title>Menu Đồ Ăn & Đồ Uống | Smart Hotel</title>
         <jsp:include page="../components/head.jsp"></jsp:include>
-            <style>
-                .menu-section {
-                    padding-top: 50px;
-                    padding-bottom: 80px;
-                }
-                .menu-item-inner {
-                    border-radius: 8px;
-                    transition: background-color 0.3s;
-                }
-                .menu-item-inner:hover {
-                    background-color: #f7f7f7;
-                }
-                .quantity-input {
-                    border-radius: 5px;
-                    border: 1px solid #ccc;
-                }
-                .service-image {
-                    width: 80px;
-                    height: 80px;
-                    object-fit: cover;
-                    border-radius: 5px;
-                    margin-right: 15px;
-                }
-            </style>
-        </head>
-        <body>
-            <div id="preloder"><div class="loader"></div></div>
-            <jsp:include page="../components/navbar.jsp"></jsp:include>
+        
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap.min.css" type="text/css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/font-awesome.min.css" type="text/css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
 
-            <div class="breadcrumb-section">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="breadcrumb-text">
-                                <h2>Thực Đơn Phục Vụ Tại Phòng</h2>
-                                <div class="bt-option">
-                                    <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
+        <style>
+            .menu-section {
+                padding-top: 50px;
+                padding-bottom: 80px;
+            }
+            .menu-item-inner {
+                border-radius: 8px;
+                transition: background-color 0.3s;
+            }
+            .menu-item-inner:hover {
+                background-color: #f7f7f7;
+            }
+            .quantity-input {
+                border-radius: 5px;
+                border: 1px solid #ccc;
+            }
+            .service-image {
+                width: 80px;
+                height: 80px;
+                object-fit: cover;
+                border-radius: 5px;
+                border: 1px solid #ddd;
+                margin-right: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="preloder"><div class="loader"></div></div>
+        <jsp:include page="../components/navbar.jsp"></jsp:include>
+
+        <div class="breadcrumb-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="breadcrumb-text">
+                            <h2>Thực Đơn Phục Vụ Tại Phòng</h2>
+                            <div class="bt-option">
+                                <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
                                 <span>Menu</span>
                             </div>
                         </div>
@@ -51,6 +57,7 @@
                 </div>
             </div>
         </div>
+
         <section class="menu-section spad">
             <div class="container">
                 <div class="row">
@@ -61,16 +68,17 @@
                         </div>
                     </div>
                 </div>
+
                 <%-- Hiển thị thông báo lỗi nếu có --%>
                 <c:if test="${not empty sessionScope.errorMessage}">
                     <div style="color: red; font-weight: bold; padding: 10px; border: 1px solid red; margin-bottom: 20px;">
                         ${sessionScope.errorMessage}
                     </div>
-                    <%-- Xóa lỗi sau khi hiện để F5 không bị hiện lại --%>
                     <c:remove var="errorMessage" scope="session" />
                 </c:if>
-                <form action="checkout-order" method="POST">
 
+                <form action="checkout-order" method="POST">
+                    
                     <h3 class="mt-4 mb-3">🍔 Đồ Ăn (Foods)</h3>
                     <div class="row">
                         <c:choose>
@@ -78,8 +86,13 @@
                                 <c:forEach var="food" items="${requestScope.foodList}">
                                     <div class="col-lg-6 menu-item">
                                         <div class="menu-item-inner d-flex justify-content-between align-items-center mb-4 p-3 border rounded shadow-sm">
+                                            
                                             <div class="menu-item-left d-flex align-items-center">
-                                                <img src="${food.imageUrl}" alt="${food.name}" class="service-image">
+                                                <img src="${pageContext.request.contextPath}/uploads/${food.imageUrl}" 
+                                                     alt="${food.name}" 
+                                                     class="service-image"
+                                                     onerror="this.src='${pageContext.request.contextPath}/uploads/default.jpg'">
+                                                
                                                 <div>
                                                     <h5 class="mb-0">${food.name} 
                                                         <c:if test="${food.isVegetarian}"> 
@@ -120,8 +133,13 @@
                                 <c:forEach var="drink" items="${requestScope.drinkList}">
                                     <div class="col-lg-6 menu-item">
                                         <div class="menu-item-inner d-flex justify-content-between align-items-center mb-4 p-3 border rounded shadow-sm">
+                                            
                                             <div class="menu-item-left d-flex align-items-center">
-                                                <img src="${drink.imageUrl}" alt="${drink.name}" class="service-image">
+                                                <img src="${pageContext.request.contextPath}/uploads/${drink.imageUrl}" 
+                                                     alt="${drink.name}" 
+                                                     class="service-image"
+                                                     onerror="this.src='${pageContext.request.contextPath}/uploads/default.jpg'">
+                                                
                                                 <div>
                                                     <h5 class="mb-0">${drink.name} 
                                                         <c:if test="${drink.isAlcoholic}"> 
@@ -181,5 +199,9 @@
         </section>
 
         <jsp:include page="../components/footer.jsp"></jsp:include>
+        
+        <script src="${pageContext.request.contextPath}/js/jquery-3.3.1.min.js"></script>
+        <script src="${pageContext.request.contextPath}/js/bootstrap.min.js"></script>
+        <script src="${pageContext.request.contextPath}/js/main.js"></script>
     </body>
 </html>
