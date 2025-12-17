@@ -16,15 +16,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 
 @WebServlet(name = "FoodManagerServlet", urlPatterns = {"/admin/foods"})
-//sử dụng Annotation @MultipartConfig
-//nhận diện và xử lý các Part (phần dữ liệu file) từ request.
-//không lưu file trực tiếp vào Database (dạng BLOB) vì sẽ làm Database nặng 
-//Lưu file vật lý vào thư mục uploads
-//ghép đường dẫn thư mục uploads + tên file trong Database để hiển thị ảnh ra thẻ <img>.
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 2,
-        maxFileSize = 1024 * 1024 * 10,
-        maxRequestSize = 1024 * 1024 * 50
+        fileSizeThreshold = 1024 * 1024 * 2, // 2MB
+        maxFileSize = 1024 * 1024 * 10, // 10MB
+        maxRequestSize = 1024 * 1024 * 50 // 50MB
 )
 public class FoodManagerServlet extends HttpServlet {
 
@@ -87,21 +82,38 @@ public class FoodManagerServlet extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
+            request.getSession().setAttribute("message", "Lỗi hệ thống: " + e.getMessage());
             response.sendRedirect("foods");
         }
     }
 
-    // --- XỬ LÝ UPLOAD FILE ---
+    // --- 1. HÀM UPLOAD CÓ VALIDATION (CHẶN FILE RÁC) ---
     private String handleFileUpload(HttpServletRequest request) throws IOException, ServletException {
-        Part filePart = request.getPart("imageFile"); // Tên input file trong JSP
-        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+        Part filePart = request.getPart("imageFile");
 
-        if (fileName == null || fileName.isEmpty()) {
+        // Nếu không chọn file -> Return null (để giữ ảnh cũ)
+        if (filePart == null || filePart.getSize() == 0 || filePart.getSubmittedFileName().isEmpty()) {
             return null;
         }
 
-        // Đường dẫn tuyệt đối đến thư mục uploads trong project
+        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+
+        // A. Kiểm tra loại file (MIME Type)
+        String mimeType = filePart.getContentType();
+        if (mimeType == null || !mimeType.startsWith("image/")) {
+            throw new ServletException("File tải lên không hợp lệ! Vui lòng chỉ chọn file ảnh.");
+        }
+
+        // B. Kiểm tra đuôi file
+        String ext = "";
+        if (fileName.contains(".")) {
+            ext = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+        }
+        if (!ext.equals("jpg") && !ext.equals("png") && !ext.equals("jpeg") && !ext.equals("gif")) {
+            throw new ServletException("Chỉ chấp nhận định dạng: .jpg, .png, .jpeg, .gif");
+        }
+
+        // C. Lưu file
         String uploadPath = getServletContext().getRealPath("") + File.separator + "uploads";
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) {
@@ -109,17 +121,91 @@ public class FoodManagerServlet extends HttpServlet {
         }
 
         filePart.write(uploadPath + File.separator + fileName);
-        return fileName; // Chỉ lưu tên file vào DB
+        return fileName;
     }
 
+    // --- 2. TẠO MỚI (XỬ LÝ LỖI -> QUAY LẠI FORM) ---
+    private void createFood(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            String fileName = handleFileUpload(request); // Có thể ném lỗi tại đây
+
+            Food f = new Food();
+            f.setName(request.getParameter("name").trim());
+            f.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
+            f.setDescription(request.getParameter("description"));
+            f.setIsActive(true);
+
+            try {
+                f.setPrice(Double.parseDouble(request.getParameter("price")));
+            } catch (NumberFormatException e) {
+                throw new ServletException("Giá tiền phải là số hợp lệ!");
+            }
+
+            f.setImageUrl(fileName != null ? fileName : "default.jpg");
+
+            foodDAO.createFood(f);
+            request.getSession().setAttribute("message", "Thêm món mới thành công!");
+            response.sendRedirect("foods");
+
+        } catch (ServletException e) {
+            // Lỗi Validate -> Quay lại trang ADD để hiện thông báo lỗi
+            e.printStackTrace();
+            request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
+            response.sendRedirect("foods?action=add");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("foods");
+        }
+    }
+
+    // --- 3. CẬP NHẬT (XỬ LÝ LỖI -> QUAY LẠI FORM) ---
+    private void updateFood(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String idStr = request.getParameter("foodId");
+        try {
+            String fileName = handleFileUpload(request);
+
+            int id = Integer.parseInt(idStr);
+            Food f = foodDAO.getFoodById(id); // Lấy thông tin cũ
+
+            f.setName(request.getParameter("name").trim());
+            f.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
+            f.setDescription(request.getParameter("description"));
+
+            try {
+                f.setPrice(Double.parseDouble(request.getParameter("price")));
+            } catch (NumberFormatException e) {
+                throw new ServletException("Giá tiền phải là số!");
+            }
+
+            // Chỉ thay ảnh nếu có upload mới
+            if (fileName != null) {
+                f.setImageUrl(fileName);
+            }
+
+            foodDAO.updateFood(f);
+            request.getSession().setAttribute("message", "Cập nhật thành công!");
+            response.sendRedirect("foods");
+
+        } catch (ServletException e) {
+            // Lỗi Validate -> Quay lại trang EDIT
+            e.printStackTrace();
+            request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
+            response.sendRedirect("foods?action=edit&foodId=" + idStr);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("foods");
+        }
+    }
+
+    // --- CÁC HÀM PHỤ TRỢ ---
     private void listFoods(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String keyword = request.getParameter("keyword");
         String serviceFilter = request.getParameter("serviceFilter");
         int pageIndex = 1;
         try {
-            String pageStr = request.getParameter("page");
-            if (pageStr != null) {
-                pageIndex = Integer.parseInt(pageStr);
+            String page = request.getParameter("page");
+            if (page != null) {
+                pageIndex = Integer.parseInt(page);
             }
         } catch (Exception e) {
         }
@@ -147,39 +233,6 @@ public class FoodManagerServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/food/foodDetail.jsp").forward(request, response);
     }
 
-    private void createFood(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Food f = new Food();
-        f.setName(request.getParameter("name").trim());
-        f.setPrice(Double.parseDouble(request.getParameter("price")));
-        f.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
-        f.setDescription(request.getParameter("description"));
-        f.setIsActive(true);
-        String fileName = handleFileUpload(request);
-        f.setImageUrl(fileName != null ? fileName : "default.jpg");
-
-        foodDAO.createFood(f);
-        request.getSession().setAttribute("message", "Thêm món mới thành công!");
-        response.sendRedirect("foods");
-    }
-
-    private void updateFood(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        int id = Integer.parseInt(request.getParameter("foodId"));
-        Food f = foodDAO.getFoodById(id);
-
-        f.setName(request.getParameter("name").trim());
-        f.setPrice(Double.parseDouble(request.getParameter("price")));
-        f.setServiceId(Integer.parseInt(request.getParameter("serviceId")));
-        f.setDescription(request.getParameter("description"));
-
-        String fileName = handleFileUpload(request);
-        if (fileName != null) {
-            f.setImageUrl(fileName); // Nếu ko chọn ảnh mới thì giữ ảnh cũ
-        }
-        foodDAO.updateFood(f);
-        request.getSession().setAttribute("message", "Cập nhật thành công!");
-        response.sendRedirect("foods");
-    }
-
     private void toggleStatus(HttpServletRequest request, HttpServletResponse response, boolean status) throws Exception {
         int id = Integer.parseInt(request.getParameter("foodId"));
         if (status) {
@@ -187,7 +240,7 @@ public class FoodManagerServlet extends HttpServlet {
         } else {
             foodDAO.deactivateFood(id);
         }
-        request.getSession().setAttribute("message", "Đã cập nhật trạng thái kinh doanh!");
+        request.getSession().setAttribute("message", "Đã cập nhật trạng thái!");
         response.sendRedirect("foods");
     }
 }

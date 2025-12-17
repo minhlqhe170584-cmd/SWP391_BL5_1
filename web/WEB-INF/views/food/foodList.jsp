@@ -83,8 +83,7 @@
                                         <td>
                                             <img src="${pageContext.request.contextPath}/uploads/${fn:trim(f.imageUrl)}" 
                                                  class="img-thumb" 
-                                                 alt="Food Img"
-                                                 onerror="this.src='https://via.placeholder.com/60'"> 
+                                                 alt="Food Img"                                           
                                         </td>
                                         <td>${fn:trim(f.name)}</td>
                                         <td>$${f.price}</td>

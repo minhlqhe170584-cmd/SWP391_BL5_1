@@ -11,75 +11,93 @@
             <div class="section-header-back">
                 <a href="foods" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
             </div>
-            <h1>${food != null ? "Edit Item" : "Add New Item"}</h1>
+            <h1>${food != null ? "Edit Food Item" : "Add New Food Item"}</h1>
         </div>
 
         <div class="section-body">
-            <div class="row">
-                <div class="col-12 col-md-8 offset-md-2">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4>Item Information</h4>
-                        </div>
-<!--                                thêm thuộc tính enctype="multipart/form-data"-->
-<!--                                đổi từ type="text" sang type="file"-->
-                        <form action="foods" method="post" enctype="multipart/form-data">
 
+            <c:if test="${not empty sessionScope.message}">
+                <c:set var="alertType" value="${fn:contains(sessionScope.message, 'Lỗi') ? 'danger' : 'success'}" />
+                <div class="alert alert-${alertType} alert-dismissible show fade">
+                    <div class="alert-body">
+                        <button class="close" data-dismiss="alert"><span>&times;</span></button>
+                        <i class="fas fa-${alertType == 'danger' ? 'exclamation-triangle' : 'check-circle'}"></i>
+                        ${sessionScope.message}
+                    </div>
+                </div>
+                <c:remove var="message" scope="session"/>
+            </c:if>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header"><h4>Form Details</h4></div>
+
+                        <form action="foods" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="action" value="${food != null ? 'update' : 'create'}">
                             <c:if test="${food != null}">
                                 <input type="hidden" name="foodId" value="${food.foodId}">
                             </c:if>
 
                             <div class="card-body">
-                                <div class="form-group">
-                                    <label>Item Name</label>
-                                    <input type="text" name="name" class="form-control" 
-                                           value="${fn:trim(food.name)}" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Price ($)</label>
-                                    <input type="number" step="0.01" name="price" class="form-control" 
-                                           value="${food.price}" required min="0">
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Service Category</label>
-                                    <select name="serviceId" class="form-control selectric">
-                                        <c:forEach var="s" items="${listServices}"> <option value="${s.serviceId}" ${food.serviceId == s.serviceId ? 'selected' : ''}>
-                                                ${fn:trim(s.serviceName)}
-                                            </option>
-                                        </c:forEach>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Item Image</label>
-                                    <div class="custom-file">
-                                        <input type="file" name="imageFile" class="custom-file-input" id="customFile" accept="image/*">
-                                        <label class="custom-file-label" for="customFile">Choose file</label>
+                                <div class="form-group row mb-4">
+                                    <label class="col-form-label text-md-right col-12 col-md-3">Name</label>
+                                    <div class="col-sm-12 col-md-7">
+                                        <input type="text" name="name" class="form-control" value="${fn:trim(food.name)}" required>
                                     </div>
-                                    <small class="form-text text-muted">Max size: 10MB. Formats: JPG, PNG.</small>
-
-                                    <c:if test="${food.imageUrl != null}">
-                                        <div class="mt-3">
-                                            <p class="mb-1">Current Image:</p>
-                                            <img src="${pageContext.request.contextPath}/uploads/${fn:trim(food.imageUrl)}" 
-                                                 width="120" class="img-thumbnail" 
-                                                 style="object-fit: cover;">
-                                        </div>
-                                    </c:if>
                                 </div>
 
-                                <div class="form-group">
-                                    <label>Description</label>
-                                    <textarea name="description" class="form-control" style="height: 100px;">${fn:trim(food.description)}</textarea>
+                                <div class="form-group row mb-4">
+                                    <label class="col-form-label text-md-right col-12 col-md-3">Price ($)</label>
+                                    <div class="col-sm-12 col-md-7">
+                                        <input type="number" step="0.01" name="price" class="form-control" value="${food.price}" required min="0">
+                                    </div>
                                 </div>
 
-                                <div class="form-group text-right">
-                                    <button type="submit" class="btn btn-primary btn-lg">
-                                        ${food != null ? "Save Changes" : "Create Item"}
-                                    </button>
+                                <div class="form-group row mb-4">
+                                    <label class="col-form-label text-md-right col-12 col-md-3">Category</label>
+                                    <div class="col-sm-12 col-md-7">
+                                        <select name="serviceId" class="form-control selectric">
+                                            <c:forEach var="s" items="${listServices}">
+                                                <option value="${s.serviceId}" ${food.serviceId == s.serviceId ? 'selected' : ''}>
+                                                    ${fn:trim(s.serviceName)}
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-form-label text-md-right col-12 col-md-3">Image</label>
+                                    <div class="col-sm-12 col-md-7">
+                                        <input type="file" name="imageFile" class="form-control" 
+                                               accept="image/*" style="height: auto; padding: 6px;">
+                                        <small class="text-muted">Supports JPG, PNG, GIF (Max 10MB)</small>
+
+                                        <c:if test="${food.imageUrl != null}">
+                                            <div class="mt-2 p-2 bg-light border rounded" style="width: fit-content;">
+                                                <span class="d-block small text-muted mb-1">Current Image:</span>
+                                                <img src="${pageContext.request.contextPath}/uploads/${fn:trim(food.imageUrl)}" 
+                                                     height="80" style="object-fit: cover; border-radius: 4px;">
+                                            </div>
+                                        </c:if>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-form-label text-md-right col-12 col-md-3">Description</label>
+                                    <div class="col-sm-12 col-md-7">
+                                        <textarea name="description" class="form-control" style="height: 100px;">${fn:trim(food.description)}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row mb-4">
+                                    <label class="col-form-label text-md-right col-12 col-md-3"></label>
+                                    <div class="col-sm-12 col-md-7">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-save"></i> ${food != null ? "Save Changes" : "Create Item"}
+                                        </button>
+                                        <a href="foods" class="btn btn-secondary btn-lg ml-2">Cancel</a>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -89,12 +107,5 @@
         </div>
     </section>
 </div>
-
-<script>
-    $(".custom-file-input").on("change", function () {
-        var fileName = $(this).val().split("\\").pop();
-        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-    });
-</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
