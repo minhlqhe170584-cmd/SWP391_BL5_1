@@ -23,10 +23,9 @@ public class Food {
         this.description = description;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
-        this.isVegetarian = isVegetarian; // Khởi tạo trường mới
+        this.isVegetarian = isVegetarian; 
     }
 
-    // --- GETTER & SETTER cho trường mới ---
     public boolean isIsVegetarian() {
         return isVegetarian;
     }
@@ -35,7 +34,6 @@ public class Food {
         this.isVegetarian = isVegetarian;
     }
 
-    // --- GETTER & SETTER CŨ (Không thay đổi) ---
     public int getFoodId() {
         return foodId;
     }
