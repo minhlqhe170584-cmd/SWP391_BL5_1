@@ -13,7 +13,7 @@
         <ul class="sidebar-menu">
 
             <%-- ======================================================== --%>
-            <%-- PHẦN DÀNH CHO ADMIN (Giữ nguyên toàn bộ)                 --%>
+            <%-- PHẦN DÀNH CHO ADMIN (Giữ nguyên)                         --%>
             <%-- ======================================================== --%>
             <c:if test="${sessionScope.USER.role.roleName == 'Admin'}">
                 
@@ -100,33 +100,37 @@
                 
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/admin/foods" class="nav-link">
-                        <i class="fas fa-utensils nav-icon"></i> <p>Food</p>
+                        <i class="fas fa-utensils nav-icon"></i> <span>Food</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/admin/drinks" class="nav-link">
-                        <i class="fas fa-cocktail nav-icon"></i> <p>Drink</p>
+                        <i class="fas fa-cocktail nav-icon"></i> <span>Drink</span>
                     </a>
                 </li>
             </c:if>
 
             <%-- ======================================================== --%>
-            <%-- PHẦN DÀNH CHO RECEPTIONIST (Lễ Tân - Mới thêm vào)       --%>
+            <%-- PHẦN DÀNH CHO RECEPTIONIST (LỄ TÂN) - MỚI THÊM           --%>
             <%-- ======================================================== --%>
             <c:if test="${sessionScope.USER.role.roleName == 'Receptionist'}">
-                <li class="menu-header">Reception Operations</li>
-                
-                <%-- Link tới màn hình Front Desk (Sơ đồ phòng/Check-in) --%>
+                <li class="menu-header">Nghiệp vụ Lễ tân</li>
+
                 <li>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/receptionist/frontdesk">
-                        <i class="fas fa-concierge-bell"></i> <span>Front Desk</span>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/receptionist">
+                        <i class="fas fa-exchange-alt"></i> <span>Check In / Check Out</span>
                     </a>
                 </li>
 
-                <%-- Link tới màn hình Payment (Thanh toán) --%>
+                <li>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/booking-manager">
+                        <i class="fas fa-calendar-check"></i> <span>Book Manager</span>
+                    </a>
+                </li>
+
                 <li>
                     <a class="nav-link" href="${pageContext.request.contextPath}/receptionist/payment">
-                        <i class="fas fa-file-invoice-dollar"></i> <span>Payment</span>
+                        <i class="fas fa-file-invoice-dollar"></i> <span>Tính tiền</span>
                     </a>
                 </li>
             </c:if>

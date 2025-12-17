@@ -1,14 +1,13 @@
 package controllers;
 
 import dao.BookingDAO;
-import dao.RoomDAO;
+import dao.BookingRoomDAO; 
+import models.Booking;
 import models.Customer;
 import models.Room;
-import models.Booking;
-import utils.EmailUtils;
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.LocalDate;
+import java.sql.Date;
+import java.util.UUID;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,47 +18,50 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet(name = "BookingServlet", urlPatterns = {"/booking"})
 public class BookingServlet extends HttpServlet {
 
-    // --- 1. GET: HIỂN THỊ FORM ĐẶT PHÒNG ---
+    private BookingDAO bookingDAO = new BookingDAO();
+    private BookingRoomDAO bookingRoomDAO = new BookingRoomDAO();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        String action = request.getParameter("action");
+        String roomIdParam = request.getParameter("roomId");
+
+        // 1. Khách bấm 'ĐẶT NGAY' -> Hiện Form
+        if (roomIdParam != null && !roomIdParam.isEmpty()) {
+            handleClientView(request, response, roomIdParam);
+            return;
+        }
+
+        // 2. Logic Admin (Nếu không dùng thì về Home)
+        if (action == null) action = "list";
+        if(action.equals("list")) response.sendRedirect("home");
+    }
+
+    private void handleClientView(HttpServletRequest request, HttpServletResponse response, String roomIdParam) 
+            throws ServletException, IOException {
+        
         HttpSession session = request.getSession();
-        Object userObj = session.getAttribute("USER");
-        String role = (String) session.getAttribute("ROLE");
-
-        // Chặn tài khoản ROOM
-        if ("ROOM".equals(role)) {
-            response.sendRedirect("listRooms");
+        
+        // A. Kiểm tra đăng nhập
+        if (session.getAttribute("USER") == null) {
+            session.setAttribute("redirectUrl", "booking?roomId=" + roomIdParam);
+            response.sendRedirect("login"); 
             return;
         }
 
-        // Chặn nếu chưa đăng nhập hoặc không phải Customer
-        if (userObj == null || !"CUSTOMER".equals(role) || !(userObj instanceof Customer)) {
-            String roomId = request.getParameter("roomId");
-            if (roomId != null) {
-                session.setAttribute("PENDING_ROOM_ID", roomId);
-            }
-            response.sendRedirect("login");
-            return;
-        }
-
-        // Hiển thị Form
+        // B. Lấy dữ liệu phòng và chuyển sang JSP
         try {
-            String roomIdStr = request.getParameter("roomId");
-            if (roomIdStr == null || roomIdStr.isEmpty()) {
-                response.sendRedirect("listRooms");
-                return;
-            }
-            
-            int roomId = Integer.parseInt(roomIdStr);
-            RoomDAO roomDAO = new RoomDAO();
-            Room room = roomDAO.getRoomById(roomId);
+            int roomId = Integer.parseInt(roomIdParam);
+            Room room = bookingRoomDAO.getRoomForBooking(roomId);
             
             if (room != null) {
                 request.setAttribute("room", room);
-                request.getRequestDispatcher("/WEB-INF/views/room/booking.jsp").forward(request, response);
+                // Đường dẫn chính xác tới file JSP của bạn
+                request.getRequestDispatcher("/WEB-INF/views/booking/booking-form.jsp").forward(request, response);
             } else {
+                // Không tìm thấy phòng -> Về danh sách
                 response.sendRedirect("listRooms");
             }
         } catch (Exception e) {
@@ -68,104 +70,53 @@ public class BookingServlet extends HttpServlet {
         }
     }
 
-    // --- 2. POST: XỬ LÝ ĐẶT PHÒNG ---
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        request.setCharacterEncoding("UTF-8");
+        String action = request.getParameter("action");
         HttpSession session = request.getSession();
-        Object userObj = session.getAttribute("USER");
-        String role = (String) session.getAttribute("ROLE");
-        
-        // Bảo mật lớp 2
-        if ("ROOM".equals(role)) {
-            response.sendRedirect("listRooms");
-            return;
-        }
-        if (userObj == null || !"CUSTOMER".equals(role) || !(userObj instanceof Customer)) {
-            response.sendRedirect("login");
-            return;
-        }
-        
-        Customer user = (Customer) userObj;
 
         try {
-            // 1. Nhận dữ liệu
-            int roomId = Integer.parseInt(request.getParameter("roomId"));
-            String checkInStr = request.getParameter("checkIn");
-            String checkOutStr = request.getParameter("checkOut");
-
-            LocalDate inDate = LocalDate.parse(checkInStr);
-            LocalDate outDate = LocalDate.parse(checkOutStr);
-            Timestamp checkIn = Timestamp.valueOf(inDate.atStartOfDay());
-            Timestamp checkOut = Timestamp.valueOf(outDate.atStartOfDay());
-
-            // 2. Validate
-            if (!outDate.isAfter(inDate)) {
-                request.setAttribute("error", "Ngày trả phòng phải sau ngày nhận phòng!");
-                reloadForm(request, response, roomId);
-                return;
-            }
-            if (inDate.isBefore(LocalDate.now())) {
-                request.setAttribute("error", "Không thể đặt phòng trong quá khứ!");
-                reloadForm(request, response, roomId);
-                return;
-            }
-
-            BookingDAO bookingDAO = new BookingDAO();
-            if (!bookingDAO.isRoomAvailable(roomId, checkIn, checkOut)) {
-                request.setAttribute("error", "Phòng này đã kín lịch trong thời gian bạn chọn.");
-                reloadForm(request, response, roomId);
-                return;
-            }
-
-            // 3. Lưu Booking
-            Booking booking = new Booking();
-            booking.setCustomerId(user.getCustomerId());
-            booking.setRoomId(roomId);
-            booking.setCheckInDate(checkIn);
-            booking.setCheckOutDate(checkOut);
-            String randomCode = EmailUtils.generateRandomCode(8);
-            booking.setBookingCode(randomCode);
-            
-            if (bookingDAO.insertBooking(booking)) {
+            // Xử lý khi khách bấm nút "XÁC NHẬN"
+            if ("client_booking".equals(action)) {
                 
-                // === BƯỚC QUAN TRỌNG: Cập nhật trạng thái phòng thành 'Occupied' ===
-                RoomDAO roomDAO = new RoomDAO();
-                roomDAO.updateRoomStatus(roomId, "Occupied");
-                
-                // === Gửi Mail ===
-                
-                String subject = "Xác nhận đặt phòng thành công - Smart Hotel";
-                String body = "Xin chào " + user.getFullName() + ",\n\n"
-                        + "Đặt phòng thành công!\n"
-                        + "Phòng số: " + roomId + "\n"
-                        + "Check-in: " + checkInStr + "\n"
-                        + "Check-out: " + checkOutStr + "\n\n"
-                        + "MÃ VÉ CỦA BẠN: " + randomCode;
-                
-                new Thread(() -> EmailUtils.sendEmail(user.getEmail(), subject, body)).start();
+                Customer customer = (Customer) session.getAttribute("USER");
+                if (customer == null) {
+                    response.sendRedirect("login");
+                    return;
+                }
 
-                // === Thông báo Success & Chuyển trang ===
-                request.getSession().setAttribute("bookingSuccess", "Đặt phòng thành công! Mã vé đã được gửi tới email.");
-                response.sendRedirect("listRooms"); 
+                int roomId = Integer.parseInt(request.getParameter("roomId"));
+                Date checkIn = Date.valueOf(request.getParameter("checkIn"));
+                Date checkOut = Date.valueOf(request.getParameter("checkOut"));
+                // (Đã bỏ phần Note theo yêu cầu)
+
+                Booking b = new Booking();
+                b.setCustomerId(customer.getCustomerId());
+                b.setRoomId(roomId);
+                b.setCheckInDate(checkIn);
+                b.setCheckOutDate(checkOut);
+                
+                // Sinh mã đơn hàng ngẫu nhiên (VD: BK-A1B2)
+                b.setBookingCode("BK-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase());
+                b.setStatus("Pending");
+                b.setTotalAmount(0); // Tính tiền sau
+
+                if (bookingDAO.addBooking(b)) {
+                    session.setAttribute("bookingSuccess", "Đặt phòng thành công! Mã đơn: " + b.getBookingCode());
+                    response.sendRedirect("listRooms");
+                } else {
+                    request.setAttribute("error", "Lỗi hệ thống. Vui lòng thử lại.");
+                    handleClientView(request, response, String.valueOf(roomId));
+                }
             } else {
-                request.setAttribute("error", "Lỗi hệ thống.");
-                reloadForm(request, response, roomId);
+                response.sendRedirect("booking");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
+            session.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
             response.sendRedirect("listRooms");
         }
-    }
-
-    private void reloadForm(HttpServletRequest request, HttpServletResponse response, int roomId) 
-            throws ServletException, IOException {
-        RoomDAO roomDAO = new RoomDAO();
-        Room room = roomDAO.getRoomById(roomId);
-        request.setAttribute("room", room);
-        request.getRequestDispatcher("/WEB-INF/views/room/booking.jsp").forward(request, response);
     }
 }
