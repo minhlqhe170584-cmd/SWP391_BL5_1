@@ -28,27 +28,24 @@
             border-radius: 4px;
             transition: all 0.3s ease;
         }
+        /* Hiệu ứng hover cho nút Đặt Ngay */
         .btn-booking-custom:not(.disabled):not(.btn-detail):hover {
             background: #dfa974;
             color: #fff;
             border-color: #dfa974;
             text-decoration: none;
             box-shadow: 0 5px 15px rgba(223, 169, 116, 0.3);
+            cursor: pointer;
         }
 
-        /* Style nút Chi Tiết (Khi hết phòng) */
+        /* Style nút Chi Tiết (Khi hết phòng - Màu xám) */
         .btn-booking-custom.btn-detail {
             background: #e9ecef;
             color: #495057;
             border-color: #dee2e6;
+            cursor: not-allowed; /* Con trỏ chuột báo không bấm được */
         }
-        .btn-booking-custom.btn-detail:hover {
-            background: #17a2b8; /* Màu xanh Info */
-            color: #fff;
-            border-color: #17a2b8;
-            text-decoration: none;
-        }
-
+        
         /* Style nút Vô hiệu hóa (Role Room) */
         .btn-booking-custom.disabled {
             opacity: 0.6;
@@ -169,18 +166,23 @@
                                     <%-- 2. Nếu là CUSTOMER / GUEST --%>
                                     <c:otherwise>
                                         <c:choose>
-                                            <%-- Phòng trống -> Đặt Ngay --%>
+                                            
+                                            <%-- TRƯỜNG HỢP 1: Phòng trống -> Hiện nút ĐẶT NGAY --%>
                                             <c:when test="${r.status == 'Available'}">
                                                 <a href="${pageContext.request.contextPath}/booking?roomId=${r.roomId}" class="btn-booking-custom">
                                                     Đặt Ngay
                                                 </a>
                                             </c:when>
-                                            <%-- Hết phòng -> Chi Tiết --%>
+                                            
+                                            <%-- TRƯỜNG HỢP 2: Hết phòng -> Hiện nút CHI TIẾT (Không cho click link) --%>
                                             <c:otherwise>
-                                                <a href="${pageContext.request.contextPath}/booking?roomId=${r.roomId}" class="btn-booking-custom btn-detail">
+                                                <a href="javascript:void(0);" 
+                                                   class="btn-booking-custom btn-detail"
+                                                   onclick="Swal.fire('Thông báo', 'Phòng này hiện đã có người đặt hoặc đang bảo trì.', 'info')">
                                                     Chi Tiết
                                                 </a>
                                             </c:otherwise>
+
                                         </c:choose>
                                     </c:otherwise>
                                 </c:choose>
@@ -229,7 +231,6 @@
                 confirmButtonColor: '#dfa974',
                 confirmButtonText: 'Tuyệt vời'
             });
-            // Xóa session để không hiện lại khi F5 (Dùng JSTL remove tag)
             <c:remove var="bookingSuccess" scope="session"/>
         </c:if>
 
