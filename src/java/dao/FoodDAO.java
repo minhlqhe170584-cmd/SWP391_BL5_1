@@ -186,19 +186,21 @@ public class FoodDAO extends DBContext {
         }
         return list;
     }
-
-    // --- HÀM MAP RESULTSET CHUẨN (8 tham số) ---
     private Food mapResultSetToFood(ResultSet rs) throws SQLException {
-        return new Food(
-                rs.getInt("food_id"),
-                rs.getInt("service_id"),
-                rs.getString("food_name"),
-                rs.getDouble("price"),
-                rs.getString("description"),
-                rs.getString("image_url"),
-                rs.getBoolean("is_active"),
-                rs.getBoolean("is_vegetarian")
-        );
+        Food f = new Food();
+
+        f.setFoodId(rs.getInt("food_id"));
+        String name = rs.getString("food_name");
+        f.setName(name != null ? name.trim() : "");
+        f.setPrice(rs.getDouble("price"));
+        String img = rs.getString("image_url");
+        f.setImageUrl(img != null ? img.trim() : "default.jpg");
+        f.setServiceId(rs.getInt("service_id"));
+        f.setDescription(rs.getString("description"));
+        f.setIsActive(rs.getBoolean("is_active"));
+        f.setIsVegetarian(rs.getBoolean("is_vegetarian")); 
+        
+        return f;
     }
 
     // --- LẤY DANH SÁCH CHO GIAO DIỆN KHÁCH HÀNG ---

@@ -1,11 +1,22 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-
-<fmt:setLocale value="vi_VN"/>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/sidebar.jsp" />
+
+<style>
+    /* CSS CHỐNG VỠ KHUNG */
+    .table-fixed { table-layout: fixed; width: 100%; }
+    .table-fixed td { vertical-align: middle !important; }
+    .img-thumb { 
+        width: 60px; 
+        height: 60px; 
+        object-fit: cover; 
+        border-radius: 5px; 
+        border: 1px solid #ddd;
+    }
+</style>
 
 <div class="main-content">
     <section class="section">
@@ -15,43 +26,36 @@
 
         <div class="section-body">
             <div class="card">
-                
                 <div class="card-header">
-                    <h4>Food List</h4>
-                    <div class="card-header-form">
-                        <form method="GET" action="foods" class="form-inline">
-                            
-                            <div class="form-group mr-2">
-                                <select name="serviceFilter" class="form-control" onchange="this.form.submit()" 
-                                        style="border-radius: 30px; height: 31px; padding: 0 10px; font-size: 12px;">
-                                    <option value="">-- Tất cả loại món --</option>
-                                    
-                                    <c:forEach var="srv" items="${listServices}">
-                                        <option value="${srv.serviceId}" ${param.serviceFilter == srv.serviceId ? 'selected' : ''}>
-                                            ${srv.serviceName}
-                                        </option>
-                                    </c:forEach>
-                                </select>
-                            </div>
-
-                            <div class="input-group">
-                                <input type="text" name="keyword" class="form-control" placeholder="Tìm tên món..." value="${param.keyword}">
-                                <div class="input-group-btn">
-                                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
-                                </div>
-                            </div>
-                            
-                            <a href="foods" class="btn btn-light ml-1" title="Làm mới"><i class="fas fa-sync-alt"></i></a>
-                        </form>
-                    </div>
-                    
-                    <div class="card-header-action ml-auto">
-                        <a href="foods?action=add" class="btn btn-primary">➕ Thêm món mới</a>
+                    <h4>Menu List</h4>
+                    <div class="card-header-action">
+                        <a href="foods?action=add" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add New Food
+                        </a>
                     </div>
                 </div>
-
                 <div class="card-body">
                     
+                    <form action="foods" method="get" class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="text" name="keyword" class="form-control" 
+                                   placeholder="Search by name..." value="${fn:trim(keyword)}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="serviceFilter" class="form-control">
+                                <option value="-1">-- All Services --</option>
+                                <c:forEach var="s" items="${listServices}">
+                                    <option value="${s.serviceId}" ${serviceFilter == s.serviceId ? 'selected' : ''}>
+                                        ${fn:trim(s.serviceName)}
+                                    </option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-block"><i class="fas fa-search"></i> Filter</button>
+                        </div>
+                    </form>
+
                     <c:if test="${not empty sessionScope.message}">
                         <div class="alert alert-success alert-dismissible show fade">
                             <div class="alert-body">
@@ -63,85 +67,51 @@
                     </c:if>
 
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped table-md table-fixed">
                             <thead>
                                 <tr>
-                                    <th>Ảnh</th>
-                                    <th>Tên món</th>
-                                    <th>Giá tiền</th>
-                                    <th>Loại (Service)</th>
-                                    <th>Mô tả</th>
-                                    <th>Trạng thái</th>
-                                    <th class="text-center">Hành động</th>
+                                    <th style="width: 80px;">Image</th> <th>Name</th>
+                                    <th style="width: 100px;">Price</th>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th style="width: 150px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <c:if test="${empty foodsList}">
-                                    <tr>
-                                        <td colspan="7" class="text-center">Không tìm thấy món ăn nào phù hợp.</td>
-                                    </tr>
-                                </c:if>
-
-                                <c:forEach var="food" items="${foodsList}">
+                                <c:forEach var="f" items="${foodsList}">
                                     <tr>
                                         <td>
-                                            <img alt="img" src="${pageContext.request.contextPath}/${food.imageUrl != null ? food.imageUrl : 'admin_screen/assets/img/products/product-1.png'}" 
-                                                 class="rounded" width="45" height="45" style="object-fit: cover; border: 1px solid #eee;">
+                                            <img src="${pageContext.request.contextPath}/uploads/${fn:trim(f.imageUrl)}" 
+                                                 class="img-thumb" 
+                                                 alt="Food Img"
+                                                 onerror="this.src='https://via.placeholder.com/60'"> 
                                         </td>
-                                        <td>
-                                            <strong>${food.name}</strong>
-                                        </td>
-                                        <td>
-                                            <span class="text-primary font-weight-bold">
-                                                <fmt:formatNumber value="${food.price}" type="currency" currencySymbol="đ"/>
-                                            </span>
-                                        </td>
+                                        <td>${fn:trim(f.name)}</td>
+                                        <td>$${f.price}</td>
                                         <td>
                                             <c:forEach var="s" items="${listServices}">
-                                                <c:if test="${s.serviceId == food.serviceId}">
-                                                    <div class="badge badge-light">${s.serviceName}</div>
+                                                <c:if test="${s.serviceId == f.serviceId}">
+                                                    <span class="badge badge-info">${fn:trim(s.serviceName)}</span>
                                                 </c:if>
                                             </c:forEach>
                                         </td>
                                         <td>
-                                            <span class="d-inline-block text-truncate" style="max-width: 150px; color: #666;">
-                                                ${food.description}
+                                            <span class="badge badge-${f.isActive ? 'success' : 'danger'}">
+                                                ${f.isActive ? 'Selling' : 'Stop'}
                                             </span>
                                         </td>
                                         <td>
-                                            <c:choose>
-                                                <c:when test="${food.isActive}">
-                                                    <div class="badge badge-success">Đang bán</div>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="badge badge-danger">Ngừng bán</div>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="d-flex justify-content-center">
-                                                <a href="foods?action=edit&foodId=${food.foodId}" class="btn btn-warning btn-sm mr-2" title="Sửa">
-                                                    <i class="fas fa-pencil-alt"></i>
-                                                </a>
-
-                                                <form method="POST" action="foods" style="margin:0">
-                                                    <input type="hidden" name="foodId" value="${food.foodId}">
-                                                    <c:choose>
-                                                        <c:when test="${food.isActive}">
-                                                            <button type="submit" name="action" value="deactivate" class="btn btn-danger btn-sm" 
-                                                                    onclick="return confirm('Bạn có chắc muốn NGỪNG kinh doanh món này?')" title="Ngừng kinh doanh">
-                                                                <i class="fas fa-eye-slash"></i>
-                                                            </button>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <button type="submit" name="action" value="activate" class="btn btn-success btn-sm" 
-                                                                    onclick="return confirm('Bạn có chắc muốn MỞ BÁN lại món này?')" title="Mở bán">
-                                                                <i class="fas fa-eye"></i>
-                                                            </button>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </form>
-                                            </div>
+                                            <a href="foods?action=edit&foodId=${f.foodId}" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="foods" method="post" style="display:inline;">
+                                                <input type="hidden" name="action" value="${f.isActive ? 'deactivate' : 'activate'}">
+                                                <input type="hidden" name="foodId" value="${f.foodId}">
+                                                <button class="btn btn-${f.isActive ? 'secondary' : 'success'} btn-sm"
+                                                        onclick="return confirm('Change status for ${fn:trim(f.name)}?')">
+                                                    <i class="fas fa-power-off"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -149,36 +119,22 @@
                         </table>
                     </div>
 
-                <div class="card-footer text-right">
-                    <nav class="d-inline-block">
-                        <ul class="pagination mb-0">
-                            
-                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="foods?page=${currentPage - 1}&keyword=${param.keyword}&serviceFilter=${param.serviceFilter}" tabindex="-1">
-                                    <i class="fas fa-chevron-left"></i>
-                                </a>
-                            </li>
-
-                            <c:forEach begin="1" end="${totalPages}" var="i">
-                                <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                    <a class="page-link" href="foods?page=${i}&keyword=${param.keyword}&serviceFilter=${param.serviceFilter}">
-                                        ${i}
-                                    </a>
-                                </li>
-                            </c:forEach>
-
-                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                <a class="page-link" href="foods?page=${currentPage + 1}&keyword=${param.keyword}&serviceFilter=${param.serviceFilter}">
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
+                    <c:if test="${totalPages > 1}">
+                        <div class="card-footer text-right">
+                            <nav class="d-inline-block">
+                                <ul class="pagination mb-0">
+                                    <c:forEach begin="1" end="${totalPages}" var="i">
+                                        <li class="page-item ${currentPage == i ? 'active' : ''}">
+                                            <a class="page-link" href="foods?page=${i}&keyword=${keyword}&serviceFilter=${serviceFilter}">${i}</a>
+                                        </li>
+                                    </c:forEach>
+                                </ul>
+                            </nav>
+                        </div>
+                    </c:if>
                 </div>
-
             </div>
         </div>
     </section>
 </div>
-
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
