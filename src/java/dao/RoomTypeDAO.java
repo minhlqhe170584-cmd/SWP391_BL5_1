@@ -19,7 +19,7 @@ public class RoomTypeDAO extends DBContext {
         // THÊM: WHERE isEventRoom = 0
         // (Để dropdown tạo phòng mới chỉ hiện loại phòng ngủ, không hiện sảnh tiệc)
         String sql = "SELECT * FROM RoomTypes WHERE isEventRoom = 0 ORDER BY type_id ASC";
-        
+
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
@@ -46,8 +46,8 @@ public class RoomTypeDAO extends DBContext {
         List<RoomType> list = new ArrayList<>();
         // THÊM: WHERE isEventRoom = 0
         String sql = "SELECT * FROM RoomTypes WHERE isEventRoom = 0 "
-                   + "ORDER BY type_id ASC "
-                   + "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
+                + "ORDER BY type_id ASC "
+                + "OFFSET ? ROWS FETCH NEXT 5 ROWS ONLY";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, (index - 1) * 5);
@@ -85,7 +85,7 @@ public class RoomTypeDAO extends DBContext {
         }
         return 0;
     }
-    
+
     // 4. INSERT (Cần set mặc định isEventRoom = 0)
     public void insertRoomType(RoomType rt) {
         // Mặc định isEventRoom = 0 (Vì đây là quản lý phòng ngủ)
@@ -99,7 +99,7 @@ public class RoomTypeDAO extends DBContext {
             st.setBigDecimal(5, rt.getBasePriceWeekday());
             st.setBigDecimal(6, rt.getBasePriceWeekend());
             st.setBoolean(7, rt.isIsActive());
-            
+
             st.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Error insertRoomType: " + e.getMessage());
@@ -119,22 +119,22 @@ public class RoomTypeDAO extends DBContext {
             st.setBigDecimal(6, rt.getBasePriceWeekend());
             st.setBoolean(7, rt.isIsActive());
             st.setInt(8, rt.getTypeId());
-            
+
             st.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Error updateRoomType: " + e.getMessage());
         }
     }
-    
+
     // 6. XÓA MỀM (Chuyển is_active = 0)
     public void deleteRoomType(int id) {
         String sql = "UPDATE RoomTypes SET is_active = 0 WHERE type_id = ?";
         try {
-             PreparedStatement st = connection.prepareStatement(sql);
-             st.setInt(1, id);
-             st.executeUpdate();
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, id);
+            st.executeUpdate();
         } catch (SQLException e) {
-             System.out.println("Error deleteRoomType: " + e.getMessage());
+            System.out.println("Error deleteRoomType: " + e.getMessage());
         }
     }
 
@@ -142,11 +142,11 @@ public class RoomTypeDAO extends DBContext {
     public void restoreRoomType(int id) {
         String sql = "UPDATE RoomTypes SET is_active = 1 WHERE type_id = ?";
         try {
-             PreparedStatement st = connection.prepareStatement(sql);
-             st.setInt(1, id);
-             st.executeUpdate();
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, id);
+            st.executeUpdate();
         } catch (SQLException e) {
-             System.out.println("Error restoreRoomType: " + e.getMessage());
+            System.out.println("Error restoreRoomType: " + e.getMessage());
         }
     }
 
@@ -191,5 +191,52 @@ public class RoomTypeDAO extends DBContext {
             System.out.println("Error checkTypeNameExists: " + e.getMessage());
         }
         return false;
+    }
+
+    public List<RoomType> findRoomTypes(String keyword, String status) {
+        List<RoomType> list = new ArrayList<>();
+        // 1. Luôn lấy isEventRoom = 0 để chỉ hiện phòng ngủ
+        StringBuilder sql = new StringBuilder("SELECT * FROM RoomTypes WHERE isEventRoom = 0 ");
+        List<Object> params = new ArrayList<>();
+
+        // 2. Filter theo Keyword (Tên loại phòng)
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND type_name LIKE ? ");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        // 3. Filter theo Status (Active/Inactive)
+        if (status != null && !status.isEmpty()) {
+            if (status.equalsIgnoreCase("Active")) {
+                sql.append(" AND is_active = 1 ");
+            } else if (status.equalsIgnoreCase("Inactive")) {
+                sql.append(" AND is_active = 0 ");
+            }
+        }
+
+        sql.append(" ORDER BY type_id ASC");
+
+        // 4. Thực thi Query
+        try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                st.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                RoomType rt = new RoomType();
+                rt.setTypeId(rs.getInt("type_id"));
+                rt.setTypeName(rs.getString("type_name"));
+                rt.setCapacity(rs.getInt("capacity"));
+                rt.setDescription(rs.getString("description"));
+                rt.setImageUrl(rs.getString("image_url"));
+                rt.setBasePriceWeekday(rs.getBigDecimal("base_price_weekday"));
+                rt.setBasePriceWeekend(rs.getBigDecimal("base_price_weekend"));
+                rt.setIsActive(rs.getBoolean("is_active"));
+                list.add(rt);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }

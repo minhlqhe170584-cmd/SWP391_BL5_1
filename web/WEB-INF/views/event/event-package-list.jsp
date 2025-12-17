@@ -39,92 +39,110 @@
                                 <c:remove var="successMessage" scope="session" />
                             </c:if>
 
-                            <c:if test="${not empty sessionScope.errorMessage}">
-                                <div class="alert alert-danger alert-dismissible show fade">
-                                    <div class="alert-body">
-                                        <button class="close" data-dismiss="alert"><span>&times;</span></button>
-                                        <i class="fas fa-exclamation-triangle"></i> ${sessionScope.errorMessage}
+                            <%-- ========== START: SEARCH & FILTER FORM ========== --%>
+                            <form action="event-packages" method="GET" class="mb-4">
+                                <input type="hidden" name="action" value="LIST">
+                                <div class="form-row align-items-end">
+                                    
+                                    <div class="form-group col-md-5">
+                                        <label>Search Package Name</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text"><i class="fas fa-search"></i></div>
+                                            </div>
+                                            <input type="text" name="keyword" value="${keyword}" class="form-control" placeholder="Enter package name...">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group col-md-3">
+                                        <label>Status</label>
+                                        <select name="status" class="form-control">
+                                            <option value="">-- All Status --</option>
+                                            <option value="Active" ${status == 'Active' ? 'selected' : ''}>Active</option>
+                                            <option value="Inactive" ${status == 'Inactive' ? 'selected' : ''}>Inactive</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group col-md-4 text-right">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-filter"></i> Filter
+                                        </button>
+                                        
+                                        <%-- Reset Button: Show only if filtering --%>
+                                        <c:if test="${not empty keyword or not empty status}">
+                                            <a href="event-packages?action=LIST" class="btn btn-secondary ml-2">
+                                                Reset
+                                            </a>
+                                        </c:if>
                                     </div>
                                 </div>
-                                <c:remove var="errorMessage" scope="session" />
-                            </c:if>
+                            </form>
+                            <%-- ========== END: SEARCH & FILTER FORM ========== --%>
 
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover" id="table-1">
+                                <table class="table table-striped table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="text-center">#</th>
+                                            <th>#ID</th>
                                             <th>Package Name</th>
-                                            <th>Price per Table</th>
-                                            <th class="text-center">Status</th>
-                                            <th>Created Date</th>
+                                            <th>Price</th>
+                                            <th>Category</th>
+                                            <th>Rooms</th>
+                                            <th>Status</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <c:if test="${empty packages}">
+                                        
+                                        <c:if test="${empty listEventPackages}">
                                             <tr>
-                                                <td colspan="6" class="text-center text-muted py-4">
-                                                    <i class="fas fa-box-open fa-3x mb-3"></i><br>
-                                                    No packages found. Please create a new one.
-                                                </td>
+                                                <td colspan="7" class="text-center text-muted py-4">No event packages found.</td>
                                             </tr>
                                         </c:if>
 
-                                        <c:forEach var="p" items="${packages}" varStatus="status">
+                                        <c:forEach var="e" items="${listEventPackages}">
                                             <tr>
-                                                <td class="text-center">${status.count}</td>
-                                                <td>
-                                                    <strong>${p.eventName}</strong>
+                                                <td>${e.eventId}</td>
+                                                <td><strong>${e.eventName}</strong></td>
+                                                <td class="text-primary font-weight-bold">
+                                                    <fmt:formatNumber value="${e.pricePerTable}" type="currency" currencySymbol="₫"/>
                                                 </td>
                                                 <td>
-                                                    <strong class="text-primary">
-                                                        <fmt:formatNumber value="${p.pricePerTable}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
-                                                    </strong>
+                                                    <div class="badge badge-light">${e.eventCategory.categoryName}</div>
                                                 </td>
-
-                                                <td class="text-center">
+                                                <td>
+                                                    <small class="text-muted"><i class="fas fa-door-open"></i> ${e.location}</small>
+                                                </td>
+                                                <td>
                                                     <c:choose>
-                                                        <c:when test="${p.status == 'Active'}">
+                                                        <c:when test="${e.status == 'Active'}">
                                                             <div class="badge badge-success">Active</div>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <div class="badge badge-secondary">Inactive</div>
+                                                            <div class="badge badge-danger">Inactive</div>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>
-
                                                 <td>
-                                                    <fmt:formatDate value="${p.createdDate}" pattern="dd/MM/yyyy"/>
-                                                </td>
-                                                <td>
-                                                    <a href="event-packages?action=EDIT&id=${p.eventId}" class="btn btn-primary btn-sm mr-1" data-toggle="tooltip" title="Edit">
+                                                    <a href="event-packages?action=EDIT&id=${e.eventId}" class="btn btn-warning btn-sm" title="Edit">
                                                         <i class="fas fa-pencil-alt"></i>
                                                     </a>
-
+                                                    
                                                     <c:choose>
-                                                        <c:when test="${p.status == 'Active'}">
-                                                            <c:url var="deactivateLink" value="event-packages">
-                                                                <c:param name="action" value="DEACTIVATE"/>
-                                                                <c:param name="id" value="${p.eventId}"/>
-                                                            </c:url>
-                                                            <a href="${deactivateLink}" 
-                                                               class="btn btn-warning btn-sm" 
-                                                               onclick="confirmStatusChange(event, '${p.eventName}', 'DEACTIVATE', '${deactivateLink}')"
-                                                               data-toggle="tooltip" title="Deactivate">
-                                                                <i class="fas fa-ban"></i>
+                                                        <c:when test="${e.status == 'Active'}">
+                                                            <a href="event-packages?action=DEACTIVATE&id=${e.eventId}" 
+                                                               class="btn btn-danger btn-sm"
+                                                               onclick="confirmEventAction(event, '${e.eventName}', 'DEACTIVATE', this.href)"
+                                                               title="Deactivate">
+                                                                <i class="fas fa-lock"></i>
                                                             </a>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <c:url var="activateLink" value="event-packages">
-                                                                <c:param name="action" value="ACTIVATE"/>
-                                                                <c:param name="id" value="${p.eventId}"/>
-                                                            </c:url>
-                                                            <a href="${activateLink}" 
-                                                               class="btn btn-success btn-sm" 
-                                                               onclick="confirmStatusChange(event, '${p.eventName}', 'ACTIVATE', '${activateLink}')"
-                                                               data-toggle="tooltip" title="Activate">
-                                                                <i class="fas fa-check-circle"></i>
+                                                            <a href="event-packages?action=ACTIVATE&id=${e.eventId}" 
+                                                               class="btn btn-success btn-sm"
+                                                               onclick="confirmEventAction(event, '${e.eventName}', 'ACTIVATE', this.href)"
+                                                               title="Activate">
+                                                                <i class="fas fa-unlock"></i>
                                                             </a>
                                                         </c:otherwise>
                                                     </c:choose>
@@ -135,6 +153,51 @@
                                 </table>
                             </div>
                         </div>
+
+                        <%-- ========== START: PAGINATION ========== --%>
+                    <c:if test="${endPage > 1}">
+                        <div class="card-footer text-right">
+                            <nav class="d-inline-block">
+                                <ul class="pagination mb-0">
+                                    <c:if test="${tag > 1}">
+                                        <li class="page-item">
+                                            <a class="page-link" href="event-packages?action=LIST&index=${tag-1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    </c:if>
+
+                                    <c:if test="${tag + 2 >= endPage}">
+                                        <c:forEach begin="${endPage - 2}" end="${endPage}" var="i">
+                                            <li class="page-item ${tag == i ? 'active' : ''}">
+                                                <a class="page-link" href="event-packages?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                    ${i}
+                                                </a>
+                                            </li>
+                                        </c:forEach>
+                                    </c:if>
+                                    <c:if test="${tag + 2 < endPage}">
+                                        <c:forEach begin="${tag}" end="${tag + 2}" var="i">
+                                            <li class="page-item ${tag == i ? 'active' : ''}">
+                                                <a class="page-link" href="event-packages?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                    ${i}
+                                                </a>
+                                            </li>
+                                        </c:forEach>
+                                    </c:if>
+                                    <c:if test="${tag < endPage}">
+                                        <li class="page-item">
+                                            <a class="page-link" href="event-packages?action=LIST&index=${tag+1}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    </c:if>
+                                </ul>
+                            </nav>
+                        </div>
+                    </c:if>
+                        <%-- ========== END: PAGINATION ========== --%>
+
                     </div>
                 </div>
             </div>
@@ -143,10 +206,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
-    function confirmStatusChange(event, packageName, action, link) {
-        event.preventDefault(); // Prevents the default <a> navigation
+    function confirmEventAction(event, packageName, action, link) {
+        event.preventDefault();
 
         let titleInfo = "";
         let textInfo = "";
@@ -156,15 +218,15 @@
 
         if (action === 'DEACTIVATE') {
             titleInfo = "Deactivate Package " + packageName + "?";
-            textInfo = "This event package will be hidden and unavailable for new bookings!";
+            textInfo = "This package will be hidden from new bookings!";
             iconType = "warning";
-            confirmColor = "#ffc107"; // Yellow (Warning)
+            confirmColor = "#ffc107";
             btnText = "Yes, Deactivate it!";
-        } else { // ACTIVATE
+        } else { 
             titleInfo = "Activate Package " + packageName + "?";
-            textInfo = "This event package will be visible and available for new bookings.";
+            textInfo = "This package will be visible for new bookings.";
             iconType = "question";
-            confirmColor = "#28a745"; // Green (Success)
+            confirmColor = "#28a745";
             btnText = "Yes, Activate it!";
         }
 
@@ -179,7 +241,6 @@
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                // If user confirms, redirect to the provided URL
                 window.location.href = link;
             }
         });

@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part; // QUAN TRỌNG: Để xử lý file
+import java.util.ArrayList;
 
 /**
  * Servlet quản lý Loại Phòng (Room Types)
@@ -80,12 +81,45 @@ public class RoomTypeServlet extends HttpServlet {
     }
 
     // --- CÁC HÀM XỬ LÝ ---
-    private void listRoomTypes(HttpServletRequest request, HttpServletResponse response, RoomTypeDAO dao)
-            throws ServletException, IOException {
-        List<RoomType> list = dao.getAllRoomTypes();
-        request.setAttribute("listRoomTypes", list);
-        request.getRequestDispatcher("/WEB-INF/views/roomtype/room-type-list.jsp").forward(request, response);
+private void listRoomTypes(HttpServletRequest request, HttpServletResponse response, RoomTypeDAO dao)
+        throws ServletException, IOException {
+    
+    // 1. Lấy tham số Search & Filter
+    String keyword = request.getParameter("keyword");
+    String status = request.getParameter("status");
+    String indexPage = request.getParameter("index");
+    
+    if (indexPage == null) indexPage = "1";
+    int index = Integer.parseInt(indexPage);
+
+    // 2. Gọi DAO lấy TOÀN BỘ danh sách theo điều kiện (Chưa phân trang)
+    List<RoomType> fullList = dao.findRoomTypes(keyword, status);
+
+    // 3. Xử lý SubList (Cắt trang) - Logic giống hệt RoomServlet
+    int count = fullList.size();
+    int pageSize = 5; // Bạn có thể sửa số dòng/trang ở đây
+    int endPage = count / pageSize;
+    if (count % pageSize != 0) endPage++;
+
+    int start = (index - 1) * pageSize;
+    int end = Math.min(start + pageSize, count);
+
+    List<RoomType> pagedList = new ArrayList<>();
+    if (start < count) {
+        pagedList = fullList.subList(start, end);
     }
+
+    // 4. Đẩy dữ liệu ra JSP
+    request.setAttribute("listRoomTypes", pagedList); // List đã cắt
+    request.setAttribute("endPage", endPage);
+    request.setAttribute("tag", index);
+    
+    // Giữ lại giá trị Search để hiện trên ô input
+    request.setAttribute("keyword", keyword);
+    request.setAttribute("currentStatus", status);
+
+    request.getRequestDispatcher("/WEB-INF/views/roomtype/room-type-list.jsp").forward(request, response);
+}
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
