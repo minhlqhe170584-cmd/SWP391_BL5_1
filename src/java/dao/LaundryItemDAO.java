@@ -421,5 +421,21 @@ public class LaundryItemDAO extends DBContext {
         }
         return null;
     }
+    
+        public boolean isExistName(String name) {
+        String sql = "SELECT COUNT(*) FROM LaundryItems WHERE item_name = ? AND  is_active = 1";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, name);
+            
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
 
