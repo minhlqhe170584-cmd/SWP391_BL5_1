@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import models.BikeRentalOption;
-import models.Service;
 
 @WebServlet(name = "BikeOptionServlet", urlPatterns = {"/admin/bike-options"})
 public class BikeOptionServlet extends HttpServlet {

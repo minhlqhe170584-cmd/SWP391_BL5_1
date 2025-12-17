@@ -129,8 +129,6 @@
                                                 </c:when>
                                                 
                                                 <c:otherwise>
-                                                    <%-- Đã xóa nút Toggle Status ở đây vì đã tích hợp vào cột Status --%>
-
                                                     <a href="service?action=detail&id=${s.serviceId}" class="btn btn-warning btn-sm mr-2" title="Edit">
                                                         <i class="fas fa-pencil-alt"></i>
                                                     </a>

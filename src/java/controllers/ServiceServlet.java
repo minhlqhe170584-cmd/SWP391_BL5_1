@@ -55,7 +55,11 @@ public class ServiceServlet extends HttpServlet {
 
         int pageIndex = 1;
         int pageSize = 5;
-
+        
+        //String pageSizeRaw = request.getParameter("pageSize");
+//        if (pageSizeRaw != null) {
+//            pageSize = Integer.parseInt(pageSizeRaw);
+//        } &pageSize=${pageSize}
         if (pageRaw != null && !pageRaw.trim().isEmpty()) {
             try {
                 pageIndex = Integer.parseInt(pageRaw);
@@ -78,6 +82,7 @@ public class ServiceServlet extends HttpServlet {
         request.setAttribute("view", view);
         request.setAttribute("page", pageIndex);
         request.setAttribute("totalPages", totalPages);
+        //request.setAttribute("pageSize", pageSize);
 
         request.getRequestDispatcher("/WEB-INF/views/service/list.jsp").forward(request, response);
     }
