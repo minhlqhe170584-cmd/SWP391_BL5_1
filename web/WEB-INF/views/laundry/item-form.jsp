@@ -123,7 +123,6 @@
 </div>
 
 <!--<script>
-    // Form validation
     document.getElementById('itemForm').addEventListener('submit', function(e) {
         const itemName = document.querySelector('input[name="itemName"]').value.trim();
         const defaultPrice = parseFloat(document.querySelector('input[name="defaultPrice"]').value);
@@ -139,6 +138,7 @@
             alert('Đơn giá phải lớn hơn 0.');
             return false;
         }
+        if()
     });
 </script>-->
 

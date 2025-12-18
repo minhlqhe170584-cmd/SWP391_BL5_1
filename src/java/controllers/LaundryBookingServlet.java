@@ -4,6 +4,7 @@ import dao.LaundryItemDAO;
 import dao.LaundryOrderDAO;
 import dao.LaundryHandleDAO;
 import dao.ServiceDAO;
+import dao.RoomDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,6 +20,7 @@ import models.LaundryItem;
 import models.LaundryOrder;
 import models.LaundryOrderDetail;
 import models.Service;
+import models.Room;
 
 /**
  *
@@ -32,6 +34,7 @@ public class LaundryBookingServlet extends HttpServlet {
     private ServiceDAO serviceDAO;
     private LaundryHandleDAO handleDAO;
     private LaundryOrderDAO laundryOrderDAO;
+    private RoomDAO roomDAO;
     
     @Override
     public void init() throws ServletException {
@@ -39,6 +42,7 @@ public class LaundryBookingServlet extends HttpServlet {
         serviceDAO = new ServiceDAO();
         handleDAO = new LaundryHandleDAO();
         laundryOrderDAO = new LaundryOrderDAO();
+        roomDAO = new RoomDAO();
     }
 
     @Override
@@ -47,9 +51,11 @@ public class LaundryBookingServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Integer roomId = (Integer) session.getAttribute("ROOM_ID");
         String serviceIdRaw = request.getParameter("serviceId");
+        request.getSession().setAttribute("serId",serviceIdRaw);
         if (roomId == null) {
             roomId = 1;//test
             session.setAttribute("ROOM_ID", roomId);
+           
         }
         if (serviceIdRaw == null || serviceIdRaw.trim().isEmpty()) {
             ArrayList<Service> laundrySer = handleDAO.getAllLaundryServices();
@@ -78,11 +84,39 @@ public class LaundryBookingServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         Integer roomId = (Integer) session.getAttribute("ROOM_ID");
-        String serviceIdRaw = request.getParameter("serviceId");
-        int serviceId = Integer.parseInt(serviceIdRaw);
         if (roomId == null) {
             roomId = 1;
             session.setAttribute("ROOM_ID", roomId);
+        }
+        
+        // Get serviceId from request parameter or session
+        String serviceIdRaw = request.getParameter("serviceId");
+        Integer serviceId = null;
+        
+        if (serviceIdRaw != null && !serviceIdRaw.trim().isEmpty()) {
+            try {
+                serviceId = Integer.parseInt(serviceIdRaw);
+            } catch (NumberFormatException e) {
+                // Invalid format, try session
+            }
+        }
+        
+        // Fallback to session if request parameter is missing
+        if (serviceId == null) {
+            String serId = (String) session.getAttribute("serId");
+            if (serId != null && !serId.trim().isEmpty()) {
+                try {
+                    serviceId = Integer.valueOf(serId);
+                } catch (NumberFormatException e) {
+                    // Invalid session value
+                }
+            }
+        }
+        
+        // If still no serviceId, redirect to list
+        if (serviceId == null) {
+            response.sendRedirect("laundry-book");
+            return;
         }
         
         String action = request.getParameter("action");
@@ -90,7 +124,7 @@ public class LaundryBookingServlet extends HttpServlet {
         if ("order".equals(action)) {
             placeOrder(request, response, roomId, serviceId);
         } else {
-            showOrderForm(request, response, roomId,serviceId);
+            showOrderForm(request, response, roomId, serviceId);
         }
     }
     
@@ -99,10 +133,57 @@ public class LaundryBookingServlet extends HttpServlet {
         // Get active services and items     
         ArrayList<LaundryItem> items = itemDAO.getItemsByService(serviceId);
         
+        // Get and set service information for the JSP
+        Service service = serviceDAO.getById(serviceId);
+        
+        // Get room information to display room number
+        String roomNumber = null;
+        if (roomId != null) {
+            Room room = roomDAO.getRoomById(roomId);
+            if (room != null) {
+                roomNumber = room.getRoomNumber();
+            }
+        }
+        
         request.setAttribute("items", items);
         request.setAttribute("roomId", roomId);
+        request.setAttribute("roomNumber", roomNumber);
+        request.setAttribute("service", service);
         
         request.getRequestDispatcher("/WEB-INF/views/client/laundry-order.jsp").forward(request, response);
+    }
+    
+    /**
+     * Helper method to preserve form data when there's an error
+     */
+    private void preserveFormData(HttpServletRequest request) {
+        String pickupTimeStr = request.getParameter("pickupTime");
+        String returnTimeStr = request.getParameter("returnTime");
+        String note = request.getParameter("note");
+        String[] itemIds = request.getParameterValues("itemId");
+        String[] quantities = request.getParameterValues("quantity");
+        
+        java.util.Map<String, Boolean> selectedItemsMap = new java.util.HashMap<>();
+        java.util.Map<String, String> itemQuantities = new java.util.HashMap<>();
+        
+        if (itemIds != null && quantities != null) {
+            for (int i = 0; i < itemIds.length; i++) {
+                String itemId = itemIds[i];
+                String checkboxValue = request.getParameter("selected_" + itemId);
+                if (checkboxValue != null && "true".equals(checkboxValue)) {
+                    selectedItemsMap.put(itemId, true);
+                    if (i < quantities.length) {
+                        itemQuantities.put(itemId, quantities[i]);
+                    }
+                }
+            }
+        }
+        
+        request.setAttribute("selectedItemsMap", selectedItemsMap);
+        request.setAttribute("itemQuantities", itemQuantities);
+        request.setAttribute("preservedPickupTime", pickupTimeStr);
+        request.setAttribute("preservedReturnTime", returnTimeStr);
+        request.setAttribute("preservedNote", note);
     }
     
     /**
@@ -129,6 +210,37 @@ public class LaundryBookingServlet extends HttpServlet {
                 returnTime = LocalDateTime.parse(returnTimeStr, formatter);
             }
             
+            String errorMessage = null;
+            
+            // Validate note length
+            if (note != null && note.length() > 500) {
+                errorMessage = "Ghi chú không được vượt quá 500 ký tự";
+            }
+            
+            // Only validate times if both are provided (skip if note validation failed)
+            if (errorMessage == null) {
+                if (pickupTime != null && returnTime != null) {
+                    if (returnTime.isBefore(pickupTime)) {
+                        errorMessage = "Return time must be later than pickup time";
+                    } else if (returnTime.isBefore(LocalDateTime.now())) {
+                        errorMessage = "Return time must be later than current time";
+                    } else if (pickupTime.isBefore(LocalDateTime.now())) {
+                        errorMessage = "Pickup time must be later than current time";
+                    }
+                } else if (pickupTime != null && pickupTime.isBefore(LocalDateTime.now())) {
+                    errorMessage = "Pickup time must be later than current time";
+                } else if (returnTime != null && returnTime.isBefore(LocalDateTime.now())) {
+                    errorMessage = "Return time must be later than current time";
+                }
+            }
+            
+            if(errorMessage != null){
+                request.setAttribute("error", errorMessage);
+                preserveFormData(request);
+                showOrderForm(request, response, roomId, serviceId);
+                return;
+            }
+            
             // Get ALL form parameters
             String[] itemIds = request.getParameterValues("itemId");
             String[] quantities = request.getParameterValues("quantity");
@@ -137,7 +249,8 @@ public class LaundryBookingServlet extends HttpServlet {
             // Validate basic arrays exist
             if (itemIds == null || quantities == null || prices == null) {
                 request.setAttribute("error", "Vui lòng chọn ít nhất một mục để đặt đơn");
-                showOrderForm(request, response, roomId,serviceId);
+                preserveFormData(request);
+                showOrderForm(request, response, roomId, serviceId);
                 return;
             }
             
@@ -168,7 +281,8 @@ public class LaundryBookingServlet extends HttpServlet {
 
             if (orderDetails.isEmpty()) {
                 request.setAttribute("error", "Vui lòng chọn ít nhất một mục để đặt đơn");
-                showOrderForm(request, response, roomId,serviceId);
+                preserveFormData(request);
+                showOrderForm(request, response, roomId, serviceId);
                 return;
             }
 
@@ -179,15 +293,18 @@ public class LaundryBookingServlet extends HttpServlet {
                 request.getRequestDispatcher("/WEB-INF/views/client/success.jsp").forward(request, response);
             } else {              
                 request.setAttribute("error", "Không thể tạo đơn hàng. Vui lòng thử lại.");
-                showOrderForm(request, response, roomId,serviceId);
+                preserveFormData(request);
+                showOrderForm(request, response, roomId, serviceId);
             }
             
         } catch (NumberFormatException e) {
             request.setAttribute("error", "Dữ liệu không hợp lệ: " + e.getMessage());
-            showOrderForm(request, response, roomId,serviceId);
+            preserveFormData(request);
+            showOrderForm(request, response, roomId, serviceId);
         } catch (Exception e) {
             request.setAttribute("error", "Lỗi khi đặt đơn: " + e.getMessage());
-            showOrderForm(request, response, roomId,serviceId);
+            preserveFormData(request);
+            showOrderForm(request, response, roomId, serviceId);
         }
     }
 }

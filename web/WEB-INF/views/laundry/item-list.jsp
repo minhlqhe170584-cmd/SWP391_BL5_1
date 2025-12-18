@@ -141,13 +141,13 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Tên mục</th>
-                                    <th>Dịch vụ</th>
-                                    <th>Mô tả</th>
-                                    <th>Đơn giá</th>
-                                    <th>Đơn vị</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
+                                    <th>Item</th>
+                                    <th>Service</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Unit</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -180,30 +180,30 @@
                                         <td>
                                             <c:choose>
                                                 <c:when test="${item.isActive}">
-                                                    <span class="badge badge-success">Hoạt động</span>
+                                                    <span class="badge badge-success">Active</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge badge-danger">Không hoạt động</span>
+                                                    <span class="badge badge-danger">InActive</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
                                         <td>
                                             <a href="laundry-item?action=edit&id=${item.laundryItemId}" 
-                                               class="btn btn-primary btn-sm" title="Chỉnh sửa">
+                                               class="btn btn-primary btn-sm" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <c:choose>
                                                 <c:when test="${item.isActive}">
                                                     <button type="button" class="btn btn-warning btn-sm" 
                                                             onclick="confirmDeactivate(${item.laundryItemId})" 
-                                                            title="Vô hiệu hóa">
+                                                            title="Inactive">
                                                         <i class="fas fa-ban"></i>
                                                     </button>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <button type="button" class="btn btn-success btn-sm" 
                                                             onclick="confirmActivate(${item.laundryItemId})" 
-                                                            title="Kích hoạt">
+                                                            title="Active">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                 </c:otherwise>
@@ -216,7 +216,7 @@
                                     <tr>
                                         <td colspan="8" class="text-center py-4">
                                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                            <p class="text-muted">Không tìm thấy mục nào</p>
+                                            <p class="text-muted">Don't have any item</p>
                                         </td>
                                     </tr>
                                 </c:if>
