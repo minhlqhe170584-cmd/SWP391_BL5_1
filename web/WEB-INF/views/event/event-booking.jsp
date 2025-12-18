@@ -111,11 +111,11 @@
                                             <c:forEach var="room" items="${roomList}">
                                                 <div class="form-check">
                                                     <input type="checkbox" name="roomIds" value="${room.roomId}" class="form-check-input" id="r_${room.roomId}"
-                                                        <c:if test="${paramValues.roomIds != null}">
-                                                            <c:forEach var="selectedRoomId" items="${paramValues.roomIds}">
-                                                                <c:if test="${selectedRoomId == room.roomId}">checked</c:if>
-                                                            </c:forEach>
-                                                        </c:if>>
+                                                           <c:if test="${paramValues.roomIds != null}">
+                                                               <c:forEach var="selectedRoomId" items="${paramValues.roomIds}">
+                                                                   <c:if test="${selectedRoomId == room.roomId}">checked</c:if>
+                                                               </c:forEach>
+                                                           </c:if>>
                                                     <label class="form-check-label" for="r_${room.roomId}">
                                                         Phòng ${room.roomNumber}
                                                     </label>
@@ -142,7 +142,7 @@
 
                                         <div class="form-group">
                                             <label>Ghi chú</label>
-                                            <textarea name="message" class="form-control" rows="4" required>${param.message}</textarea>
+                                            <textarea name="message" class="form-control" rows="4" maxlength="100">${param.message}</textarea>
                                         </div>
 
                                         <button type="submit"
@@ -163,44 +163,47 @@
 
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
+        <script>
+                                                        document.addEventListener('DOMContentLoaded', function () {
+                                                            const checkOutInput = document.getElementById('checkOutDate');
+                                                            const checkInInput = document.getElementById('checkInDate');
 
-        // Khởi tạo cho trường KẾT THÚC (checkOutDate) TRƯỚC
-        const checkOutPicker = flatpickr("#checkOutDate", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            time_24hr: true,
-            minDate: "today",
-            minuteIncrement: 15,
-            defaultDate: document.getElementById('checkOutDate').value // Giữ lại giá trị cũ
-        });
+                                                            // Khởi tạo cho trường KẾT THÚC (checkOutDate)
+                                                            const checkOutPicker = flatpickr("#checkOutDate", {
+                                                                enableTime: true,
+                                                                dateFormat: "Y-m-d H:i",
+                                                                time_24hr: true,
+                                                                minDate: new Date(), // lấy đúng ngày + giờ hiện tại
+                                                                minuteIncrement: 15,
+                                                                defaultDate: checkOutInput.value || new Date() // giữ giá trị cũ, nếu rỗng thì giờ hiện tại
+                                                            });
 
-        // Khởi tạo cho trường BẮT ĐẦU (checkInDate)
-        const checkInPicker = flatpickr("#checkInDate", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            time_24hr: true,
-            minDate: "today",
-            minuteIncrement: 15,
-            defaultDate: document.getElementById('checkInDate').value, // Giữ lại giá trị cũ
+                                                            // Khởi tạo cho trường BẮT ĐẦU (checkInDate)
+                                                            const checkInPicker = flatpickr("#checkInDate", {
+                                                                enableTime: true,
+                                                                dateFormat: "Y-m-d H:i",
+                                                                time_24hr: true,
+                                                                minDate: new Date(), // lấy đúng ngày + giờ hiện tại
+                                                                minuteIncrement: 15,
+                                                                defaultDate: checkInInput.value || new Date(), // giữ giá trị cũ, nếu rỗng thì giờ hiện tại
 
-            // Xử lý giới hạn ngày/giờ: Ngày kết thúc phải sau ngày bắt đầu
-            onChange: function(selectedDates, dateStr, instance) {
-                if (selectedDates.length > 0) {
-                    // Set minDate cho checkOutDate là ngày đã chọn (bao gồm cả giờ)
-                    checkOutPicker.set('minDate', selectedDates[0]);
-                }
-            }
-        });
+                                                                // Ngày kết thúc phải sau ngày bắt đầu
+                                                                onChange: function (selectedDates) {
+                                                                    if (selectedDates.length > 0) {
+                                                                        checkOutPicker.set('minDate', selectedDates[0]);
+                                                                    }
+                                                                }
+                                                            });
 
-        // Điều chỉnh ban đầu: Nếu checkInDate đã có giá trị từ trước (do lỗi), cần đặt minDate cho checkOutPicker
-        const checkInDateValue = document.getElementById('checkInDate').value;
-        if (checkInDateValue) {
-            checkOutPicker.set('minDate', checkInDateValue);
-        }
-    });
-</script>
+                                                            // Nếu checkInDate đã có giá trị từ trước thì đặt minDate cho checkOutPicker
+                                                            if (checkInInput.value) {
+                                                                checkOutPicker.set('minDate', checkInInput.value);
+                                                            }
+                                                        });
+
+
+
+        </script>
         <jsp:include page="../components/footer.jsp"/>
     </body>
 </html>
