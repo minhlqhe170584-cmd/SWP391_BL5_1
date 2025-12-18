@@ -108,7 +108,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label class="font-weight-bold">Mật khẩu</label>
-                                    <input type="text" name="password" class="form-control" value="${sessionScope.USER.password}" required>
+                                    <input type="password" name="password" class="form-control" value="${sessionScope.USER.password}" required>
                                 </div>
                                 <div class="text-center mt-4">
                                     <button class="btn btn-warning btn-lg px-5 font-weight-bold text-white shadow">LƯU THAY ĐỔI</button>
