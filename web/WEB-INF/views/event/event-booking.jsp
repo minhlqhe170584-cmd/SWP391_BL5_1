@@ -142,7 +142,7 @@
 
                                         <div class="form-group">
                                             <label>Ghi chú</label>
-                                            <textarea name="message" class="form-control" rows="4" required>${param.message}</textarea>
+                                            <textarea name="message" class="form-control" rows="4" maxlength="255">${param.message}</textarea>
                                         </div>
 
                                         <button type="submit"
