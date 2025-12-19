@@ -9,7 +9,7 @@ import java.util.List;
 
 public class PaymentDAO extends DBContext {
 
-    // 1. Tìm Booking ID đang hoạt động (hoặc đã checkout)
+    // Tìm Booking ID đang hoạt động (hoặc đã checkout)
     public int getActiveBookingIdByRoom(String roomNumber) {
         String sql = "SELECT TOP 1 b.booking_id " +
                      "FROM Bookings b " +
@@ -26,7 +26,7 @@ public class PaymentDAO extends DBContext {
         return -1;
     }
     
-    // 1.1. Lấy Booking ID đã checkout theo bookingId
+    // Lấy Booking ID đã checkout theo bookingId
     public int getCheckedOutBookingById(int bookingId) {
         String sql = "SELECT booking_id FROM Bookings WHERE booking_id = ? AND status = 'CheckedOut'";
         try {
@@ -38,7 +38,7 @@ public class PaymentDAO extends DBContext {
         return -1;
     }
 
-    // 2. Lấy thông tin thanh toán (Kèm kiểm tra Đã Thanh Toán chưa)
+    // Lấy thông tin thanh toán (Kèm kiểm tra Đã Thanh Toán chưa)
     public PaymentDTO getPaymentInfo(int bookingId) {
         PaymentDTO dto = new PaymentDTO();
         dto.setBookingId(bookingId);
@@ -46,7 +46,7 @@ public class PaymentDAO extends DBContext {
         double totalRoom = 0;
         double totalServiceInvoice = 0;
 
-        // A. LẤY THÔNG TIN BOOKING
+        //  LẤY THÔNG TIN BOOKING
         String sqlBooking = "SELECT b.total_amount, b.booking_code, r.room_number, c.full_name " +
                            "FROM Bookings b " +
                            "LEFT JOIN Rooms r ON b.room_id = r.room_id " +
@@ -64,7 +64,7 @@ public class PaymentDAO extends DBContext {
             }
         } catch (Exception e) { e.printStackTrace(); }
 
-        // B. KIỂM TRA TRẠNG THÁI THANH TOÁN (Kiểm tra Invoice status và ServiceInvoices status)
+        // KIỂM TRA TRẠNG THÁI THANH TOÁN (Kiểm tra Invoice status và ServiceInvoices status)
         String sqlInvoice = "SELECT total_amount, created_at, note, status FROM Invoices WHERE booking_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sqlInvoice);
@@ -122,7 +122,7 @@ public class PaymentDAO extends DBContext {
             dto.setListServiceDetails(listDetails);
         } catch (Exception e) { e.printStackTrace(); }
 
-        // D. LẤY THÔNG TIN SERVICEINVOICES
+        // LẤY THÔNG TIN SERVICEINVOICES
         List<PaymentDTO.ServiceInvoiceDetail> listServiceInvoices = new ArrayList<>();
         String sqlServiceInvoice = 
             "SELECT si.invoice_id, si.order_id, si.final_amount, si.status, si.payment_method, si.created_at, " +
