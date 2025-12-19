@@ -87,7 +87,7 @@
                 
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/admin/laundry-item" class="nav-link">
-                        <i class="fas fa-shirt"></i> <span>Laundry items</span>
+                        <i class="fas fa-tshirt"></i> <span>Laundry items</span>
                     </a>
                 </li>
                 
@@ -147,7 +147,7 @@
                 <li class="menu-header">Staff Operations</li>
                 <li>
                     <a class="nav-link" href="${pageContext.request.contextPath}/bike-ops">
-                        <i class="fas fa-bicycle"></i> <span>Giao và Trả xe</span>
+                        <i class="fas fa-bicycle"></i> <span>Bicycle Delivery and Return</span>
                     </a>
                 </li>
 

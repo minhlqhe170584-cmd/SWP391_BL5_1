@@ -42,9 +42,7 @@ public class PaymentDAO extends DBContext {
     public PaymentDTO getPaymentInfo(int bookingId) {
         PaymentDTO dto = new PaymentDTO();
         dto.setBookingId(bookingId);
-        double totalService = 0;
         double totalRoom = 0;
-        double totalServiceInvoice = 0;
 
         //  LẤY THÔNG TIN BOOKING
         String sqlBooking = "SELECT b.total_amount, b.booking_code, r.room_number, c.full_name " +
@@ -113,10 +111,9 @@ public class PaymentDAO extends DBContext {
                 if (itemName == null || itemName.isEmpty()) itemName = svcName; 
 
                 double sub = rs.getDouble("subtotal");
-                totalService += sub;
 
                 listDetails.add(new PaymentDTO.ServiceDetail(
-                    svcName, itemName, rs.getInt("quantity"), rs.getDouble("unit_price"), sub, rs.getTimestamp("order_date")
+                    svcName, itemName, rs.getInt("quantity"), rs.getDouble("unit_price"), sub, rs.getTimestamp("order_date"), rs.getInt("order_id")
                 ));
             }
             dto.setListServiceDetails(listDetails);
@@ -139,7 +136,6 @@ public class PaymentDAO extends DBContext {
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 double finalAmount = rs.getDouble("final_amount");
-                totalServiceInvoice += finalAmount;
                 
                 listServiceInvoices.add(new PaymentDTO.ServiceInvoiceDetail(
                     rs.getInt("invoice_id"),
@@ -170,11 +166,10 @@ public class PaymentDAO extends DBContext {
             dto.setRoomNote("Đã thanh toán phòng nhưng còn dịch vụ chưa thanh toán");
         }
         
-        // Tính tổng
+        // Tính tổng - chỉ cộng phần chưa thanh toán
         if (dto.isPaid() && allServiceInvoicesPaid) {
             dto.setGrandTotal(totalRoom); // Nếu đã trả hết, lấy số tiền trong Invoice
         } else {
-            // Nếu chưa trả, tính từ ServiceInvoices (nếu có) hoặc từ OrderDetails
             // Chỉ tính các ServiceInvoice chưa Paid
             double unpaidServiceInvoice = 0;
             for (PaymentDTO.ServiceInvoiceDetail inv : listServiceInvoices) {
@@ -183,13 +178,22 @@ public class PaymentDAO extends DBContext {
                 }
             }
             
-            if (unpaidServiceInvoice > 0) {
-                dto.setGrandTotal(totalRoom + unpaidServiceInvoice);
-            } else if (totalServiceInvoice > 0) {
-                dto.setGrandTotal(totalRoom + totalServiceInvoice);
-            } else {
-                dto.setGrandTotal(totalRoom + totalService);
+            // Tính OrderDetails chưa có ServiceInvoice (chưa thanh toán)
+            double unpaidOrderDetails = 0;
+            java.util.Set<Integer> ordersWithInvoice = new java.util.HashSet<>();
+            for (PaymentDTO.ServiceInvoiceDetail inv : listServiceInvoices) {
+                ordersWithInvoice.add(inv.getOrderId());
             }
+            
+            for (PaymentDTO.ServiceDetail detail : listDetails) {
+                // Chỉ tính OrderDetails chưa có ServiceInvoice
+                if (!ordersWithInvoice.contains(detail.getOrderId())) {
+                    unpaidOrderDetails += detail.getTotal();
+                }
+            }
+            
+            // Tổng = tiền phòng + ServiceInvoice chưa Paid + OrderDetails chưa có ServiceInvoice
+            dto.setGrandTotal(totalRoom + unpaidServiceInvoice + unpaidOrderDetails);
         }
         
         return dto;

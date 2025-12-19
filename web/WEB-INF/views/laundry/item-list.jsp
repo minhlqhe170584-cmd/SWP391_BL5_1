@@ -56,6 +56,7 @@
                         <button class="close" data-dismiss="alert">
                             <span>&times;</span>
                         </button>
+                         <i class="fas fa-exclamation-circle"></i>
                         ${errorMessage}
                     </div>
                 </div>
@@ -172,8 +173,8 @@
                                             <strong>
                                                 <fmt:formatNumber value="${item.defaultPrice}" 
                                                                 type="currency" 
-                                                                currencySymbol="$" 
-                                                                maxFractionDigits="2"/>
+                                                                currencySymbol="" 
+                                                                maxFractionDigits="0"/>VND
                                             </strong>
                                         </td>
                                         <td><span class="badge badge-light">${item.unit}</span></td>
