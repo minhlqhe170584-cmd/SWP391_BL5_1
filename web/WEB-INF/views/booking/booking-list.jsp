@@ -25,9 +25,14 @@
         <div class="row">
             
             <%-- ======================================================== --%>
-            <%-- 2. SIDEBAR (Đồng bộ, chỉ khác mục Active)                --%>
+            <%-- 2. SIDEBAR                                               --%>
             <%-- ======================================================== --%>
             <div class="col-md-2 mb-3">
+                <%-- 
+                   GỢI Ý: Bạn nên cập nhật file components/sidebar-receptionist.jsp 
+                   theo mẫu list-group này để dùng chung cho gọn nhé.
+                   Hiện tại mình giữ nguyên code HTML của bạn ở đây.
+                --%>
                 <div class="list-group shadow-sm">
                     <div class="list-group-item bg-light text-uppercase font-weight-bold">
                         Chức Năng
@@ -49,7 +54,7 @@
             </div>
 
             <%-- ======================================================== --%>
-            <%-- 3. MAIN CONTENT (Nội dung chính)                         --%>
+            <%-- 3. MAIN CONTENT                                          --%>
             <%-- ======================================================== --%>
             <div class="col-md-10">
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
@@ -112,65 +117,65 @@
                                         </thead>
                                         <tbody>
                                             <c:forEach items="${bookings}" var="b">
-                                        <tr>
-                                            <td><strong>${b.bookingCode}</strong></td>
-                                            <td>${b.customerName}</td>
-                                            <td><span class="badge badge-info">P.${b.roomNumber}</span></td>
-                                            <td><fmt:formatDate value="${b.checkInDate}" pattern="dd/MM/yyyy"/></td>
-                                            <td><fmt:formatDate value="${b.checkOutDate}" pattern="dd/MM/yyyy"/></td>
+                                            <tr>
+                                                <td><strong>${b.bookingCode}</strong></td>
+                                                <td>${b.customerName}</td>
+                                                <td><span class="badge badge-info">P.${b.roomNumber}</span></td>
+                                                <td><fmt:formatDate value="${b.checkInDate}" pattern="dd/MM/yyyy"/></td>
+                                                <td><fmt:formatDate value="${b.checkOutDate}" pattern="dd/MM/yyyy"/></td>
+                                                
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${b.status == 'Pending'}">
+                                                            <span class="badge badge-warning text-white">Chờ nhận phòng</span>
+                                                        </c:when>
+                                                        <c:when test="${b.status == 'CheckedIn'}">
+                                                            <span class="badge badge-success">Đang ở</span>
+                                                        </c:when>
+                                                        <c:when test="${b.status == 'CheckedOut'}">
+                                                            <span class="badge badge-secondary">Đã trả phòng</span>
+                                                        </c:when>
+                                                        <c:when test="${b.status == 'Cancelled'}">
+                                                            <span class="badge badge-danger">Đã hủy</span>
+                                                        </c:when>
+                                                        <c:otherwise>${b.status}</c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                
+                                                <td class="text-center">
+                                                    <c:if test="${b.status == 'Pending'}">
+                                                        <form action="${pageContext.request.contextPath}/booking-manager" method="post" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn HỦY đơn đặt này không? Hành động này không thể hoàn tác.');">
+                                                            <input type="hidden" name="action" value="cancel">
+                                                            <input type="hidden" name="bookingId" value="${b.bookingId}">
+                                                            <input type="hidden" name="roomId" value="${b.roomId}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Hủy đơn này">
+                                                                <i class="fa fa-times"></i> Hủy Đơn
+                                                            </button>
+                                                        </form>
+                                                    </c:if>
+                                                    <c:if test="${b.status == 'CheckedIn'}">
+                                                        <form action="${pageContext.request.contextPath}/receptionist" method="post" class="d-inline">
+                                                            <input type="hidden" name="bookingId" value="${b.bookingId}">
+                                                            <input type="hidden" name="roomId" value="${b.roomId}">
+                                                            <button type="submit" name="action" value="checkout" class="btn btn-sm btn-warning" 
+                                                                    onclick="return confirm('Xác nhận khách trả phòng và Check-out?');" title="Checkout">
+                                                                <i class="fa fa-sign-out"></i> Checkout
+                                                            </button>
+                                                        </form>
+                                                    </c:if>
+                                                    <c:if test="${b.status == 'CheckedOut'}">
+                                                        <a href="${pageContext.request.contextPath}/receptionist/payment?bookingId=${b.bookingId}" 
+                                                           class="btn btn-sm btn-success" title="Thanh toán">
+                                                            <i class="fa fa-money"></i> Thanh Toán
+                                                        </a>
+                                                    </c:if>
+                                                    <c:if test="${b.status != 'Pending' && b.status != 'CheckedOut' && b.status != 'CheckedIn'}">
+                                                        <span class="text-muted small"><i class="fa fa-lock"></i></span>
+                                                    </c:if>
+                                                </td>
+                                            </tr>
+                                            </c:forEach>
                                             
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${b.status == 'Pending'}">
-                                                        <span class="badge badge-warning text-white">Chờ nhận phòng</span>
-                                                    </c:when>
-                                                    <c:when test="${b.status == 'CheckedIn'}">
-                                                        <span class="badge badge-success">Đang ở</span>
-                                                    </c:when>
-                                                    <c:when test="${b.status == 'CheckedOut'}">
-                                                        <span class="badge badge-secondary">Đã trả phòng</span>
-                                                    </c:when>
-                                                    <c:when test="${b.status == 'Cancelled'}">
-                                                        <span class="badge badge-danger">Đã hủy</span>
-                                                    </c:when>
-                                                    <c:otherwise>${b.status}</c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            
-                                            <td class="text-center">
-                                                <c:if test="${b.status == 'Pending'}">
-                                                    <form action="${pageContext.request.contextPath}/booking-manager" method="post" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn HỦY đơn đặt này không? Hành động này không thể hoàn tác.');">
-                                                        <input type="hidden" name="action" value="cancel">
-                                                        <input type="hidden" name="bookingId" value="${b.bookingId}">
-                                                        <input type="hidden" name="roomId" value="${b.roomId}">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hủy đơn này">
-                                                            <i class="fa fa-times"></i> Hủy Đơn
-                                                        </button>
-                                                    </form>
-                                                </c:if>
-                                                <c:if test="${b.status == 'CheckedIn'}">
-                                                    <form action="${pageContext.request.contextPath}/receptionist" method="post" class="d-inline">
-                                                        <input type="hidden" name="bookingId" value="${b.bookingId}">
-                                                        <input type="hidden" name="roomId" value="${b.roomId}">
-                                                        <button type="submit" name="action" value="checkout" class="btn btn-sm btn-warning" 
-                                                                onclick="return confirm('Xác nhận khách trả phòng và Check-out?');" title="Checkout">
-                                                            <i class="fa fa-sign-out"></i> Checkout
-                                                        </button>
-                                                    </form>
-                                                </c:if>
-                                                <c:if test="${b.status == 'CheckedOut'}">
-                                                    <a href="${pageContext.request.contextPath}/receptionist/payment?bookingId=${b.bookingId}" 
-                                                       class="btn btn-sm btn-success" title="Thanh toán">
-                                                        <i class="fa fa-money"></i> Thanh Toán
-                                                    </a>
-                                                </c:if>
-                                                <c:if test="${b.status != 'Pending' && b.status != 'CheckedOut' && b.status != 'CheckedIn'}">
-                                                    <span class="text-muted small"><i class="fa fa-lock"></i></span>
-                                                </c:if>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                    
                                             <c:if test="${empty bookings}">
                                                 <tr>
                                                     <td colspan="7" class="text-center py-4 text-muted">
@@ -301,10 +306,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-    </div>
-
-    <jsp:include page="../components/footer.jsp"></jsp:include>
+                </div> </div> </div> </div> <jsp:include page="../components/footer.jsp"></jsp:include>
 </body>
 </html>
