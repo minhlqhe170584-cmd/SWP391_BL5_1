@@ -388,17 +388,180 @@ public class LaundryOrderDAO extends DBContext {
 
     // Update order status
     public boolean updateOrderStatus(int laundryId, String status) {
+        Connection conn = null;
+        PreparedStatement stLaundry = null;
+        PreparedStatement stService = null;
+        PreparedStatement stOrderDetail = null;
+        
         try {
-            PreparedStatement st = connection.prepareStatement(UPDATE_ORDER_STATUS);
-            st.setString(1, status);
-            st.setInt(2, laundryId);
+            conn = connection;
+            conn.setAutoCommit(false);
             
-            int rowsAffected = st.executeUpdate();
-            return rowsAffected > 0;
+            // First, get current status and order_id
+            String getCurrentInfo = "SELECT lo.status AS current_status, lo.order_id " +
+                                   "FROM LaundryOrders lo WHERE lo.laundry_id = ?";
+            PreparedStatement stGetInfo = conn.prepareStatement(getCurrentInfo);
+            stGetInfo.setInt(1, laundryId);
+            ResultSet rsInfo = stGetInfo.executeQuery();
+            
+            if (!rsInfo.next()) {
+                rsInfo.close();
+                stGetInfo.close();
+                return false;
+            }
+            
+            String currentStatus = rsInfo.getString("current_status");
+            int orderId = rsInfo.getInt("order_id");
+            rsInfo.close();
+            stGetInfo.close();
+            
+            // 1. Update LaundryOrders status
+            stLaundry = conn.prepareStatement(UPDATE_ORDER_STATUS);
+            stLaundry.setString(1, status);
+            stLaundry.setInt(2, laundryId);
+            stLaundry.executeUpdate();
+            
+            // 2. Determine ServiceOrders status based on new status
+            String serviceOrderStatus = "Pending"; // default
+            
+            if ("COMPLETED".equalsIgnoreCase(status)) {
+                serviceOrderStatus = "Completed";
+            } else if ("CANCELLED".equalsIgnoreCase(status)) {
+                serviceOrderStatus = "CANCELLED";
+            } else if ("PENDING".equalsIgnoreCase(currentStatus) && !"PENDING".equalsIgnoreCase(status)) {
+                // If changing from PENDING to anything else, set to Confirmed
+                serviceOrderStatus = "Confirmed";
+            } else {
+                // Keep current ServiceOrders status if not one of the above cases
+                String getServiceStatus = "SELECT status FROM ServiceOrders WHERE order_id = ?";
+                PreparedStatement stGetServiceStatus = conn.prepareStatement(getServiceStatus);
+                stGetServiceStatus.setInt(1, orderId);
+                ResultSet rsServiceStatus = stGetServiceStatus.executeQuery();
+                if (rsServiceStatus.next()) {
+                    serviceOrderStatus = rsServiceStatus.getString("status");
+                }
+                rsServiceStatus.close();
+                stGetServiceStatus.close();
+            }
+            
+            // 3. Update ServiceOrders status
+            String updateServiceStatus = "UPDATE ServiceOrders SET status = ? WHERE order_id = ?";
+            stService = conn.prepareStatement(updateServiceStatus);
+            stService.setString(1, serviceOrderStatus);
+            stService.setInt(2, orderId);
+            stService.executeUpdate();
+            
+            // 3.5. If ServiceOrders status is "Confirmed", create ServiceInvoices
+            if ("Confirmed".equalsIgnoreCase(serviceOrderStatus)) {
+                // Check if ServiceInvoice already exists for this order_id
+                String checkInvoice = "SELECT COUNT(*) FROM ServiceInvoices WHERE order_id = ?";
+                PreparedStatement stCheckInvoice = conn.prepareStatement(checkInvoice);
+                stCheckInvoice.setInt(1, orderId);
+                ResultSet rsCheckInvoice = stCheckInvoice.executeQuery();
+                boolean hasInvoice = false;
+                if (rsCheckInvoice.next()) {
+                    hasInvoice = rsCheckInvoice.getInt(1) > 0;
+                }
+                rsCheckInvoice.close();
+                stCheckInvoice.close();
+                
+                // Only create invoice if it doesn't exist
+                if (!hasInvoice) {
+                    // Get total_amount from ServiceOrders
+                    String getTotalAmount = "SELECT total_amount FROM ServiceOrders WHERE order_id = ?";
+                    PreparedStatement stGetAmount = conn.prepareStatement(getTotalAmount);
+                    stGetAmount.setInt(1, orderId);
+                    ResultSet rsAmount = stGetAmount.executeQuery();
+                    double finalAmount = 0.0;
+                    if (rsAmount.next()) {
+                        finalAmount = rsAmount.getDouble("total_amount");
+                    }
+                    rsAmount.close();
+                    stGetAmount.close();
+                    
+                    // Insert ServiceInvoice
+                    String insertInvoice = "INSERT INTO ServiceInvoices (order_id, created_at, final_amount, status) VALUES (?, GETDATE(), ?, 'Unpaid')";
+                    PreparedStatement stInvoice = conn.prepareStatement(insertInvoice);
+                    stInvoice.setInt(1, orderId);
+                    stInvoice.setDouble(2, finalAmount);
+                    stInvoice.executeUpdate();
+                    stInvoice.close();
+                }
+            }
+            
+            // 4. If changing from PENDING, create OrderDetails records
+            if ("PENDING".equalsIgnoreCase(currentStatus) && !"PENDING".equalsIgnoreCase(status)) {
+                // Get LaundryOrderDetails
+                String getLaundryDetails = "SELECT lod.laundry_item_id, lod.quantity, lod.unit_price, " +
+                                         "li.item_name, li.service_id " +
+                                         "FROM LaundryOrderDetails lod " +
+                                         "LEFT JOIN LaundryItems li ON lod.laundry_item_id = li.laundry_item_id " +
+                                         "WHERE lod.laundry_id = ?";
+                PreparedStatement stGetDetails = conn.prepareStatement(getLaundryDetails);
+                stGetDetails.setInt(1, laundryId);
+                ResultSet rsDetails = stGetDetails.executeQuery();
+                
+                // Check if OrderDetails already exist for this order_id
+                String checkExisting = "SELECT COUNT(*) FROM OrderDetails WHERE order_id = ?";
+                PreparedStatement stCheck = conn.prepareStatement(checkExisting);
+                stCheck.setInt(1, orderId);
+                ResultSet rsCheck = stCheck.executeQuery();
+                boolean hasExisting = false;
+                if (rsCheck.next()) {
+                    hasExisting = rsCheck.getInt(1) > 0;
+                }
+                rsCheck.close();
+                stCheck.close();
+                
+                // Only insert if OrderDetails don't exist yet
+                if (!hasExisting) {
+                    String insertOrderDetail = "INSERT INTO OrderDetails (order_id, service_id, item_name, quantity, unit_price) " +
+                                             "VALUES (?, ?, ?, ?, ?)";
+                    stOrderDetail = conn.prepareStatement(insertOrderDetail);
+                    
+                    while (rsDetails.next()) {
+                        stOrderDetail.setInt(1, orderId);
+                        stOrderDetail.setInt(2, rsDetails.getInt("service_id"));
+                        stOrderDetail.setString(3, rsDetails.getString("item_name"));
+                        stOrderDetail.setInt(4, rsDetails.getInt("quantity"));
+                        stOrderDetail.setDouble(5, rsDetails.getDouble("unit_price"));
+                        stOrderDetail.addBatch();
+                    }
+                    
+                    if (stOrderDetail != null) {
+                        stOrderDetail.executeBatch();
+                    }
+                }
+                
+                if (rsDetails != null) {
+                    rsDetails.close();
+                }
+                if (stGetDetails != null) {
+                    stGetDetails.close();
+                }
+            }
+            
+            conn.commit();
+            return true;
+            
         } catch (SQLException e) {
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                System.out.println("Error rolling back: " + ex);
+            }
             System.out.println("Error updating order status: " + e);
+            return false;
+        } finally {
+            try {
+                if (conn != null) conn.setAutoCommit(true);
+                if (stLaundry != null) stLaundry.close();
+                if (stService != null) stService.close();
+                if (stOrderDetail != null) stOrderDetail.close();
+            } catch (SQLException e) {
+                System.out.println("Error closing resources: " + e);
+            }
         }
-        return false;
     }
 
     // Delete order details
@@ -521,6 +684,9 @@ public class LaundryOrderDAO extends DBContext {
                     break;
                 case "Completed":
                     sql.append(" AND so.status LIKE N'%Completed%' OR so.status LIKE N'%Paid%' ");
+                    break;
+                case "Confirmed":
+                    sql.append(" AND so.status LIKE N'%Confirmed%' ");
                     break;
                 default:
                     sql.append(" AND so.status LIKE N'%Pending%' OR so.status LIKE N'%PENDING%' ");
@@ -653,6 +819,9 @@ public class LaundryOrderDAO extends DBContext {
                     break;
                 case "Completed":
                     sql.append(" AND so.status LIKE N'%Completed%' OR so.status LIKE N'%Paid%' ");
+                    break;
+                case "Confirmed":
+                    sql.append(" AND so.status LIKE N'%Confirmed%' ");
                     break;
                 default:
                     sql.append(" AND so.status LIKE N'%Pending%' OR so.status LIKE N'%PENDING%' ");

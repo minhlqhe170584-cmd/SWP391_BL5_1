@@ -391,18 +391,23 @@ public class LaundryOrderServlet extends HttpServlet {
             int laundryId = Integer.parseInt(request.getParameter("laundryId"));
             String status = request.getParameter("status");
             
+            if (status == null || status.trim().isEmpty()) {
+                response.sendRedirect("laundry-order?action=view&id=" + laundryId + "&error=invalid_status");
+                return;
+            }
+            
             boolean success = orderDAO.updateOrderStatus(laundryId, status);
             
             if (success) {
                 response.sendRedirect("laundry-order?action=view&id=" + laundryId + "&success=status_updated");
             } else {
-                request.setAttribute("error", "Failed to update status");
-                showUpdateStatusForm(request, response);
+                response.sendRedirect("laundry-order?action=view&id=" + laundryId + "&error=update_failed");
             }
             
+        } catch (NumberFormatException e) {
+            response.sendRedirect("laundry-order?error=invalid_id");
         } catch (Exception e) {
-            request.setAttribute("error", "Error updating status: " + e.getMessage());
-            showUpdateStatusForm(request, response);
+            response.sendRedirect("laundry-order?error=update_error");
         }
     }
 }

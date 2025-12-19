@@ -145,6 +145,13 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link ${view == 'Confirmed' ? 'active' : ''}" 
+                   href="laundry-order?view=Confirmed">
+                    <i class="fas fa-check-circle"></i> Confirmed
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link ${view == 'Completed' ? 'active' : ''}" 
                    href="laundry-order?view=Completed">
                     <i class="fas fa-check-circle"></i> Completed

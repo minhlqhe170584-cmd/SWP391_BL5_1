@@ -29,14 +29,7 @@
                         <i class="fas fa-user-tag"></i> <span>Staff Roles</span>
                     </a>
                 </li>
-                
-                <li class="menu-header">Customer Management</li>
-                <li>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/admin/customer">
-                        <i class="fas fa-users"></i> <span>Customer</span>
-                    </a>
-                </li>
-                
+                              
                 <li class="menu-header">Room Management</li>
                 <li>
                     <a class="nav-link" href="${pageContext.request.contextPath}/admin/rooms">
@@ -143,6 +136,12 @@
                 <li>
                     <a class="nav-link" href="${pageContext.request.contextPath}/task">
                         <i class="fas fa-users"></i> <span>Task</span>
+                    </a>
+                </li>
+                <li class="menu-header">Customer Management</li>
+                <li>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/admin/customer">
+                        <i class="fas fa-users"></i> <span>Customer</span>
                     </a>
                 </li>
                 <li class="menu-header">Staff Operations</li>

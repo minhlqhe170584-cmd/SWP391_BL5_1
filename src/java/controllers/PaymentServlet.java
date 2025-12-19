@@ -15,19 +15,49 @@ public class PaymentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        PaymentDAO dao = new PaymentDAO();
+        String bookingIdStr = request.getParameter("bookingId");
         String roomNumber = request.getParameter("roomNumber");
-        if (roomNumber != null && !roomNumber.trim().isEmpty()) {
-            PaymentDAO dao = new PaymentDAO();
-            int bookingId = dao.getActiveBookingIdByRoom(roomNumber);
-            if (bookingId != -1) {
-                PaymentDTO bill = dao.getPaymentInfo(bookingId);
-                request.setAttribute("bill", bill);
-                request.setAttribute("currBookingId", bookingId);
-                request.setAttribute("currRoom", roomNumber);
-            } else {
+        
+        int bookingId = -1;
+        
+        // Ưu tiên lấy từ bookingId (từ booking list)
+        if (bookingIdStr != null && !bookingIdStr.trim().isEmpty()) {
+            try {
+                bookingId = Integer.parseInt(bookingIdStr);
+                // Kiểm tra booking đã checkout
+                int checkedOutId = dao.getCheckedOutBookingById(bookingId);
+                if (checkedOutId == -1) {
+                    request.setAttribute("error", "Booking này chưa được checkout!");
+                } else {
+                    bookingId = checkedOutId;
+                }
+            } catch (NumberFormatException e) {
+                request.setAttribute("error", "Booking ID không hợp lệ!");
+            }
+        } 
+        // Nếu không có bookingId, thử tìm theo roomNumber
+        else if (roomNumber != null && !roomNumber.trim().isEmpty()) {
+            bookingId = dao.getActiveBookingIdByRoom(roomNumber);
+            if (bookingId == -1) {
                 request.setAttribute("error", "Phòng " + roomNumber + " hiện không có khách!");
             }
         }
+        
+        // Nếu có bookingId hợp lệ, lấy thông tin thanh toán
+        if (bookingId != -1) {
+            PaymentDTO bill = dao.getPaymentInfo(bookingId);
+            request.setAttribute("bill", bill);
+            request.setAttribute("currBookingId", bookingId);
+            if (bill.getRoomNumber() != null) {
+                request.setAttribute("currRoom", bill.getRoomNumber());
+            }
+        } else {
+            // Nếu không có bookingId, hiển thị danh sách booking cần thanh toán
+            java.util.List<PaymentDTO> pendingBookings = dao.getPendingPaymentBookings();
+            request.setAttribute("pendingBookings", pendingBookings);
+        }
+        
         request.getRequestDispatcher("/WEB-INF/views/receptionist/payment.jsp").forward(request, response);
     }
 
