@@ -132,7 +132,6 @@ CREATE TABLE Bicycles (
     bike_id INT IDENTITY(1,1) PRIMARY KEY,
     bike_code VARCHAR(20) UNIQUE NOT NULL,
     service_id INT FOREIGN KEY REFERENCES Services(service_id),
-    [status] NVARCHAR(20) DEFAULT 'Available', -- Đã thêm []
     [condition] NVARCHAR(255)                   -- Đã thêm []
 );
 
