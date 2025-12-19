@@ -2,7 +2,6 @@ package controllers;
 
 import dao.BicycleDAO;
 import dao.BikeTransactionDAO;
-import dao.ServiceDAO;
 import java.io.IOException;
 import java.util.ArrayList;
 import jakarta.servlet.ServletException;
@@ -83,6 +82,7 @@ public class BicycleServlet extends HttpServlet {
 
         String idRaw = request.getParameter("id");
         Bicycle b = new Bicycle();
+        
         b.setStatus("Available"); 
 
         if (idRaw != null && !idRaw.trim().isEmpty()) {
@@ -151,19 +151,7 @@ public class BicycleServlet extends HttpServlet {
             }
         }
         
-        if (bikeId == 0) {
-            b.setStatus("Available");
-        } else {
-            Bicycle oldBike = bicycleDAO.getById(bikeId);
-            if (oldBike != null) {
-                b.setStatus(oldBike.getStatus());
-            } else {
-                b.setStatus("Available"); 
-            }
-        }
-
         String errorMessage = null;
-
         if (bikeCode == null || bikeCode.trim().isEmpty()) {
             errorMessage = "Bike Code is required.";
         } else if (serviceIdStr == null || serviceIdStr.trim().isEmpty()) {

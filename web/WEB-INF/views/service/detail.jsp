@@ -6,7 +6,7 @@
 
 <div class="main-content">
     <section class="section">
-        
+
         <div class="section-header">
             <div class="section-header-back">
                 <a href="service" class="btn btn-icon"><i class="fas fa-arrow-left"></i></a>
@@ -20,7 +20,7 @@
         </div>
 
         <div class="section-body">
-            
+
             <c:if test="${not empty errorMessage}">
                 <div class="alert alert-danger alert-dismissible show fade">
                     <div class="alert-body">
@@ -39,10 +39,12 @@
                             <h4>${service.serviceId == 0 ? 'Add Service Form' : 'Update Service Form'}</h4>
                         </div>
                         <div class="card-body">
-                            
-                            <form method="POST" action="service" class="needs-validation" novalidate="">
+
+                            <form method="POST" action="service" class="needs-validation" novalidate="" enctype="multipart/form-data">
                                 <input type="hidden" name="serviceId" value="${service.serviceId}"/>
                                 
+                                <input type="hidden" name="currentImage" value="${service.imageUrl}"/>
+
                                 <div class="form-group">
                                     <label>Service Name <span class="text-danger">*</span></label>
                                     <div class="input-group">
@@ -69,15 +71,16 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Image URL</label>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                <i class="fas fa-image"></i>
-                                            </div>
+                                    <label>Service Image</label>
+                                    <c:if test="${not empty service.imageUrl}">
+                                        <div class="mb-2">
+                                            <img src="${pageContext.request.contextPath}/${service.imageUrl}" alt="Current Image" class="img-thumbnail" style="max-height: 150px; max-width: 100%;">
+                                            <small class="d-block text-muted">Current image</small>
                                         </div>
-                                        <input type="text" class="form-control" name="imageUrl" 
-                                               value="${service.imageUrl}" placeholder="http://example.com/image.jpg">
+                                    </c:if>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="customFile" name="imageFile" accept="image/*">
+                                        <label class="custom-file-label" for="customFile">Choose file (Leave empty to keep current)</label>
                                     </div>
                                 </div>
 
@@ -85,12 +88,12 @@
                                     <div class="control-label">Status</div>
                                     <label class="custom-switch mt-2 pl-0">
                                         <input type="checkbox" name="isActive" value="true" class="custom-switch-input" 
-                                            <c:if test="${service.serviceId == 0 || service.isActive}">checked</c:if>>
+                                               <c:if test="${service.serviceId == 0 || service.isActive}">checked</c:if>>
                                         <span class="custom-switch-indicator"></span>
                                         <span class="custom-switch-description">Active</span>
                                     </label>
                                 </div>
-                                
+
                                 <div class="form-group text-right">
                                     <button class="btn btn-primary btn-lg" type="submit">
                                         <i class="fas fa-save"></i> ${service.serviceId == 0 ? 'Save Service' : 'Save Changes'}
@@ -120,5 +123,13 @@
         </div>
     </section>
 </div>
+
+<script>
+    document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+        var fileName = document.getElementById("customFile").files[0].name;
+        var nextSibling = e.target.nextElementSibling;
+        nextSibling.innerText = fileName;
+    });
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

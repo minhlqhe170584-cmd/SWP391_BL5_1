@@ -222,7 +222,6 @@ CREATE TABLE BikeRentals (
 CREATE TABLE LaundryOrders (
     laundry_id INT IDENTITY(1,1) PRIMARY KEY,
     order_id INT NOT NULL FOREIGN KEY REFERENCES ServiceOrders(order_id),
-    pickup_time DATETIME,
     expected_pickup_time DATETIME NULL,
     expected_return_time DATETIME NULL,
     [status] NVARCHAR(20) DEFAULT N'Pending', -- Đã thêm []

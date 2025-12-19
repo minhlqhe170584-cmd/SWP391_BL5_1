@@ -71,7 +71,7 @@ public class BikeTransactionDAO extends DBContext {
     }
 
     public int getTotalBikeCount(int serviceId) {
-        String sql = "SELECT COUNT(*) FROM Bicycles WHERE status != 'Maintenance' AND status != 'Deleted' AND service_id = ?";
+        String sql = "SELECT COUNT(*) FROM Bicycles WHERE (condition != 'Deleted' OR condition IS NULL) AND service_id = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, serviceId);
@@ -95,7 +95,9 @@ public class BikeTransactionDAO extends DBContext {
             ResultSet rs2 = st2.executeQuery();
             if (rs2.next()) bookedBikes = rs2.getInt(1);
         } catch (SQLException e) { e.printStackTrace(); }
-        return totalBikes - bookedBikes;
+        
+        int available = totalBikes - bookedBikes;
+        return available < 0 ? 0 : available;
     }
 
     public ArrayList<SlotAvailability> getHourlyAvailability(Timestamp start, Timestamp end, int serviceId) {
@@ -159,6 +161,7 @@ public class BikeTransactionDAO extends DBContext {
             return true;
         } catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            e.printStackTrace();
         } finally {
             try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException ex) {}
         }
@@ -199,8 +202,13 @@ public class BikeTransactionDAO extends DBContext {
 
     public ArrayList<Bicycle> getPhysicalBikesForHandover(int serviceId) {
         ArrayList<Bicycle> list = new ArrayList<>();
-        String sql = "SELECT b.*, s.service_name FROM Bicycles b LEFT JOIN Services s ON b.service_id = s.service_id " +
-                     "WHERE b.status = 'Available' AND b.service_id = ?";
+        String sql = "SELECT b.*, s.service_name FROM Bicycles b " +
+                     "LEFT JOIN Services s ON b.service_id = s.service_id " +
+                     "WHERE b.service_id = ? " +
+                     "AND (b.condition != 'Deleted' OR b.condition IS NULL) " +
+                     "AND NOT EXISTS (" +
+                     "  SELECT 1 FROM BikeRentals br WHERE br.bike_id = b.bike_id AND br.status = 'Active'" +
+                     ")";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, serviceId);
@@ -208,7 +216,7 @@ public class BikeTransactionDAO extends DBContext {
             while (rs.next()) {
                 list.add(new Bicycle(
                     rs.getInt("bike_id"), rs.getString("bike_code"), rs.getInt("service_id"), 
-                    rs.getString("status"), rs.getString("condition"), rs.getString("service_name")
+                    "Available", rs.getString("condition"), rs.getString("service_name")
                 ));
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -225,65 +233,65 @@ public class BikeTransactionDAO extends DBContext {
         } catch (SQLException e) { e.printStackTrace(); }
         return 0;
     }
-  
+    
     public void handoverBikes(int orderId, String[] bikeIds) {
         Connection conn = null;
         try {
             conn = this.connection;
             conn.setAutoCommit(false);
+            
             PreparedStatement psOrder = conn.prepareStatement("SELECT total_amount FROM ServiceOrders WHERE order_id = ?");
             psOrder.setInt(1, orderId);
             ResultSet rs = psOrder.executeQuery();
+            
             if (!rs.next()) return;
             double amount = rs.getDouble("total_amount");
+
             PreparedStatement psRental = conn.prepareStatement("INSERT INTO BikeRentals (order_id, bike_id, start_time, status) VALUES (?, ?, GETDATE(), 'Active')");
-            PreparedStatement psBike = conn.prepareStatement("UPDATE Bicycles SET status = 'Rented' WHERE bike_id = ?");
+            
             for (String bid : bikeIds) {
                 psRental.setInt(1, orderId);
                 psRental.setInt(2, Integer.parseInt(bid));
                 psRental.addBatch();
-                psBike.setInt(1, Integer.parseInt(bid));
-                psBike.addBatch();
             }
             psRental.executeBatch();
-            psBike.executeBatch();
+
             PreparedStatement psInv = conn.prepareStatement("INSERT INTO ServiceInvoices (order_id, created_at, final_amount, status) VALUES (?, GETDATE(), ?, 'Unpaid')");
             psInv.setInt(1, orderId);
             psInv.setDouble(2, amount);
             psInv.executeUpdate();
+
             PreparedStatement psUpdateOrder = conn.prepareStatement("UPDATE ServiceOrders SET status = 'Confirmed' WHERE order_id = ?");
             psUpdateOrder.setInt(1, orderId);
             psUpdateOrder.executeUpdate();
+
             conn.commit();
         } catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            e.printStackTrace();
         } finally {
             try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException ex) {}
         }
     }
 
-    //Hoàn thành task update status cho task
-    public void returnBikesAndPay(int orderId, String paymentMethod) {
+    public void returnBikes(int orderId) {
         Connection conn = null;
         try {
             conn = this.connection;
             conn.setAutoCommit(false);
+
             PreparedStatement psRental = conn.prepareStatement("UPDATE BikeRentals SET end_time = GETDATE(), status = 'Returned' WHERE order_id = ?");
             psRental.setInt(1, orderId);
             psRental.executeUpdate();
-            PreparedStatement psBike = conn.prepareStatement("UPDATE Bicycles SET status = 'Available' WHERE bike_id IN (SELECT bike_id FROM BikeRentals WHERE order_id = ?)");
-            psBike.setInt(1, orderId);
-            psBike.executeUpdate();
-            PreparedStatement psInv = conn.prepareStatement("UPDATE ServiceInvoices SET status = 'Paid', payment_method = ? WHERE order_id = ?");
-            psInv.setString(1, paymentMethod);
-            psInv.setInt(2, orderId);
-            psInv.executeUpdate();
+
             PreparedStatement psOrder = conn.prepareStatement("UPDATE ServiceOrders SET status = 'Completed' WHERE order_id = ?");
             psOrder.setInt(1, orderId);
             psOrder.executeUpdate();
+
             conn.commit();
         } catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
+            e.printStackTrace();
         } finally {
             try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException ex) {}
         }

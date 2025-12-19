@@ -65,12 +65,7 @@ public class BikeRentalOpsServlet extends HttpServlet {
                     response.sendRedirect("bike-ops?view=pending&error=NoBikeSelected");
                 }
             } else if ("return".equals(action)) {
-                String paymentMethod = request.getParameter("paymentMethod");
-                if (paymentMethod == null || paymentMethod.isEmpty()) {
-                    paymentMethod = "Cash"; 
-                }
-                
-                dao.returnBikesAndPay(orderId, paymentMethod);
+                dao.returnBikes(orderId);
                 response.sendRedirect("bike-ops?view=active&msg=Returned");
             }
         } catch (Exception e) {

@@ -61,14 +61,23 @@
                                 </tr>
                             </c:if>
 
-                            <c:forEach var="c" items="${categories}">
+                            <c:forEach items="${listCategories}" var="c">
                                 <tr>
-                                    <td>#${c.categoryId}</td>
-                                    <td class="font-weight-bold">${c.categoryName}</td>
-                                    <td>${c.description}</td>
+                                    <td>${c.categoryId}</td>
+
+                                    <td style="max-width: 150px; white-space: normal; word-wrap: break-word;">
+                                        ${c.categoryName}
+                                    </td>
+
+                                    <td style="max-width: 300px; white-space: normal; word-wrap: break-word;">
+                                        <div style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal;" title="${c.description}">
+                                            ${c.description}
+                                        </div>
+                                    </td>
+
                                     <td>
-                                        <div class="d-flex">
-                                            <a href="service-category?action=detail&id=${c.categoryId}" class="btn btn-warning btn-sm mr-2" title="Edit">
+                                        <div class="table-actions">
+                                            <a href="service-category?action=detail&id=${c.categoryId}" class="btn btn-primary btn-sm" title="Edit">
                                                 <i class="fas fa-pencil-alt"></i>
                                             </a>
                                             <a href="service-category?action=delete&id=${c.categoryId}" class="btn btn-danger btn-sm" 
