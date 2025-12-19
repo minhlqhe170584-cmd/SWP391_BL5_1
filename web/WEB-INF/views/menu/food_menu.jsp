@@ -230,7 +230,7 @@
                                             <div class="quantity-wrapper">
                                                 <span class="quantity-label">Số lượng</span>
                                                 <input type="number" 
-                                                       name="item_serviceId_${food.serviceId}" 
+                                                       name="item_serviceId_${food.foodId}" 
                                                        value="0" 
                                                        min="0" 
                                                        class="form-control quantity-input">
@@ -283,7 +283,7 @@
                                             <div class="quantity-wrapper">
                                                 <span class="quantity-label">Số lượng</span>
                                                 <input type="number" 
-                                                       name="item_serviceId_${drink.serviceId}" 
+                                                       name="item_serviceId_${drink.drinkId}" 
                                                        value="0" 
                                                        min="0" 
                                                        class="form-control quantity-input">
