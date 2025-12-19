@@ -39,7 +39,7 @@
                             <h4><i class="fas fa-plus-circle"></i> New Room Type Form</h4>
                         </div>
                         <div class="card-body">
-                            
+
                             <c:if test="${not empty error}">
                                 <div class="alert alert-danger">
                                     ${error}
@@ -145,36 +145,35 @@
 <script>
     function previewImage(input) {
         if (input.files && input.files[0]) {
-        var fileSize = input.files[0].size;
-        var maxSize = 2 * 1024 * 1024; // 2MB
+            var fileSize = input.files[0].size;
+            var maxSize = 2 * 1024 * 1024; // 2MB
 
-        if (fileSize > maxSize) {
-            alert("File size must be less than 2MB.");
-            return false;
-        }
-        
-        
-        
-        // Kiểm tra loại file
-        var allowedExtensions = ['.xbm', '.tif', '.jfif', '.pjp','.apng','.jpeg','.heif','.ico','.tiff','.webp','.svgz','.jpg','.heic','.gif','.svg','.png','.bmg','.pjpeg','.avif'];
+            if (fileSize > maxSize) {
+                alert("File size must be less than 2MB.");
+                return false;
+            }
 
-        
-        if (!input.files[0].name.endsWith(allowedExtensions)) {
-            alert("Only image files are allowed.");
-            return false;
-        }
-        
-        
 
-        // Continue with the rest of your code
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('imagePreview').src = e.target.result;
+
+            // Kiểm tra loại file
+            var allowedMIMETypes = ['image/x-bmp', 'image/tiff', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/webp', 'image/heif', 'image/avif'];
+
+            if (!allowedMIMETypes.includes(input.files[0].type)) {
+                alert("Only image files are allowed.");
+                return false;
+            }
+
+
+
+            // Continue with the rest of your code
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imagePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+            var fileName = input.files[0].name;
+            input.nextElementSibling.innerText = fileName;
         }
-        reader.readAsDataURL(input.files[0]);
-        var fileName = input.files[0].name;
-        input.nextElementSibling.innerText = fileName;
-    }
     }
 
     function validateForm() {
@@ -217,7 +216,7 @@
             showError(p1Input, "errorPrice1", "Invalid price!");
             isValid = false;
         }
-        
+
         let p2Val = p2Input.value;
         if (p2Val === "" || isNaN(p2Val) || parseFloat(p2Val) < 0) {
             showError(p2Input, "errorPrice2", "Invalid price!");

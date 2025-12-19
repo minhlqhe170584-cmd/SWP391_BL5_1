@@ -33,12 +33,12 @@
                 </div>
 
                 <div class="card-body">
-                    
+
                     <%-- ========== PHẦN THÊM MỚI: SEARCH & FILTER START ========== --%>
                     <form action="event-booking-list" method="GET" class="mb-4">
                         <input type="hidden" name="action" value="LIST">
                         <div class="form-row align-items-end">
-                            
+
                             <div class="form-group col-md-5">
                                 <label>Search Event Name</label>
                                 <div class="input-group">
@@ -64,7 +64,7 @@
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-filter"></i> Filter
                                 </button>
-                                
+
                                 <%-- Logic nút Reset: Chỉ hiện khi đang search hoặc filter --%>
                                 <c:if test="${not empty keyword or not empty status}">
                                     <a href="event-booking-list?action=LIST" class="btn btn-secondary ml-2">
@@ -178,27 +178,41 @@
                         </table>
                     </div>
                 </div>
-                
-                <%-- ========== PHẦN THÊM MỚI: PAGINATION (PHÂN TRANG) START ========== --%>
+
+                <%-- ========== PHẦN THÊM MỚI: PAGINATION (PHÂN TRANG) START ========== --%>                
                 <c:if test="${endPage > 1}">
                     <div class="card-footer text-right">
                         <nav class="d-inline-block">
                             <ul class="pagination mb-0">
-                                
                                 <c:if test="${tag > 1}">
                                     <li class="page-item">
-                                        <a class="page-link" href="event-booking-list?action=LIST&index=${tag-1}&keyword=${keyword}&status=${status}">
+                                        <a class="page-link" href="event-booking-list?action=LIST&index=${tag+1}&keyword=${keyword}&status=${status}">
                                             <i class="fas fa-chevron-left"></i>
                                         </a>
                                     </li>
                                 </c:if>
 
-                                <c:forEach begin="1" end="${endPage}" var="i">
-                                    <li class="page-item ${tag == i ? 'active' : ''}">
-                                        <a class="page-link" href="event-booking-list?action=LIST&index=${i}&keyword=${keyword}&status=${status}">${i}</a>
-                                    </li>
-                                </c:forEach>
+                                <c:if test="${tag + 2 >= endPage}">
+                                    <%-- Đảm bảo begin không nhỏ hơn 1 --%>
+                                    <c:set var="startLoop" value="${endPage - 2 < 1 ? 1 : endPage - 2}" />
 
+                                    <c:forEach begin="${startLoop}" end="${endPage}" var="i">
+                                        <li class="page-item ${tag == i ? 'active' : ''}">
+                                            <a class="page-link" href="event-booking-list?action=LIST&index=${tag+1}&keyword=${keyword}&status=${status}">
+                                                ${i}
+                                            </a>
+                                        </li>
+                                    </c:forEach>
+                                </c:if>
+                                <c:if test="${tag + 2 < endPage}">
+                                    <c:forEach begin="${tag}" end="${tag + 2}" var="i">
+                                        <li class="page-item ${tag == i ? 'active' : ''}">
+                                            <a class="page-link" href="event-booking-list?action=LIST&index=${tag+1}&keyword=${keyword}&status=${status}">
+                                                ${i}
+                                            </a>
+                                        </li>
+                                    </c:forEach>
+                                </c:if>
                                 <c:if test="${tag < endPage}">
                                     <li class="page-item">
                                         <a class="page-link" href="event-booking-list?action=LIST&index=${tag+1}&keyword=${keyword}&status=${status}">
@@ -211,7 +225,7 @@
                     </div>
                 </c:if>
                 <%-- ========== PHẦN THÊM MỚI: PAGINATION END ========== --%>
-                
+
             </div>
         </div>
     </section>
@@ -221,41 +235,41 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-   function confirmAction(event, actionName, message, link) {
-       event.preventDefault(); // Chặn chuyển trang
+                                                           function confirmAction(event, actionName, message, link) {
+                                                               event.preventDefault(); // Chặn chuyển trang
 
-       let iconType = 'question';
-       let confirmColor = '#3085d6';
-       let btnText = 'Yes, do it!';
+                                                               let iconType = 'question';
+                                                               let confirmColor = '#3085d6';
+                                                               let btnText = 'Yes, do it!';
 
-       // Tùy chỉnh màu sắc và icon theo hành động
-       if (actionName === 'Approve') {
-           iconType = 'success';
-           confirmColor = '#28a745'; // Xanh lá
-           btnText = 'Yes, Approve!';
-       } else if (actionName === 'Reject') {
-           iconType = 'warning';
-           confirmColor = '#dc3545'; // Đỏ
-           btnText = 'Yes, Reject!';
-       } else if (actionName === 'Finish') {
-           iconType = 'info';
-           confirmColor = '#17a2b8'; // Xanh dương
-           btnText = 'Yes, Finish!';
-       }
+                                                               // Tùy chỉnh màu sắc và icon theo hành động
+                                                               if (actionName === 'Approve') {
+                                                                   iconType = 'success';
+                                                                   confirmColor = '#28a745'; // Xanh lá
+                                                                   btnText = 'Yes, Approve!';
+                                                               } else if (actionName === 'Reject') {
+                                                                   iconType = 'warning';
+                                                                   confirmColor = '#dc3545'; // Đỏ
+                                                                   btnText = 'Yes, Reject!';
+                                                               } else if (actionName === 'Finish') {
+                                                                   iconType = 'info';
+                                                                   confirmColor = '#17a2b8'; // Xanh dương
+                                                                   btnText = 'Yes, Finish!';
+                                                               }
 
-       Swal.fire({
-           title: actionName + ' Request?',
-           text: message,
-           icon: iconType,
-           showCancelButton: true,
-           confirmButtonColor: confirmColor,
-           cancelButtonColor: '#d33',
-           confirmButtonText: btnText,
-           cancelButtonText: 'Cancel'
-       }).then((result) => {
-           if (result.isConfirmed) {
-               window.location.href = link; // Chuyển trang nếu bấm Yes
-           }
-       });
-   }
+                                                               Swal.fire({
+                                                                   title: actionName + ' Request?',
+                                                                   text: message,
+                                                                   icon: iconType,
+                                                                   showCancelButton: true,
+                                                                   confirmButtonColor: confirmColor,
+                                                                   cancelButtonColor: '#d33',
+                                                                   confirmButtonText: btnText,
+                                                                   cancelButtonText: 'Cancel'
+                                                               }).then((result) => {
+                                                                   if (result.isConfirmed) {
+                                                                       window.location.href = link; // Chuyển trang nếu bấm Yes
+                                                                   }
+                                                               });
+                                                           }
 </script>

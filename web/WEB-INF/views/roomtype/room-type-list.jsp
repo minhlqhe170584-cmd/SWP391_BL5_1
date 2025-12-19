@@ -186,14 +186,17 @@
                                             </c:if>
 
                                             <c:if test="${tag + 2 >= endPage}">
-                                                <c:forEach begin="${endPage - 2}" end="${endPage}" var="i">
-                                                    <li class="page-item ${tag == i ? 'active' : ''}">
+                                        <%-- Đảm bảo begin không nhỏ hơn 1 --%>
+                                        <c:set var="startLoop" value="${endPage - 2 < 1 ? 1 : endPage - 2}" />
+
+                                        <c:forEach begin="${startLoop}" end="${endPage}" var="i">
+                                            <li class="page-item ${tag == i ? 'active' : ''}">
                                                         <a class="page-link" href="room-types?action=LIST&index=${i}&keyword=${keyword}&floor=${currentFloor}&typeId=${currentType}&active=${currentActive}">
-                                                            ${i}
-                                                        </a>
-                                                    </li>
-                                                </c:forEach>
-                                            </c:if>
+                                                    ${i}
+                                                </a>
+                                            </li>
+                                        </c:forEach>
+                                    </c:if>
                                             <c:if test="${tag + 2 < endPage}">
                                                 <c:forEach begin="${tag}" end="${tag + 2}" var="i">
                                                     <li class="page-item ${tag == i ? 'active' : ''}">
