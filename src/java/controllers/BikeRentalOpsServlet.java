@@ -38,8 +38,7 @@ public class BikeRentalOpsServlet extends HttpServlet {
                 request.setAttribute("bikes", new ArrayList<Bicycle>());
             }
             
-        } 
-        else if ("active".equals(view)) {
+        } else if ("active".equals(view)) {
             request.setAttribute("orders", dao.getOrdersByStatus("Confirmed"));
         }
 
@@ -65,14 +64,8 @@ public class BikeRentalOpsServlet extends HttpServlet {
                 } else {
                     response.sendRedirect("bike-ops?view=pending&error=NoBikeSelected");
                 }
-            } 
-            else if ("return".equals(action)) {
-                String paymentMethod = request.getParameter("paymentMethod");
-                if (paymentMethod == null || paymentMethod.isEmpty()) {
-                    paymentMethod = "Cash"; 
-                }
-                
-                dao.returnBikesAndPay(orderId, paymentMethod);
+            } else if ("return".equals(action)) {
+                dao.returnBikes(orderId);
                 response.sendRedirect("bike-ops?view=active&msg=Returned");
             }
         } catch (Exception e) {
