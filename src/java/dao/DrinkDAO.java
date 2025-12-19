@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import dbContext.DBContext;
@@ -11,145 +7,103 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author SWP391_Project
- */
 public class DrinkDAO extends DBContext {
 
-    // --- 1. LẤY DANH SÁCH (Hỗ trợ Tìm kiếm + Lọc Service + Phân trang) ---
-    public List<Drink> getDrinks(String keyword, String serviceIdStr, int pageIndex, int pageSize) {
+    // ... (Các câu lệnh SQL String giữ nguyên như cũ) ...
+    // Copy lại các string SQL từ bài trước nếu chưa có
+    private static final String GET_DRINKS_PAGING
+            = "SELECT d.*, s.service_name FROM Drinks d "
+            + "JOIN Services s ON d.service_id = s.service_id "
+            + "WHERE d.drink_name LIKE ? AND (? = -1 OR d.service_id = ?) "
+            + "ORDER BY d.drink_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+    private static final String COUNT_DRINKS
+            = "SELECT COUNT(*) FROM Drinks d WHERE d.drink_name LIKE ? AND (? = -1 OR d.service_id = ?)";
+
+    private static final String GET_DRINK_BY_ID
+            = "SELECT d.*, s.service_name FROM Drinks d JOIN Services s ON d.service_id = s.service_id WHERE d.drink_id = ?";
+
+    // Sửa dòng này: Chỉ lấy service có tên chứa chữ "Drink" hoặc "Đồ uống"
+    private static final String GET_ALL_SERVICES = 
+            "SELECT * FROM Services WHERE service_name LIKE '%Drink Service%'";
+
+    private static final String INSERT_DRINK
+            = "INSERT INTO Drinks (drink_name, price, image_url, service_id, description, volume_ml, is_alcoholic, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
+
+    private static final String UPDATE_DRINK
+            = "UPDATE Drinks SET drink_name = ?, price = ?, image_url = ?, service_id = ?, description = ?, volume_ml = ?, is_alcoholic = ? WHERE drink_id = ?";
+
+    private static final String ACTIVATE = "UPDATE Drinks SET is_active = 1 WHERE drink_id = ?";
+    private static final String DEACTIVATE = "UPDATE Drinks SET is_active = 0 WHERE drink_id = ?";
+
+    private Drink mapResultSetToDrink(ResultSet rs) throws SQLException {
+        Drink d = new Drink();
+        d.setDrinkId(rs.getInt("drink_id"));
+
+        String name = rs.getString("drink_name");
+        d.setName(name != null ? name.trim() : "");
+
+        d.setPrice(rs.getDouble("price"));
+
+        String img = rs.getString("image_url");
+        d.setImageUrl(img != null ? img.trim() : "default.jpg");
+
+        d.setServiceId(rs.getInt("service_id"));
+        d.setDescription(rs.getString("description"));
+
+        // SỬA: Dùng getInt vì Model của bạn là int
+        d.setVolumeMl(rs.getInt("volume_ml"));
+        d.setIsAlcoholic(rs.getBoolean("is_alcoholic"));
+
+        d.setIsActive(rs.getBoolean("is_active"));
+        return d;
+    }
+
+    public List<Drink> getDrinks(String keyword, String serviceIdStr, int page, int pageSize) {
         List<Drink> list = new ArrayList<>();
+        String search = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+        int serviceId = (serviceIdStr == null || serviceIdStr.equals("-1") || serviceIdStr.isEmpty()) ? -1 : Integer.parseInt(serviceIdStr);
+        int offset = (page - 1) * pageSize;
 
-        String searchName = (keyword == null || keyword.trim().isEmpty()) ? "" : keyword.trim();
-        int serviceId = -1;
-        try {
-            if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
-                serviceId = Integer.parseInt(serviceIdStr);
-            }
-        } catch (NumberFormatException e) {
-            serviceId = -1;
-        }
-
-        int offset = (pageIndex - 1) * pageSize;
-
-        // SELECT đầy đủ 9 cột data
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT drink_id, service_id, drink_name, price, description, volume_ml, is_alcoholic, image_url, is_active FROM Drinks WHERE 1=1 ");
-
-        if (!searchName.isEmpty()) {
-            sql.append(" AND drink_name LIKE ? ");
-        }
-        if (serviceId != -1) {
-            sql.append(" AND service_id = ? ");
-        }
-
-        sql.append(" ORDER BY drink_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-
-        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-            int index = 1;
-
-            if (!searchName.isEmpty()) {
-                ps.setString(index++, "%" + searchName + "%");
-            }
-            if (serviceId != -1) {
-                ps.setInt(index++, serviceId);
-            }
-
-            ps.setInt(index++, offset);
-            ps.setInt(index++, pageSize);
-
+        try (PreparedStatement ps = connection.prepareStatement(GET_DRINKS_PAGING)) {
+            ps.setString(1, search);
+            ps.setInt(2, serviceId);
+            ps.setInt(3, serviceId);
+            ps.setInt(4, offset);
+            ps.setInt(5, pageSize);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(mapResultSetToDrink(rs));
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
     }
 
-    // --- 2. ĐẾM TỔNG SỐ BẢN GHI (Cho Phân trang) ---
     public int countDrinks(String keyword, String serviceIdStr) {
-        String searchName = (keyword == null || keyword.trim().isEmpty()) ? "" : keyword.trim();
-        int serviceId = -1;
-        try {
-            if (serviceIdStr != null && !serviceIdStr.isEmpty()) {
-                serviceId = Integer.parseInt(serviceIdStr);
-            }
-        } catch (NumberFormatException e) {
-            serviceId = -1;
-        }
-
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Drinks WHERE 1=1 ");
-
-        if (!searchName.isEmpty()) {
-            sql.append(" AND drink_name LIKE ? ");
-        }
-        if (serviceId != -1) {
-            sql.append(" AND service_id = ? ");
-        }
-
-        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-            int index = 1;
-            if (!searchName.isEmpty()) {
-                ps.setString(index++, "%" + searchName + "%");
-            }
-            if (serviceId != -1) {
-                ps.setInt(index++, serviceId);
-            }
-
+        String search = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+        int serviceId = (serviceIdStr == null || serviceIdStr.equals("-1") || serviceIdStr.isEmpty()) ? -1 : Integer.parseInt(serviceIdStr);
+        try (PreparedStatement ps = connection.prepareStatement(COUNT_DRINKS)) {
+            ps.setString(1, search);
+            ps.setInt(2, serviceId);
+            ps.setInt(3, serviceId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return 0;
     }
 
-    // --- 3. CÁC HÀM CRUD CƠ BẢN ---
-    public void createDrink(Drink drink) throws SQLException {
-        // SQL đã bao gồm đủ 8 cột data
-        String sql = "INSERT INTO Drinks (service_id, drink_name, price, description, volume_ml, is_alcoholic, image_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, drink.getServiceId());
-            ps.setString(2, drink.getName());
-            ps.setDouble(3, drink.getPrice());
-            ps.setString(4, drink.getDescription());
-            ps.setInt(5, drink.getVolumeMl());
-            ps.setBoolean(6, drink.getIsAlcoholic());
-            ps.setString(7, drink.getImageUrl());
-            ps.setBoolean(8, drink.getIsActive());
-            ps.executeUpdate();
-        }
-    }
-
-    // SỬA LỖI: Thêm cột is_active vào UPDATE
-    public void updateDrink(Drink drink) throws SQLException {
-        String sql = "UPDATE Drinks SET service_id = ?, drink_name = ?, price = ?, description = ?, volume_ml = ?, is_alcoholic = ?, image_url = ?, is_active = ? WHERE drink_id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, drink.getServiceId());
-            ps.setString(2, drink.getName());
-            ps.setDouble(3, drink.getPrice());
-            ps.setString(4, drink.getDescription());
-            ps.setInt(5, drink.getVolumeMl());
-            ps.setBoolean(6, drink.getIsAlcoholic());
-            ps.setString(7, drink.getImageUrl());
-            ps.setBoolean(8, drink.getIsActive()); // Đã thêm is_active
-            ps.setInt(9, drink.getDrinkId());      // drink_id là tham số cuối
-            ps.executeUpdate();
-        }
-    }
-
     public Drink getDrinkById(int id) {
-        String sql = "SELECT drink_id, service_id, drink_name, price, description, volume_ml, is_alcoholic, image_url, is_active FROM Drinks WHERE drink_id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (PreparedStatement ps = connection.prepareStatement(GET_DRINK_BY_ID)) {
             ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToDrink(rs);
-                }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToDrink(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -157,28 +111,9 @@ public class DrinkDAO extends DBContext {
         return null;
     }
 
-    public void deactivateDrink(int drinkId) throws SQLException {
-        String sql = "UPDATE Drinks SET is_active = 0 WHERE drink_id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, drinkId);
-            ps.executeUpdate();
-        }
-    }
-
-    public void activateDrink(int drinkId) throws SQLException {
-        String sql = "UPDATE Drinks SET is_active = 1 WHERE drink_id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, drinkId);
-            ps.executeUpdate();
-        }
-    }
-
-    // Lấy danh sách Service cho Dropdown
     public List<Service> getAllServices() {
         List<Service> list = new ArrayList<>();
-        // Giả sử category_id = 3 là Drink Category ID
-        String sql = "SELECT service_id, service_name FROM Services WHERE category_id = 3";
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = connection.prepareStatement(GET_ALL_SERVICES); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(new Service(rs.getInt("service_id"), rs.getString("service_name")));
             }
@@ -188,63 +123,69 @@ public class DrinkDAO extends DBContext {
         return list;
     }
 
-    // --- HÀM MAP RESULTSET ---
-    private Drink mapResultSetToDrink(ResultSet rs) throws SQLException {
-    
-    // Xử lý giá trị NULL an toàn cho volume_ml
-    int volumeMl = rs.getInt("volume_ml");
-    if (rs.wasNull()) {
-        volumeMl = 0; // Hoặc giá trị mặc định nếu volume_ml là NULL
+    public boolean createDrink(Drink d) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(INSERT_DRINK)) {
+            ps.setString(1, d.getName());
+            ps.setDouble(2, d.getPrice());
+            ps.setString(3, d.getImageUrl());
+            ps.setInt(4, d.getServiceId());
+            ps.setString(5, d.getDescription());
+
+            // SỬA: setInt vì volume là int
+            ps.setInt(6, d.getVolumeMl());
+
+            // SỬA: Gọi đúng tên getter trong Model của bạn (getIsAlcoholic)
+            ps.setBoolean(7, d.getIsAlcoholic());
+            return ps.executeUpdate() > 0;
+        }
     }
-    
-    // Xử lý giá trị NULL an toàn cho is_alcoholic
-    boolean isAlcoholic = rs.getBoolean("is_alcoholic");
-    // Không cần wasNull cho boolean trừ khi bạn cần 3 trạng thái (True, False, NULL)
 
-    return new Drink(
-        rs.getInt("drink_id"),
-        rs.getInt("service_id"),
-        rs.getString("drink_name"),
-        rs.getDouble("price"),
-        rs.getString("description"),
-        volumeMl, // Sử dụng giá trị đã kiểm tra NULL
-        isAlcoholic, 
-        rs.getString("image_url"),
-        rs.getBoolean("is_active")
-    );
-}
+    public boolean updateDrink(Drink d) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(UPDATE_DRINK)) {
+            ps.setString(1, d.getName());
+            ps.setDouble(2, d.getPrice());
+            ps.setString(3, d.getImageUrl());
+            ps.setInt(4, d.getServiceId());
+            ps.setString(5, d.getDescription());
 
-    // --- LẤY DANH SÁCH CHO GIAO DIỆN KHÁCH HÀNG (ĐÃ SỬA LỖI AMBIGUOUS COLUMN) ---
+            // SỬA: setInt
+            ps.setInt(6, d.getVolumeMl());
+
+            // SỬA: Gọi đúng getter
+            ps.setBoolean(7, d.getIsAlcoholic());
+
+            ps.setInt(8, d.getDrinkId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    // Các hàm activate/deactivate giữ nguyên
+    public boolean activateDrink(int id) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(ACTIVATE)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
     public List<Drink> getAllActiveDrinks() {
         List<Drink> list = new ArrayList<>();
+        
+        // SQL: Chỉ lấy từ bảng Drinks
+        String sql = "SELECT * FROM Drinks WHERE is_active = 1 ORDER BY drink_id DESC"; 
 
-        // ĐÃ SỬA: SỬ DỤNG ALIAS CHO CÁC CỘT CHUNG (service_id, image_url, is_active)
-        // Để đảm bảo tên cột trả về là chính xác.
-        String sql = "SELECT d.drink_id, s.service_id AS service_id, d.drink_name, d.price, d.description, d.volume_ml, d.is_alcoholic, s.image_url AS image_url, s.is_active AS is_active "
-                + "FROM Drinks d "
-                + "JOIN Services s ON d.service_id = s.service_id "
-                + "WHERE s.is_active = 1";
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ResultSet rs = ps.executeQuery();
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapResultSetToDrink(rs));
             }
-        } catch (Exception e) {
-            // Vui lòng in lỗi chi tiết ở đây nếu vẫn bị 500
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
     }
-
-    // Test Main
-    public static void main(String[] args) {
-        DrinkDAO dao = new DrinkDAO();
-        System.out.println("Test getDrinks:");
-        List<Drink> list = dao.getDrinks("", "", 1, 10);
-        System.out.println("Size: " + list.size());
-        for (Drink d : list) {
-            System.out.println("ID: " + d.getDrinkId() + " | Name: " + d.getName());
+    public boolean deactivateDrink(int id) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(DEACTIVATE)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
         }
     }
 }

@@ -186,30 +186,30 @@ public class FoodDAO extends DBContext {
         }
         return list;
     }
-
-    // --- HÀM MAP RESULTSET CHUẨN (8 tham số) ---
     private Food mapResultSetToFood(ResultSet rs) throws SQLException {
-        return new Food(
-                rs.getInt("food_id"),
-                rs.getInt("service_id"),
-                rs.getString("food_name"),
-                rs.getDouble("price"),
-                rs.getString("description"),
-                rs.getString("image_url"),
-                rs.getBoolean("is_active"),
-                rs.getBoolean("is_vegetarian")
-        );
+        Food f = new Food();
+
+        f.setFoodId(rs.getInt("food_id"));
+        String name = rs.getString("food_name");
+        f.setName(name != null ? name.trim() : "");
+        f.setPrice(rs.getDouble("price"));
+        String img = rs.getString("image_url");
+        f.setImageUrl(img != null ? img.trim() : "default.jpg");
+        f.setServiceId(rs.getInt("service_id"));
+        f.setDescription(rs.getString("description"));
+        f.setIsActive(rs.getBoolean("is_active"));
+        f.setIsVegetarian(rs.getBoolean("is_vegetarian")); 
+        
+        return f;
     }
 
     // --- LẤY DANH SÁCH CHO GIAO DIỆN KHÁCH HÀNG ---
     public List<Food> getAllActiveFoods() {
         List<Food> list = new ArrayList<>();
         
-        // SỬA SELECT: THÊM f.is_vegetarian VÀO SELECT LIST VÀ DÙNG ALIAS
-        String sql = "SELECT f.food_id, s.service_id AS service_id, f.food_name, f.price, f.description, s.image_url AS image_url, s.is_active AS is_active, f.is_vegetarian "
-                + "FROM Foods f "
-                + "JOIN Services s ON f.service_id = s.service_id "
-                + "WHERE s.is_active = 1"; 
+        // SỬA: Chỉ cần lấy từ bảng Foods, không cần JOIN loằng ngoằng gây sai ảnh
+        // Lấy tất cả món ăn đang Active (is_active = 1)
+        String sql = "SELECT * FROM Foods WHERE is_active = 1 ORDER BY food_id DESC"; 
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
@@ -217,7 +217,7 @@ public class FoodDAO extends DBContext {
                 list.add(mapResultSetToFood(rs)); 
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Giữ lại để debug
+            e.printStackTrace(); 
         }
         return list;
     }
