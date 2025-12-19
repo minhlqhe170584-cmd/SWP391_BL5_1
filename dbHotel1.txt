@@ -92,7 +92,8 @@ CREATE TABLE Invoices (
     created_at DATETIME DEFAULT GETDATE(),
     payment_method NVARCHAR(50),
     total_amount DECIMAL(18,0),
-    note NVARCHAR(MAX)
+    note NVARCHAR(MAX),
+    status NVARCHAR(20) DEFAULT 'Unpaid'
 );
 
 /* ============================================================
@@ -342,15 +343,14 @@ GO
 
 -- 1. StaffRoles (5 dòng)
 INSERT INTO StaffRoles (role_name) VALUES 
-('Admin'), ('Receptionist'), ('Manager'), ('Housekeeping'), ('Security');
+('Admin'), ('Receptionist'), ('Staff');
 
 -- 2. Staff (5 dòng)
 INSERT INTO Staff (full_name, email, password, role_id) VALUES 
 (N'Quản trị viên', 'admin@hotel.com', '123456', 1),
 (N'Lễ tân A', 'receptionA@hotel.com', '123456', 2),
 (N'Quản lý B', 'managerB@hotel.com', '123456', 3),
-(N'Buồng phòng C', 'cleanerC@hotel.com', '123456', 4),
-(N'Bảo vệ D', 'securityD@hotel.com', '123456', 5);
+(N'Buồng phòng C', 'cleanerC@hotel.com', '123456', 3);
 
 -- 3. Customers (5 dòng)
 INSERT INTO Customers (full_name, email, password, phone) VALUES 
@@ -488,9 +488,8 @@ INSERT INTO EventRequest (eventId, room_id, status, roomIds, check_in_date, chec
 -- 19. Invoices (5 hóa đơn cũ)
 INSERT INTO Invoices (booking_id, staff_id, total_amount, payment_method, note) VALUES 
 (1, 2, 1500000, N'Cash', N'Thanh toán đợt 1'),
-(2, 2, 1600000, N'Banking', N'Đã thanh toán hết'),
+(2, 2, 1600000, N'Banking', N'Đã thanh toán hết','Paid'),
 (3, 2, 0, NULL, N'Chưa thanh toán'),
-(4, 2, 2000000, N'Banking', N'Cọc Event'),
 (5, 2, 0, N'Cash', N'Đã hoàn tiền');
 
 GO

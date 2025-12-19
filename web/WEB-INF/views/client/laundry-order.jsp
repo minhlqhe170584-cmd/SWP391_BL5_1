@@ -4,10 +4,10 @@
 <!DOCTYPE html>
 <html lang="vi">
 
-<head>
-    <title>Đặt Dịch Vụ Giặt Ủi | Smart Hotel</title>
-    <jsp:include page="../components/head.jsp"></jsp:include>
-    <style>
+    <head>
+        <title>Đặt Dịch Vụ Giặt Ủi | Smart Hotel</title>
+        <jsp:include page="../components/head.jsp"></jsp:include>
+        <style>
         .service-group-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -92,7 +92,7 @@
         }
         
         .breadcrumb-section {
-/*            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
+            background: none;
             padding: 60px 0;
         }
         
@@ -152,165 +152,250 @@
             margin-bottom: 5px;
         }
     </style>
-</head>
+    </head>
 
-<body>
-    <jsp:include page="../components/navbar.jsp"></jsp:include>
+    <body>
+        <jsp:include page="../components/navbar.jsp"></jsp:include>
 
-    <div class="breadcrumb-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="breadcrumb-text">
-                        <h2 style="color:white;">Đặt Dịch Vụ Giặt Ủi</h2>
-                        <div class="bt-option">
-                            <a href="${pageContext.request.contextPath}/room/dashboard" style="color: rgba(255,255,255,0.8);">Trang chủ</a>
-                            <span style="color: white;">Giặt ủi</span>
+        <div class="breadcrumb-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="breadcrumb-text">
+                            <h2>Đặt Dịch Vụ Giặt Ủi</h2>
+                            <div class="bt-option">
+                                <a
+                                    href="${pageContext.request.contextPath}/room/dashboard"
+                                    >Trang chủ</a>
+                                <span>Giặt ủi</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <section class="contact-section spad">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    
-                    <div class="room-info-box">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <h4 class="mb-2"><i class="fa fa-door-open"></i> Mã Phòng ${roomId}</h4>
-                                <p class="mb-0 text-muted">Vui lòng chọn các mục giặt ủi bạn muốn đặt và điền số lượng</p>
-                            </div>
-                            <div class="col-md-4 text-right">
-<!--                                <a href="laundry?action=history" class="btn btn-outline-primary">
+        <section class="contact-section spad">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+
+                        <div class="room-info-box">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h4 class="mb-2"><i
+                                            class="fa fa-door-open"></i> Phòng
+                                        ${not empty roomNumber ? roomNumber : roomId}</h4>
+                                    <p class="mb-0 text-muted">Vui lòng chọn các
+                                        mục giặt ủi bạn muốn đặt và điền số
+                                        lượng</p>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <!--                                <a href="laundry?action=history" class="btn btn-outline-primary">
                                     <i class="fa fa-history"></i> Lịch sử đơn hàng
                                 </a>-->
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <c:if test="${not empty error}">
-                        <div class="alert alert-danger alert-custom text-center mb-4">
-                            <i class="fa fa-exclamation-circle"></i> ${error}
-                        </div>
-                    </c:if>
+                        <c:if test="${not empty error}">
+                            <div
+                                class="alert alert-danger alert-custom text-center mb-4">
+                                <i class="fa fa-exclamation-circle"></i>
+                                ${error}
+                            </div>
+                        </c:if>
 
-                    <form action="laundry-book" method="POST" class="contact-form">
-                        <input type="hidden" name="action" value="order">
-                        <input type="hidden" name="serviceId" value="${service.serviceId}">
-                        <c:choose>
-                            <c:when test="${not empty items}">
-                                <c:set var="currentService" value="" />
-                                <c:forEach var="item" items="${items}">
-                                    
-                                    <c:if test="${item.service.serviceName != currentService}">               
-                                        <div class="service-group-header">
-                                            <h4><i class="fa fa-tags"></i> ${item.service.serviceName}</h4>
-                                        </div>
-                                        
-                                        <div class="service-items"> <c:set var="currentService" value="${item.service.serviceName}" />
-                                    </c:if>
+                        <form action="laundry-book" method="POST"
+                            class="contact-form" id="itemForm">
+                            <input type="hidden" name="action" value="order">
+                            <c:if test="${not empty service}">
+                                <input type="hidden" name="serviceId"
+                                    value="${service.serviceId}">
+                            </c:if>
+                            <c:if test="${empty service and not empty items}">
+                                <input type="hidden" name="serviceId"
+                                    value="${items[0].service.serviceId}">
+                            </c:if>
+                            <c:choose>
+                                <c:when test="${not empty items}">
+                                    <c:set var="currentService" value="" />
+                                    <c:forEach var="item" items="${items}">
 
-                                    <div class="item-card">
-                                        <div class="item-selection-wrapper">
-                                            <div>
-                                                <input type="checkbox" 
-                                                       class="item-checkbox" 
-                                                       name="selected_${item.laundryItemId}" 
-                                                       value="true"
-                                                       id="item_${item.laundryItemId}">
+                                        <c:if
+                                            test="${item.service.serviceName != currentService}">
+                                            <div class="service-group-header">
+                                                <h4><i class="fa fa-tags"></i>
+                                                    ${item.service.serviceName}</h4>
                                             </div>
+                                            <c:set var="currentService"
+                                                value="${item.service.serviceName}" />
+                                        </c:if>
 
-                                            <div class="item-info">
-                                                <label for="item_${item.laundryItemId}" style="cursor: pointer; margin: 0;">
-                                                    <div class="item-name">${item.itemName}</div>
-                                                    <c:if test="${not empty item.description}">
-                                                        <div class="item-description">${item.description}</div>
+                                        <div class="item-card">
+                                            <div
+                                                class="item-selection-wrapper">
+                                                <div>
+                                                    <c:set var="itemIdStr" value="${item.laundryItemId}" />
+                                                    <c:set var="isChecked" value="false" />
+                                                    <c:if test="${not empty selectedItemsMap}">
+                                                        <c:forEach var="mapEntry" items="${selectedItemsMap}">
+                                                            <c:choose>
+                                                                <c:when test="${mapEntry.key == itemIdStr}">
+                                                                    <c:set var="isChecked" value="true" />
+                                                                </c:when>
+                                                                <c:when test="${mapEntry.key.toString() == itemIdStr.toString()}">
+                                                                    <c:set var="isChecked" value="true" />
+                                                                </c:when>
+                                                            </c:choose>
+                                                        </c:forEach>
                                                     </c:if>
-                                                    <div class="mt-2">
-                                                        <span class="price-badge">
-                                                            <fmt:formatNumber value="${item.defaultPrice}" 
-                                                                            type="currency" 
-                                                                            currencySymbol="" 
-                                                                            maxFractionDigits="0"/> VNĐ
-                                                        </span>
-                                                        <span class="unit-badge">/${item.unit}</span>
-                                                    </div>
-                                                </label>
-                                                
-                                                <input type="hidden" name="itemId" value="${item.laundryItemId}">
-                                                <input type="hidden" name="price" value="${item.defaultPrice}">
-                                            </div>
+                                                    <input type="checkbox"
+                                                        class="item-checkbox"
+                                                        name="selected_${item.laundryItemId}"
+                                                        value="true"
+                                                        id="item_${item.laundryItemId}"
+                                                        <c:if test="${isChecked}">checked</c:if>>
+                                                </div>
 
-                                            <div class="quantity-wrapper">
-                                                <div class="quantity-label">Số lượng</div>
-                                                <input type="number" 
-                                                       name="quantity" 
-                                                       class="quantity-input form-control" 
-                                                       min="1" 
-                                                       value="1">
+                                                <div class="item-info">
+                                                    <label
+                                                        for="item_${item.laundryItemId}"
+                                                        style="cursor: pointer; margin: 0;">
+                                                        <div
+                                                            class="item-name">${item.itemName}</div>
+                                                        <c:if
+                                                            test="${not empty item.description}">
+                                                            <div
+                                                                class="item-description">${item.description}</div>
+                                                        </c:if>
+                                                        <div class="mt-2">
+                                                            <span
+                                                                class="price-badge">
+                                                                <fmt:formatNumber
+                                                                    value="${item.defaultPrice}"
+                                                                    type="currency"
+                                                                    currencySymbol=""
+                                                                    maxFractionDigits="0"/>
+                                                                VNĐ
+                                                            </span>
+                                                            <span
+                                                                class="unit-badge">/${item.unit}</span>
+                                                        </div>
+                                                    </label>
+
+                                                    <input type="hidden"
+                                                        name="itemId"
+                                                        value="${item.laundryItemId}">
+                                                    <input type="hidden"
+                                                        name="price"
+                                                        value="${item.defaultPrice}">
+                                                </div>
+
+                                                <div
+                                                    class="quantity-wrapper">
+                                                    <div
+                                                        class="quantity-label">Số
+                                                        lượng</div>
+                                                    <c:set var="preservedQty" value="${itemQuantities[itemIdStr]}" />
+                                                    <input type="number"
+                                                        name="quantity"
+                                                        class="quantity-input form-control"
+                                                        min="1"
+                                                        value="${not empty preservedQty ? preservedQty : '1'}">
+                                                </div>
                                             </div>
                                         </div>
+
+                                    </c:forEach>
+
+                                    <div class="service-group-header"
+                                        style="background: #28a745;">
+                                        <h4><i class="fa fa-info-circle"></i>
+                                            Thông tin bổ sung</h4>
                                     </div>
 
-                                </c:forEach>
-                                </div> <div class="service-group-header" style="background: #28a745;">
-                                    <h4><i class="fa fa-info-circle"></i> Thông tin bổ sung</h4>
-                                </div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <label class="font-weight-bold">Thời
+                                                gian lấy đồ (Tùy chọn):</label>
+                                            <input type="datetime-local"
+                                                name="pickupTime"
+                                                class="form-control" required
+                                                value="${preservedPickupTime}">
+                                            <small class="text-muted">Để trống
+                                                nếu nhân viên sẽ liên hệ
+                                                sau</small>
+                                        </div>
 
-                                <div class="row">
-                                    <div class="col-lg-12">
-                                        <label class="font-weight-bold">Thời gian lấy đồ (Tùy chọn):</label>
-                                        <input type="datetime-local" name="pickupTime" class="form-control">
-                                        <small class="text-muted">Để trống nếu nhân viên sẽ liên hệ sau</small>
-                                    </div>
-                                    
-                                    <div class="col-lg-12 mt-3">
-                                        <label class="font-weight-bold">Thời gian nhận đồ (Tùy chọn):</label>
-                                        <input type="datetime-local" name="returnTime" class="form-control">
-                                        <small class="text-muted">Để trống nếu nhân viên sẽ liên hệ sau</small>
-                                    </div>
-                                    
-                                    <div class="col-lg-12 mt-3">
-                                        <label class="font-weight-bold">Ghi chú cho nhân viên (Tùy chọn):</label>
-                                        <textarea name="note" class="form-control" placeholder="Ví dụ: Giặt riêng đồ trắng, không dùng nước xả vải..."></textarea>
-                                    </div>
-                                    
-                                    <div class="col-lg-12 text-center mt-4">
-                                        <button type="submit" class="primary-btn" style="width: 100%;">
-                                            <i class="fa fa-check-circle"></i> Xác Nhận Đặt Đơn Giặt Ủi
-                                        </button>
-                                    </div>
-                                </div>
-                            </c:when>
+                                        <div class="col-lg-12 mt-3">
+                                            <label class="font-weight-bold">Thời
+                                                gian nhận đồ (Tùy chọn):</label>
+                                            <input type="datetime-local"
+                                                name="returnTime"
+                                                class="form-control" required
+                                                value="${preservedReturnTime}">
+                                            <small class="text-muted">Để trống
+                                                nếu nhân viên sẽ liên hệ
+                                                sau</small>
+                                        </div>
 
-                            <c:otherwise>
-                                <div class="alert alert-warning text-center mt-4" style="padding: 30px;">
-                                    <h4><i class="fa fa-search"></i> Không tìm thấy dịch vụ</h4>
-                                    <p>Hiện tại khách sạn chưa có dịch vụ giặt ủi nào khả dụng.</p>
-                                </div>
-                            </c:otherwise>
-                        </c:choose>
-                    </form>
-                        
-                    <div class="alert alert-info alert-custom mt-4">
-                        <strong><i class="fa fa-lightbulb"></i> Lưu ý:</strong>
-                        <ul class="mb-0 mt-2">
-                            <li>Chọn các mục bạn muốn giặt bằng cách tích vào ô vuông</li>
-                            <li>Điều chỉnh số lượng cho từng mục nếu cần</li>
-                            <li>Thời gian xử lý: 24-48 giờ tùy loại dịch vụ</li>
-                            <li>Nhân viên sẽ liên hệ xác nhận sau khi nhận đơn</li>
-                        </ul>
+                                        <div class="col-lg-12 mt-3">
+                                            <label class="font-weight-bold">Ghi
+                                                chú cho nhân viên (Tùy
+                                                chọn):</label>
+                                            <textarea name="note"
+                                                class="form-control"
+                                                placeholder="Ví dụ: Giặt riêng đồ trắng, không dùng nước xả vải..."
+                                                maxlength="500"
+                                                rows="4"
+                                                >${preservedNote}</textarea>                                         
+                                        </div>
+
+                                        <div class="col-lg-12 text-center mt-4">
+                                            <button type="submit"
+                                                class="primary-btn"
+                                                style="width: 100%;">
+                                                <i
+                                                    class="fa fa-check-circle"></i>
+                                                Xác Nhận Đặt Đơn Giặt Ủi
+                                            </button>
+                                        </div>
+                                    </div>
+                                </c:when>
+
+                                <c:otherwise>
+                                    <div
+                                        class="alert alert-warning text-center mt-4"
+                                        style="padding: 30px;">
+                                        <h4><i class="fa fa-search"></i> Không
+                                            tìm thấy dịch vụ</h4>
+                                        <p>Hiện tại khách sạn chưa có dịch vụ
+                                            giặt ủi nào khả dụng.</p>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </form>
+
+                        <div class="alert alert-info alert-custom mt-4">
+                            <strong><i class="fa fa-lightbulb"></i> Lưu
+                                ý:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Chọn các mục bạn muốn giặt bằng cách tích
+                                    vào ô vuông</li>
+                                <li>Điều chỉnh số lượng cho từng mục nếu
+                                    cần</li>
+                                <li>Thời gian xử lý: 24-48 giờ tùy loại dịch
+                                    vụ</li>
+                                <li>Nhân viên sẽ liên hệ xác nhận sau khi nhận
+                                    đơn</li>
+                            </ul>
+                        </div>
+
                     </div>
-                        
                 </div>
             </div>
-        </div>
-    </section>
-
-    <jsp:include page="../components/footer.jsp"></jsp:include>
-</body>
+        </section>
+        <jsp:include page="../components/footer.jsp"></jsp:include>
+    </body>
 </html>

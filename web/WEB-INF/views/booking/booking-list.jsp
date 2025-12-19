@@ -21,7 +21,7 @@
 <body>
     <jsp:include page="../components/navbar.jsp"></jsp:include>
 
-    <div class="container-fluid mt-4 mb-5">
+    <div class="container-fluid" style="padding-top: 40px; padding-bottom: 60px; min-height: calc(100vh - 200px);">
         <div class="row">
             
             <%-- ======================================================== --%>
@@ -53,10 +53,27 @@
             <%-- ======================================================== --%>
             <div class="col-md-10">
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                    <h3><i class="fa fa-list-alt"></i> Quản Lý Tất Cả Đơn Đặt</h3>
-                    <div>
-                        </div>
+                    <h3> Quản Lý Tất Cả Đơn Đặt</h3>
                 </div>
+                
+                <%-- Filter Tabs --%>
+                <ul class="nav nav-tabs mb-3" id="bookingTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="all-tab" data-toggle="tab" href="#all" role="tab" aria-controls="all" aria-selected="true">
+                            <i class="fa fa-list"></i> Tất Cả
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="checkout-tab" data-toggle="tab" href="#checkout" role="tab" aria-controls="checkout" aria-selected="false">
+                            <i class="fa fa-sign-out"></i> Cần Checkout
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="payment-tab" data-toggle="tab" href="#payment" role="tab" aria-controls="payment" aria-selected="false">
+                            <i class="fa fa-money"></i> Cần Thanh Toán
+                        </a>
+                    </li>
+                </ul>
 
                 <c:if test="${not empty sessionScope.msg}">
                     <div class="alert alert-success alert-dismissible fade show">
@@ -73,25 +90,28 @@
                     <c:remove var="err" scope="session"/>
                 </c:if>
 
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 text-primary">Danh sách chi tiết</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-striped mb-0">
-                                <thead class="thead-light"> <tr>
-                                        <th>Mã Đơn</th>
-                                        <th>Khách Hàng</th>
-                                        <th>Phòng</th>
-                                        <th>Check-In</th>
-                                        <th>Check-Out</th>
-                                        <th>Trạng Thái</th>
-                                        <th class="text-center">Hành Động</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <c:forEach items="${bookings}" var="b">
+                <div class="tab-content" id="bookingTabContent">
+                    <%-- Tab: Tất Cả --%>
+                    <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0 text-primary">Danh sách chi tiết</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped mb-0">
+                                        <thead class="thead-light"> <tr>
+                                                <th>Mã Đơn</th>
+                                                <th>Khách Hàng</th>
+                                                <th>Phòng</th>
+                                                <th>Check-In</th>
+                                                <th>Check-Out</th>
+                                                <th>Trạng Thái</th>
+                                                <th class="text-center">Hành Động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach items="${bookings}" var="b">
                                         <tr>
                                             <td><strong>${b.bookingCode}</strong></td>
                                             <td>${b.customerName}</td>
@@ -128,26 +148,159 @@
                                                         </button>
                                                     </form>
                                                 </c:if>
-                                                <c:if test="${b.status != 'Pending'}">
+                                                <c:if test="${b.status == 'CheckedIn'}">
+                                                    <form action="${pageContext.request.contextPath}/receptionist" method="post" class="d-inline">
+                                                        <input type="hidden" name="bookingId" value="${b.bookingId}">
+                                                        <input type="hidden" name="roomId" value="${b.roomId}">
+                                                        <button type="submit" name="action" value="checkout" class="btn btn-sm btn-warning" 
+                                                                onclick="return confirm('Xác nhận khách trả phòng và Check-out?');" title="Checkout">
+                                                            <i class="fa fa-sign-out"></i> Checkout
+                                                        </button>
+                                                    </form>
+                                                </c:if>
+                                                <c:if test="${b.status == 'CheckedOut'}">
+                                                    <a href="${pageContext.request.contextPath}/receptionist/payment?bookingId=${b.bookingId}" 
+                                                       class="btn btn-sm btn-success" title="Thanh toán">
+                                                        <i class="fa fa-money"></i> Thanh Toán
+                                                    </a>
+                                                </c:if>
+                                                <c:if test="${b.status != 'Pending' && b.status != 'CheckedOut' && b.status != 'CheckedIn'}">
                                                     <span class="text-muted small"><i class="fa fa-lock"></i></span>
                                                 </c:if>
                                             </td>
                                         </tr>
                                     </c:forEach>
                                     
-                                    <c:if test="${empty bookings}">
-                                        <tr>
-                                            <td colspan="7" class="text-center py-4 text-muted">
-                                                <i class="fa fa-folder-open-o fa-3x mb-2"></i><br>
-                                                Chưa có dữ liệu đặt phòng nào.
-                                            </td>
-                                        </tr>
-                                    </c:if>
-                                </tbody>
-                            </table>
+                                            <c:if test="${empty bookings}">
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-4 text-muted">
+                                                        <i class="fa fa-folder-open-o fa-3x mb-2"></i><br>
+                                                        Chưa có dữ liệu đặt phòng nào.
+                                                    </td>
+                                                </tr>
+                                            </c:if>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    
+                    <%-- Tab: Cần Checkout --%>
+                    <div class="tab-pane fade" id="checkout" role="tabpanel" aria-labelledby="checkout-tab">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0 text-warning"><i class="fa fa-sign-out"></i> Danh sách phòng cần Checkout</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Mã Đơn</th>
+                                                <th>Khách Hàng</th>
+                                                <th>Phòng</th>
+                                                <th>Check-In</th>
+                                                <th>Check-Out</th>
+                                                <th>Trạng Thái</th>
+                                                <th class="text-center">Hành Động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:set var="hasCheckout" value="false" />
+                                            <c:forEach items="${bookings}" var="b">
+                                                <c:if test="${b.status == 'CheckedIn'}">
+                                                    <c:set var="hasCheckout" value="true" />
+                                                    <tr>
+                                                        <td><strong>${b.bookingCode}</strong></td>
+                                                        <td>${b.customerName}</td>
+                                                        <td><span class="badge badge-info">P.${b.roomNumber}</span></td>
+                                                        <td><fmt:formatDate value="${b.checkInDate}" pattern="dd/MM/yyyy"/></td>
+                                                        <td><fmt:formatDate value="${b.checkOutDate}" pattern="dd/MM/yyyy"/></td>
+                                                        <td><span class="badge badge-success">Đang ở</span></td>
+                                                        <td class="text-center">
+                                                            <form action="${pageContext.request.contextPath}/receptionist" method="post" class="d-inline">
+                                                                <input type="hidden" name="bookingId" value="${b.bookingId}">
+                                                                <input type="hidden" name="roomId" value="${b.roomId}">
+                                                                <button type="submit" name="action" value="checkout" class="btn btn-sm btn-warning" 
+                                                                        onclick="return confirm('Xác nhận khách trả phòng và Check-out?');" title="Checkout">
+                                                                    <i class="fa fa-sign-out"></i> Checkout
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                </c:if>
+                                            </c:forEach>
+                                            <c:if test="${!hasCheckout}">
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-4 text-muted">
+                                                        <i class="fa fa-check-circle fa-3x mb-2"></i><br>
+                                                        Không có phòng nào cần checkout.
+                                                    </td>
+                                                </tr>
+                                            </c:if>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <%-- Tab: Cần Thanh Toán --%>
+                    <div class="tab-pane fade" id="payment" role="tabpanel" aria-labelledby="payment-tab">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0 text-success"><i class="fa fa-money"></i> Danh sách phòng cần Thanh Toán</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Mã Đơn</th>
+                                                <th>Khách Hàng</th>
+                                                <th>Phòng</th>
+                                                <th>Check-In</th>
+                                                <th>Check-Out</th>
+                                                <th>Trạng Thái</th>
+                                                <th class="text-center">Hành Động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:set var="hasPayment" value="false" />
+                                            <c:forEach items="${bookings}" var="b">
+                                                <c:if test="${b.status == 'CheckedOut'}">
+                                                    <c:set var="hasPayment" value="true" />
+                                                    <tr>
+                                                        <td><strong>${b.bookingCode}</strong></td>
+                                                        <td>${b.customerName}</td>
+                                                        <td><span class="badge badge-info">P.${b.roomNumber}</span></td>
+                                                        <td><fmt:formatDate value="${b.checkInDate}" pattern="dd/MM/yyyy"/></td>
+                                                        <td><fmt:formatDate value="${b.checkOutDate}" pattern="dd/MM/yyyy"/></td>
+                                                        <td><span class="badge badge-secondary">Đã trả phòng</span></td>
+                                                        <td class="text-center">
+                                                            <a href="${pageContext.request.contextPath}/receptionist/payment?bookingId=${b.bookingId}" 
+                                                               class="btn btn-sm btn-success" title="Thanh toán">
+                                                                <i class="fa fa-money"></i> Thanh Toán
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </c:if>
+                                            </c:forEach>
+                                            <c:if test="${!hasPayment}">
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-4 text-muted">
+                                                        <i class="fa fa-check-circle fa-3x mb-2"></i><br>
+                                                        Không có phòng nào cần thanh toán.
+                                                    </td>
+                                                </tr>
+                                            </c:if>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
     </div>

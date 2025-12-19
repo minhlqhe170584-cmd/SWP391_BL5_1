@@ -3,7 +3,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <!DOCTYPE html>
-<html lang="zxx">
+<html lang="vi">
     <head>
         <title>Menu Đồ Ăn & Đồ Uống | Smart Hotel</title>
         <jsp:include page="../components/head.jsp"></jsp:include>
@@ -13,28 +13,140 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
 
         <style>
+            /* --- Custom Styles cho Menu đẹp hơn --- */
             .menu-section {
                 padding-top: 50px;
                 padding-bottom: 80px;
+                background-color: #fdfdfd; /* Nền sáng nhẹ */
             }
+            .section-title h2 {
+                font-weight: 700;
+                color: #333;
+                margin-bottom: 10px;
+            }
+            .section-title p {
+                font-style: italic;
+                color: #777;
+            }
+            
+            /* Card món ăn */
             .menu-item-inner {
-                border-radius: 8px;
-                transition: background-color 0.3s;
+                background: #fff;
+                border-radius: 10px;
+                padding: 15px;
+                border: 1px solid #eee;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: 100%;
             }
             .menu-item-inner:hover {
-                background-color: #f7f7f7;
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                border-color: #dfa974; /* Màu cam chủ đạo của hotel */
+            }
+
+            /* Ảnh món ăn */
+            .service-image {
+                width: 90px;
+                height: 90px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 1px solid #f0f0f0;
+                margin-right: 20px;
+                flex-shrink: 0; /* Không bị co lại trên mobile */
+            }
+
+            /* Thông tin món ăn */
+            .food-info h5 {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 5px;
+                color: #19191a;
+            }
+            .food-desc {
+                font-size: 13px;
+                color: #888;
+                margin-bottom: 8px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2; /* Giới hạn 2 dòng mô tả */
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .food-price {
+                font-size: 16px;
+                font-weight: 700;
+                color: #e74c3c; /* Màu đỏ cho giá */
+            }
+
+            /* Input số lượng */
+            .quantity-wrapper {
+                text-align: center;
+            }
+            .quantity-label {
+                font-size: 11px;
+                color: #999;
+                margin-bottom: 2px;
+                display: block;
             }
             .quantity-input {
-                border-radius: 5px;
-                border: 1px solid #ccc;
+                width: 60px;
+                height: 40px;
+                text-align: center;
+                border: 2px solid #eee;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+                color: #333;
             }
-            .service-image {
-                width: 80px;
-                height: 80px;
-                object-fit: cover;
-                border-radius: 5px;
-                border: 1px solid #ddd;
-                margin-right: 15px;
+            .quantity-input:focus {
+                border-color: #dfa974;
+                outline: none;
+            }
+
+            /* Badge (Nhãn Chay/Cồn) */
+            .custom-badge {
+                font-size: 11px;
+                padding: 3px 8px;
+                border-radius: 4px;
+                vertical-align: middle;
+                margin-left: 5px;
+                font-weight: normal;
+                letter-spacing: 0.5px;
+            }
+            .badge-veg {
+                background-color: #e8f5e9;
+                color: #2e7d32;
+                border: 1px solid #c8e6c9;
+            }
+            .badge-alcohol {
+                background-color: #fff3e0;
+                color: #ef6c00;
+                border: 1px solid #ffe0b2;
+            }
+            
+            /* Form nhập thông tin */
+            .order-form-box {
+                background: #fff;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                border-top: 4px solid #dfa974;
+            }
+            .btn-confirm {
+                background-color: #dfa974;
+                color: white;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                border: none;
+                transition: 0.3s;
+            }
+            .btn-confirm:hover {
+                background-color: #c98d50;
+                color: white;
             }
         </style>
     </head>
@@ -47,7 +159,7 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="breadcrumb-text">
-                            <h2>Thực Đơn Phục Vụ Tại Phòng</h2>
+                            <h2>Thực Đơn Tại Phòng</h2>
                             <div class="bt-option">
                                 <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
                                 <span>Menu</span>
@@ -60,18 +172,18 @@
 
         <section class="menu-section spad">
             <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
+                <div class="row mb-5">
+                    <div class="col-lg-12 text-center">
                         <div class="section-title">
-                            <h2>Chọn món và Xác nhận đặt hàng</h2>
-                            <p>Vui lòng nhập số lượng (tối thiểu 1) cho các món bạn muốn đặt.</p>
+                            <h2>Thưởng Thức Ẩm Thực</h2>
+                            <p>Chọn món yêu thích và chúng tôi sẽ phục vụ tận phòng ngay lập tức.</p>
                         </div>
                     </div>
                 </div>
 
-                <%-- Hiển thị thông báo lỗi nếu có --%>
+                <%-- Thông báo lỗi --%>
                 <c:if test="${not empty sessionScope.errorMessage}">
-                    <div style="color: red; font-weight: bold; padding: 10px; border: 1px solid red; margin-bottom: 20px;">
+                    <div class="alert alert-danger text-center font-weight-bold" role="alert">
                         ${sessionScope.errorMessage}
                     </div>
                     <c:remove var="errorMessage" scope="session" />
@@ -79,118 +191,133 @@
 
                 <form action="checkout-order" method="POST">
                     
-                    <h3 class="mt-4 mb-3">🍔 Đồ Ăn (Foods)</h3>
+                    <div class="d-flex align-items-center mb-4 mt-2">
+                        <span style="font-size: 24px; margin-right: 10px;">🍔</span>
+                        <h3 class="m-0 font-weight-bold text-dark">Món Ăn Hấp Dẫn</h3>
+                    </div>
+                    
                     <div class="row">
                         <c:choose>
                             <c:when test="${not empty requestScope.foodList}">
                                 <c:forEach var="food" items="${requestScope.foodList}">
-                                    <div class="col-lg-6 menu-item">
-                                        <div class="menu-item-inner d-flex justify-content-between align-items-center mb-4 p-3 border rounded shadow-sm">
-                                            
-                                            <div class="menu-item-left d-flex align-items-center">
+                                    <div class="col-lg-6 col-md-12 mb-4">
+                                        <div class="menu-item-inner">
+                                            <div class="d-flex align-items-center" style="flex: 1;">
                                                 <img src="${pageContext.request.contextPath}/uploads/${food.imageUrl}" 
                                                      alt="${food.name}" 
                                                      class="service-image"
-                                                     onerror="this.src='${pageContext.request.contextPath}/uploads/default.jpg'">
-                                                
-                                                <div>
-                                                    <h5 class="mb-0">${food.name} 
-                                                        <c:if test="${food.isVegetarian}"> 
-                                                            <span class="badge badge-success" style="background-color: #28a745; color: white;">CHAY</span>
+                                                     onerror="this.src='${pageContext.request.contextPath}/img/room/room-1.jpg'"> 
+                                                <div class="food-info pr-2">
+                                                    <h5>
+                                                        ${food.name}
+                                                        <c:if test="${food.isVegetarian}">
+                                                            <span class="custom-badge badge-veg">CHAY</span>
                                                         </c:if>
                                                     </h5>
-                                                    <p class="text-muted mb-0">${food.description}</p>
-                                                    <p class="font-weight-bold text-danger mb-0">
-                                                        <fmt:formatNumber value="${food.price}" type="currency" currencyCode="VND" maxFractionDigits="0"/>
+                                                    <p class="food-desc" title="${food.description}">${food.description}</p>
+                                                    <p class="food-price">
+                                                        <fmt:formatNumber value="${food.price}" type="currency" currencyCode="USD" maxFractionDigits="0"/>
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div class="menu-item-right">
+                                            <div class="quantity-wrapper">
+                                                <span class="quantity-label">Số lượng</span>
                                                 <input type="number" 
                                                        name="item_serviceId_${food.serviceId}" 
                                                        value="0" 
                                                        min="0" 
-                                                       class="form-control quantity-input" 
-                                                       style="width: 80px; text-align: center;">
+                                                       class="form-control quantity-input">
                                             </div>
                                         </div>
                                     </div>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
-                                <div class="col-lg-12 text-center text-muted">Không có món ăn nào đang hoạt động.</div>
+                                <div class="col-12 text-center py-5">
+                                    <p class="text-muted">Hiện chưa có món ăn nào.</p>
+                                </div>
                             </c:otherwise>
                         </c:choose>
                     </div>
 
-                    <hr>
+                    <hr class="my-5">
 
-                    <h3 class="mt-4 mb-3">🍹 Đồ Uống (Drinks)</h3>
+                    <div class="d-flex align-items-center mb-4">
+                        <span style="font-size: 24px; margin-right: 10px;">🍹</span>
+                        <h3 class="m-0 font-weight-bold text-dark">Đồ Uống Giải Khát</h3>
+                    </div>
+
                     <div class="row">
                         <c:choose>
                             <c:when test="${not empty requestScope.drinkList}">
                                 <c:forEach var="drink" items="${requestScope.drinkList}">
-                                    <div class="col-lg-6 menu-item">
-                                        <div class="menu-item-inner d-flex justify-content-between align-items-center mb-4 p-3 border rounded shadow-sm">
-                                            
-                                            <div class="menu-item-left d-flex align-items-center">
+                                    <div class="col-lg-6 col-md-12 mb-4">
+                                        <div class="menu-item-inner">
+                                            <div class="d-flex align-items-center" style="flex: 1;">
                                                 <img src="${pageContext.request.contextPath}/uploads/${drink.imageUrl}" 
                                                      alt="${drink.name}" 
                                                      class="service-image"
-                                                     onerror="this.src='${pageContext.request.contextPath}/uploads/default.jpg'">
+                                                     onerror="this.src='${pageContext.request.contextPath}/img/room/room-2.jpg'">
                                                 
-                                                <div>
-                                                    <h5 class="mb-0">${drink.name} 
-                                                        <c:if test="${drink.isAlcoholic}"> 
-                                                            <span class="badge badge-warning" style="background-color: #ffc107; color: black;">CÓ CỒN</span>
+                                                <div class="food-info pr-2">
+                                                    <h5>
+                                                        ${drink.name}
+                                                        <c:if test="${drink.isAlcoholic}">
+                                                            <span class="custom-badge badge-alcohol">CÓ CỒN</span>
                                                         </c:if>
                                                     </h5>
-                                                    <p class="text-muted mb-0">(${drink.volumeMl} ml)</p>
-                                                    <p class="font-weight-bold text-danger mb-0">
-                                                        <fmt:formatNumber value="${drink.price}" type="currency" currencyCode="VND" maxFractionDigits="0"/>
+                                                    <p class="food-desc">Dung tích: ${drink.volumeMl} ml</p>
+                                                    <p class="food-price">
+                                                        <fmt:formatNumber value="${drink.price}" type="currency" currencyCode="USD" maxFractionDigits="0"/>
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div class="menu-item-right">
+                                            <div class="quantity-wrapper">
+                                                <span class="quantity-label">Số lượng</span>
                                                 <input type="number" 
                                                        name="item_serviceId_${drink.serviceId}" 
                                                        value="0" 
                                                        min="0" 
-                                                       class="form-control quantity-input" 
-                                                       style="width: 80px; text-align: center;">
+                                                       class="form-control quantity-input">
                                             </div>
                                         </div>
                                     </div>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
-                                <div class="col-lg-12 text-center text-muted">Không có đồ uống nào đang hoạt động.</div>
+                                <div class="col-12 text-center py-5">
+                                    <p class="text-muted">Hiện chưa có đồ uống nào.</p>
+                                </div>
                             </c:otherwise>
                         </c:choose>
                     </div>
 
-                    <hr class="mt-5">
-
-                    <div class="row mt-5 p-4 border rounded bg-light">
-                        <div class="col-lg-12">
-                            <h4 class="mb-4">Chi tiết Đặt hàng</h4>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="form-group">
-                                <label for="roomNumber" class="font-weight-bold">Số phòng:</label>
-                                <input type="text" id="roomNumber" name="roomNumber" class="form-control" placeholder="Ví dụ: 101" required>
+                    <div class="row justify-content-center mt-5">
+                        <div class="col-lg-10">
+                            <div class="order-form-box">
+                                <h4 class="mb-4 text-center font-weight-bold">Xác Nhận Đặt Hàng</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="roomNumber" class="font-weight-bold">Số phòng của bạn <span class="text-danger">*</span></label>
+                                            <input type="text" id="roomNumber" name="roomNumber" class="form-control form-control-lg" placeholder="Ví dụ: 101" required style="font-size: 14px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="note" class="font-weight-bold">Ghi chú thêm</label>
+                                            <textarea id="note" name="note" class="form-control" rows="1" placeholder="Ít đá, không hành..." style="font-size: 14px; height: 48px;"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-confirm btn-lg px-5 py-3 shadow">
+                                        <i class="fa fa-paper-plane mr-2"></i> Gửi Yêu Cầu
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="form-group">
-                                <label for="note" class="font-weight-bold">Ghi chú (Tùy chọn):</label>
-                                <textarea id="note" name="note" class="form-control" rows="3" placeholder="Yêu cầu đặc biệt..."></textarea>
-                            </div>
-                        </div>
-                        <div class="col-lg-12 d-flex justify-content-end mt-4">
-                            <button type="submit" class="primary-btn btn-lg" style="padding: 15px 50px;">XÁC NHẬN ĐẶT HÀNG</button>
                         </div>
                     </div>
 

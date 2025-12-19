@@ -7,9 +7,9 @@
 <div class="main-content">
     <section class="section">
         <div class="section-header">
-            <h1>Quản lý mục giặt ủi</h1>
+            <h1>Laundry Items Management</h1>
             <div class="section-header-breadcrumb">
-                <div class="breadcrumb-item active">Mục giặt ủi</div>
+                <div class="breadcrumb-item active">Laundry Item</div>
             </div>
         </div>
 
@@ -23,10 +23,10 @@
                         </button>
                         <i class="fas fa-check-circle"></i>
                         <c:choose>
-                            <c:when test="${param.success == 'added'}">Thêm mục thành công!</c:when>
-                            <c:when test="${param.success == 'updated'}">Cập nhật mục thành công!</c:when>
-                            <c:when test="${param.success == 'activated'}">Kích hoạt mục thành công!</c:when>
-                            <c:when test="${param.success == 'deactivated'}">Vô hiệu hóa mục thành công!</c:when>
+                            <c:when test="${param.success == 'added'}">Successfully Add A New Item</c:when>
+                            <c:when test="${param.success == 'updated'}">Update Item Successfully</c:when>
+                            <c:when test="${param.success == 'activated'}">Activate the item!</c:when>
+                            <c:when test="${param.success == 'deactivated'}">Deactivate the item!</c:when>
                             <c:otherwise>Thao tác thành công!</c:otherwise>
                         </c:choose>
                     </div>
@@ -49,27 +49,38 @@
                     </div>
                 </div>
             </c:if>
-
+            
+            <c:if test="${not empty errorMessage}">
+                <div class="alert alert-danger alert-dismissible show fade">
+                    <div class="alert-body">
+                        <button class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                        ${errorMessage}
+                    </div>
+                </div>
+            </c:if>
+            
             <!-- Search and Filter -->
             <div class="card">
                 <div class="card-header">
-                    <h4>Tìm kiếm & Lọc</h4>
+                    <h4>Search & filter</h4>
                 </div>
                 <div class="card-body">
                     <form action="laundry-item" method="get" class="row">
                         <input type="hidden" name="action" value="list">
                         
                         <div class="form-group col-md-3">
-                            <label>Tìm kiếm</label>
+                            <label>Search</label>
                             <input type="text" name="search" class="form-control" 
                                    placeholder="Tên mục, mô tả..." 
                                    value="${search}">
                         </div>
                         
                         <div class="form-group col-md-3">
-                            <label>Dịch vụ</label>
+                            <label>Service</label>
                             <select name="serviceId" class="form-control">
-                                <option value="">Tất cả dịch vụ</option>
+                                <option value="">All</option>
                                 <c:forEach var="service" items="${services}">
                                     <option value="${service.serviceId}" 
                                             ${serviceId == service.serviceId ? 'selected' : ''}>
@@ -80,29 +91,29 @@
                         </div>
                         
                         <div class="form-group col-md-2">
-                            <label>Trạng thái</label>
+                            <label>Status</label>
                             <select name="status" class="form-control">
-                                <option value="">Tất cả</option>
-                                <option value="true" ${status == 'true' ? 'selected' : ''}>Hoạt động</option>
-                                <option value="false" ${status == 'false' ? 'selected' : ''}>Không hoạt động</option>
+                                <option value="">All</option>
+                                <option value="true" ${status == 'true' ? 'selected' : ''}>Active</option>
+                                <option value="false" ${status == 'false' ? 'selected' : ''}>Inactive</option>
                             </select>
                         </div>
                         
                         <div class="form-group col-md-2">
-                            <label>Sắp xếp</label>
+                            <label>Sort</label>
                             <select name="sort" class="form-control">
-                                <option value="">Tên (A-Z)</option>
-                                <option value="nameDesc" ${sort == 'nameDesc' ? 'selected' : ''}>Tên (Z-A)</option>
-                                <option value="priceAsc" ${sort == 'priceAsc' ? 'selected' : ''}>Giá (Thấp-Cao)</option>
-                                <option value="priceDesc" ${sort == 'priceDesc' ? 'selected' : ''}>Giá (Cao-Thấp)</option>
-                                <option value="serviceAsc" ${sort == 'serviceAsc' ? 'selected' : ''}>Dịch vụ (A-Z)</option>
+                                <option value="">Name (A-Z)</option>
+                                <option value="nameDesc" ${sort == 'nameDesc' ? 'selected' : ''}>Name (Z-A)</option>
+                                <option value="priceAsc" ${sort == 'priceAsc' ? 'selected' : ''}>Price (Thấp-Cao)</option>
+                                <option value="priceDesc" ${sort == 'priceDesc' ? 'selected' : ''}>Price (Cao-Thấp)</option>
+                                <option value="serviceAsc" ${sort == 'serviceAsc' ? 'selected' : ''}>Service (A-Z)</option>
                             </select>
                         </div>
                         
                         <div class="form-group col-md-2">
                             <label>&nbsp;</label>
                             <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-search"></i> Tìm kiếm
+                                <i class="fas fa-search"></i> Search
                             </button>
                         </div>
                     </form>
@@ -112,7 +123,7 @@
             <!-- Items List -->
             <div class="card">
                 <div class="card-header">
-                    <h4>Danh sách mục giặt ủi</h4>
+                    <h4>Laundry Item List</h4>
                     <div class="card-header-action">
 <!--                        <span class="badge badge-primary">
                             Hiển thị ${(currentPage - 1) * 10 + 1} - 
@@ -120,7 +131,7 @@
                             / ${totalRecords} mục
                         </span>-->
                             <a href="laundry-item?action=add" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Thêm mới
+                                <i class="fas fa-plus"></i> Add New
                             </a>
                     </div>
                 </div>
@@ -130,13 +141,13 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Tên mục</th>
-                                    <th>Dịch vụ</th>
-                                    <th>Mô tả</th>
-                                    <th>Đơn giá</th>
-                                    <th>Đơn vị</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
+                                    <th>Item</th>
+                                    <th>Service</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Unit</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -169,30 +180,30 @@
                                         <td>
                                             <c:choose>
                                                 <c:when test="${item.isActive}">
-                                                    <span class="badge badge-success">Hoạt động</span>
+                                                    <span class="badge badge-success">Active</span>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="badge badge-danger">Không hoạt động</span>
+                                                    <span class="badge badge-danger">InActive</span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
                                         <td>
                                             <a href="laundry-item?action=edit&id=${item.laundryItemId}" 
-                                               class="btn btn-primary btn-sm" title="Chỉnh sửa">
+                                               class="btn btn-primary btn-sm" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <c:choose>
                                                 <c:when test="${item.isActive}">
                                                     <button type="button" class="btn btn-warning btn-sm" 
                                                             onclick="confirmDeactivate(${item.laundryItemId})" 
-                                                            title="Vô hiệu hóa">
+                                                            title="Inactive">
                                                         <i class="fas fa-ban"></i>
                                                     </button>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <button type="button" class="btn btn-success btn-sm" 
                                                             onclick="confirmActivate(${item.laundryItemId})" 
-                                                            title="Kích hoạt">
+                                                            title="Active">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                 </c:otherwise>
@@ -205,7 +216,7 @@
                                     <tr>
                                         <td colspan="8" class="text-center py-4">
                                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                            <p class="text-muted">Không tìm thấy mục nào</p>
+                                            <p class="text-muted">Don't have any item</p>
                                         </td>
                                     </tr>
                                 </c:if>
@@ -249,13 +260,13 @@
 
 <script>
     function confirmActivate(id) {
-        if (confirm('Bạn có chắc chắn muốn kích hoạt mục này?')) {
+        if (confirm('Are you sure want to activate this item?')) {
             window.location.href = 'laundry-item?action=activate&id=' + id;
         }
     }
     
     function confirmDeactivate(id) {
-        if (confirm('Bạn có chắc chắn muốn vô hiệu hóa mục này?')) {
+        if (confirm('Are you sure want to deactivate this item?')) {
             window.location.href = 'laundry-item?action=deactivate&id=' + id;
         }
     }
