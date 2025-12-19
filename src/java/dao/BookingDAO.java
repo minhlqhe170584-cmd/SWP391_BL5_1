@@ -149,6 +149,34 @@ public class BookingDAO extends DBContext {
         return false;
     }
 
+    // ==================================================================
+    // 9. [MỚI] KIỂM TRA TRÙNG LỊCH (Check Availability)
+    // Logic: Đếm xem có đơn nào KHÁC 'Cancelled'/'Rejected' 
+    //        mà thời gian đè lên khoảng khách chọn không.
+    // ==================================================================
+    public boolean checkAvailability(int roomId, Date checkIn, Date checkOut) {
+        String sql = "SELECT COUNT(*) FROM Bookings "
+                   + "WHERE room_id = ? "
+                   + "AND status NOT IN ('Cancelled', 'Rejected') " // Bỏ qua đơn đã hủy
+                   + "AND (check_in_date < ? AND check_out_date > ?)";
+        
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            ps.setDate(2, checkOut); // Logic: Start cũ < End mới
+            ps.setDate(3, checkIn);  // Logic: End cũ > Start mới
+            
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                // Nếu count == 0 nghĩa là KHÔNG có đơn nào trùng -> Phòng trống (Available)
+                return count == 0; 
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Mặc định trả về false (coi như bận) nếu lỗi DB để an toàn
+    }
+
     // --- HÀM PHỤ TRỢ ---
 
     // Hàm chạy Transaction chung cho Check-in/Check-out/Cancel (Tránh lặp code)
@@ -202,4 +230,5 @@ public class BookingDAO extends DBContext {
         
         return b;
     }
+    
 }
