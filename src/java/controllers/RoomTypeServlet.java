@@ -81,45 +81,49 @@ public class RoomTypeServlet extends HttpServlet {
     }
 
     // --- CÁC HÀM XỬ LÝ ---
-private void listRoomTypes(HttpServletRequest request, HttpServletResponse response, RoomTypeDAO dao)
-        throws ServletException, IOException {
-    
-    // 1. Lấy tham số Search & Filter
-    String keyword = request.getParameter("keyword");
-    String status = request.getParameter("status");
-    String indexPage = request.getParameter("index");
-    
-    if (indexPage == null) indexPage = "1";
-    int index = Integer.parseInt(indexPage);
+    private void listRoomTypes(HttpServletRequest request, HttpServletResponse response, RoomTypeDAO dao)
+            throws ServletException, IOException {
 
-    // 2. Gọi DAO lấy TOÀN BỘ danh sách theo điều kiện (Chưa phân trang)
-    List<RoomType> fullList = dao.findRoomTypes(keyword, status);
+        // 1. Lấy tham số Search & Filter
+        String keyword = request.getParameter("keyword");
+        String status = request.getParameter("status");
+        String indexPage = request.getParameter("index");
 
-    // 3. Xử lý SubList (Cắt trang) - Logic giống hệt RoomServlet
-    int count = fullList.size();
-    int pageSize = 5; // Bạn có thể sửa số dòng/trang ở đây
-    int endPage = count / pageSize;
-    if (count % pageSize != 0) endPage++;
+        if (indexPage == null) {
+            indexPage = "1";
+        }
+        int index = Integer.parseInt(indexPage);
 
-    int start = (index - 1) * pageSize;
-    int end = Math.min(start + pageSize, count);
+        // 2. Gọi DAO lấy TOÀN BỘ danh sách theo điều kiện (Chưa phân trang)
+        List<RoomType> fullList = dao.findRoomTypes(keyword, status);
 
-    List<RoomType> pagedList = new ArrayList<>();
-    if (start < count) {
-        pagedList = fullList.subList(start, end);
+        // 3. Xử lý SubList (Cắt trang) - Logic giống hệt RoomServlet
+        int count = fullList.size();
+        int pageSize = 5; // Bạn có thể sửa số dòng/trang ở đây
+        int endPage = count / pageSize;
+        if (count % pageSize != 0) {
+            endPage++;
+        }
+
+        int start = (index - 1) * pageSize;
+        int end = Math.min(start + pageSize, count);
+
+        List<RoomType> pagedList = new ArrayList<>();
+        if (start < count) {
+            pagedList = fullList.subList(start, end);
+        }
+
+        // 4. Đẩy dữ liệu ra JSP
+        request.setAttribute("listRoomTypes", pagedList); // List đã cắt
+        request.setAttribute("endPage", endPage);
+        request.setAttribute("tag", index);
+
+        // Giữ lại giá trị Search để hiện trên ô input
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("currentStatus", status);
+
+        request.getRequestDispatcher("/WEB-INF/views/roomtype/room-type-list.jsp").forward(request, response);
     }
-
-    // 4. Đẩy dữ liệu ra JSP
-    request.setAttribute("listRoomTypes", pagedList); // List đã cắt
-    request.setAttribute("endPage", endPage);
-    request.setAttribute("tag", index);
-    
-    // Giữ lại giá trị Search để hiện trên ô input
-    request.setAttribute("keyword", keyword);
-    request.setAttribute("currentStatus", status);
-
-    request.getRequestDispatcher("/WEB-INF/views/roomtype/room-type-list.jsp").forward(request, response);
-}
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -139,32 +143,61 @@ private void listRoomTypes(HttpServletRequest request, HttpServletResponse respo
     // --- LOGIC THÊM MỚI (CÓ UPLOAD ẢNH) ---
     private void insertRoomType(HttpServletRequest request, HttpServletResponse response, RoomTypeDAO dao)
             throws IOException, ServletException {
-        
-        // 1. Nhận dữ liệu text
+
+        // 1. Nhận dữ liệu text từ form (Lấy chuỗi trước để giữ lại nếu lỗi)
         String typeName = request.getParameter("typeName");
-        // Xử lý parse int/bigdecimal cẩn thận (vì có thể rỗng do hack, dù JS đã chặn)
-        int capacity = 0;
-        BigDecimal priceWeekday = BigDecimal.ZERO;
-        BigDecimal priceWeekend = BigDecimal.ZERO;
-        
-        try {
-            capacity = Integer.parseInt(request.getParameter("capacity"));
-            priceWeekday = new BigDecimal(request.getParameter("basePriceWeekday"));
-            priceWeekend = new BigDecimal(request.getParameter("basePriceWeekend"));
-        } catch (NumberFormatException e) {
-            // Nếu lỗi format số, quay lại trang add và báo lỗi
-            request.setAttribute("error", "Invalid number format!");
-            request.getRequestDispatcher("/WEB-INF/views/roomtype/room-type-add.jsp").forward(request, response);
-            return;
-        }
-        
+        String capacityStr = request.getParameter("capacity");
+        String priceWeekdayStr = request.getParameter("basePriceWeekday");
+        String priceWeekendStr = request.getParameter("basePriceWeekend");
         String description = request.getParameter("description");
         boolean isActive = request.getParameter("isActive") != null;
 
-        // 2. Xử lý Upload Ảnh
-        String imageUrl = uploadFile(request); // Hàm này mình đã cung cấp ở bài trước
+        // --- [MỚI] KIỂM TRA TRÙNG TÊN ---
+        // Tham số -1 nghĩa là đang tạo mới, kiểm tra toàn bộ bảng
+        if (dao.checkTypeNameExists(typeName, -1)) {
+            // A. Báo lỗi
+            request.setAttribute("error", "Room Type name '" + typeName + "' is already exist!");
+
+            // B. Giữ lại thông tin cũ để người dùng không phải nhập lại
+            request.setAttribute("typeName", typeName);
+            request.setAttribute("capacity", capacityStr);
+            request.setAttribute("basePriceWeekday", priceWeekdayStr);
+            request.setAttribute("basePriceWeekend", priceWeekendStr);
+            request.setAttribute("description", description);
+            
+            // C. Trả về trang Add
+            request.getRequestDispatcher("/WEB-INF/views/roomtype/room-type-add.jsp").forward(request, response);
+            return; // Dừng code tại đây (Không upload, không insert)
+        }
+        // --------------------------------
+
+        // 2. Parse số liệu (Capacity, Price)
+        int capacity = 0;
+        BigDecimal priceWeekday = BigDecimal.ZERO;
+        BigDecimal priceWeekend = BigDecimal.ZERO;
+
+        try {
+            capacity = Integer.parseInt(capacityStr);
+            priceWeekday = new BigDecimal(priceWeekdayStr);
+            priceWeekend = new BigDecimal(priceWeekendStr);
+        } catch (NumberFormatException e) {
+            // Nếu lỗi format số, cũng cần giữ lại input và báo lỗi
+            request.setAttribute("error", "Định dạng số không hợp lệ (Dung lượng hoặc Giá tiền)!");
+            
+            request.setAttribute("typeName", typeName);
+            request.setAttribute("capacity", capacityStr);
+            request.setAttribute("basePriceWeekday", priceWeekdayStr);
+            request.setAttribute("basePriceWeekend", priceWeekendStr);
+            request.setAttribute("description", description);
+            
+            request.getRequestDispatcher("/WEB-INF/views/roomtype/room-type-add.jsp").forward(request, response);
+            return;
+        }
+
+        // 3. Xử lý Upload Ảnh (Chỉ thực hiện khi các bước trên đã OK)
+        String imageUrl = uploadFile(request); 
         
-        // 3. Tạo Model
+        // 4. Tạo Model
         RoomType newType = new RoomType();
         newType.setTypeName(typeName);
         newType.setCapacity(capacity);
@@ -174,14 +207,15 @@ private void listRoomTypes(HttpServletRequest request, HttpServletResponse respo
         newType.setBasePriceWeekend(priceWeekend);
         newType.setIsActive(isActive);
 
-        // 4. Gọi DAO (Đã chuẩn hóa try-with-resources)
+        // 5. Gọi DAO Insert
         dao.insertRoomType(newType);
 
-        // 5. Thành công -> Về trang list
+        // 6. Thành công -> Về trang list
         HttpSession session = request.getSession();
-        session.setAttribute("successMessage", "Added new room type successfully!");
+        session.setAttribute("successMessage", "Thêm mới loại phòng thành công!");
         response.sendRedirect("room-types?action=LIST");
     }
+
     // --- LOGIC CẬP NHẬT (CÓ UPLOAD ẢNH) ---
     private void updateRoomType(HttpServletRequest request, HttpServletResponse response, RoomTypeDAO dao)
             throws IOException, ServletException {
@@ -216,18 +250,18 @@ private void listRoomTypes(HttpServletRequest request, HttpServletResponse respo
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         dao.deleteRoomType(id); // Gọi hàm xóa mềm trong DAO
-        
+
         HttpSession session = request.getSession();
         session.setAttribute("successMessage", "Room Type deactivated successfully!");
         response.sendRedirect("room-types?action=LIST");
     }
-    
+
     // Thêm hàm RESTORE mới
     private void restoreRoomType(HttpServletRequest request, HttpServletResponse response, RoomTypeDAO dao)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         dao.restoreRoomType(id); // Gọi hàm khôi phục trong DAO
-        
+
         HttpSession session = request.getSession();
         session.setAttribute("successMessage", "Room Type restored/activated successfully!");
         response.sendRedirect("room-types?action=LIST");
