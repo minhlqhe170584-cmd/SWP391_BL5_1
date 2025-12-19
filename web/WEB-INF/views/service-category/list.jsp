@@ -69,7 +69,7 @@
                                         ${c.categoryName}
                                     </td>
 
-                                    <td style="max-width: 300px;">
+                                    <td style="max-width: 300px; white-space: normal; word-wrap: break-word;">
                                         <div style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal;" title="${c.description}">
                                             ${c.description}
                                         </div>

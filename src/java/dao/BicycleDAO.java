@@ -9,107 +9,50 @@ import models.Bicycle;
 
 public class BicycleDAO extends DBContext {
 
-    private static final String GET_BY_ID = "SELECT b.bike_id, b.bike_code, b.service_id, b.status, b.condition, s.service_name FROM Bicycles b LEFT JOIN Services s ON b.service_id = s.service_id WHERE b.bike_id = ?";
-    private static final String INSERT_BICYCLE = "INSERT INTO Bicycles(bike_code, service_id, status, condition) VALUES(?,?,?,?)";
-    private static final String UPDATE_BICYCLE = "UPDATE Bicycles SET bike_code=?, service_id=?, status=?, condition=? WHERE bike_id=?";
-    private static final String CHECK_STATUS = "SELECT status FROM Bicycles WHERE bike_id = ?";
-    private static final String SET_STATUS = "UPDATE Bicycles SET status = ? WHERE bike_id = ?";
-    private static final String BASE_BICYCLE_SEARCH = "FROM Bicycles b LEFT JOIN Services s ON b.service_id = s.service_id WHERE 1=1";
-    private static final String CHECK_DUPLICATE_CODE = "SELECT COUNT(*) FROM Bicycles WHERE bike_code = ? AND bike_id != ?";
-
-    public Bicycle getById(int id) {
-        try {
-            PreparedStatement st = connection.prepareStatement(GET_BY_ID);
-            st.setInt(1, id);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                return new Bicycle(
-                        rs.getInt("bike_id"),
-                        rs.getString("bike_code"),
-                        rs.getInt("service_id"),
-                        rs.getString("status"),
-                        rs.getString("condition"),
-                        rs.getString("service_name")
-                );
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public void insert(Bicycle b) throws SQLException {
-        PreparedStatement st = connection.prepareStatement(INSERT_BICYCLE);
-        st.setString(1, b.getBikeCode());
-        st.setInt(2, b.getServiceId());
-        st.setString(3, b.getStatus());
-        st.setString(4, b.getCondition());
-        st.executeUpdate();
-    }
-
-    public void update(Bicycle b) throws SQLException {
-        PreparedStatement st = connection.prepareStatement(UPDATE_BICYCLE);
-        st.setString(1, b.getBikeCode());
-        st.setInt(2, b.getServiceId());
-        st.setString(3, b.getStatus());
-        st.setString(4, b.getCondition());
-        st.setInt(5, b.getBikeId());
-        st.executeUpdate();
-    }
-
-    public void toggleDeleteStatus(int id) throws SQLException {
-        String currentStatus = "";
-        PreparedStatement checkSt = connection.prepareStatement(CHECK_STATUS);
-        checkSt.setInt(1, id);
-        ResultSet rs = checkSt.executeQuery();
-        if (rs.next()) {
-            currentStatus = rs.getString("status");
-        }
-
-        String newStatus;
-        if ("Deleted".equalsIgnoreCase(currentStatus)) {
-            newStatus = "Available";
-        } else {
-            newStatus = "Deleted";
-        }
-
-        PreparedStatement updateSt = connection.prepareStatement(SET_STATUS);
-        updateSt.setString(1, newStatus);
-        updateSt.setInt(2, id);
-        updateSt.executeUpdate();
-    }
+    private static final String DYNAMIC_STATUS_SQL = 
+            " CASE " +
+            "    WHEN b.condition = 'Deleted' THEN 'Deleted' " +
+            "    WHEN EXISTS ( " +
+            "        SELECT 1 FROM ServiceOrders so " +
+            "        JOIN OrderDetails od ON so.order_id = od.order_id " +
+            "        JOIN BikeRentals br ON so.order_id = br.order_id " +
+            "        WHERE br.bike_id = b.bike_id " +
+            "        AND so.status IN ('Confirmed', 'Pending') " +
+            "        AND GETDATE() BETWEEN so.booking_start_date AND so.booking_end_date " +
+            "    ) THEN 'Rented' " +
+            "    ELSE 'Available' " +
+            " END as current_status ";
 
     public ArrayList<Bicycle> search(String search, String statusFilter, String view, String sort, int pageIndex, int pageSize) {
         ArrayList<Bicycle> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT b.bike_id, b.bike_code, b.service_id, b.status, b.condition, s.service_name ").append(BASE_BICYCLE_SEARCH);
+        
+        sql.append("SELECT b.bike_id, b.bike_code, b.service_id, b.condition, s.service_name, ");
+        sql.append(DYNAMIC_STATUS_SQL);
+        sql.append("FROM Bicycles b LEFT JOIN Services s ON b.service_id = s.service_id WHERE 1=1 ");
 
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (b.bike_code LIKE ? OR s.service_name LIKE ?) ");
         }
 
         if ("deleted".equals(view)) {
-            sql.append(" AND b.status = 'Deleted' ");
+            sql.append(" AND b.condition = 'Deleted' ");
         } else {
-            sql.append(" AND b.status != 'Deleted' ");
-            if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
-                sql.append(" AND b.status = ? ");
-            }
+            sql.append(" AND (b.condition != 'Deleted' OR b.condition IS NULL) ");
         }
 
-        if (sort == null || sort.isEmpty()) {
-            sql.append(" ORDER BY b.bike_id ASC ");
-        } else {
+        if (sort != null && !sort.isEmpty()) {
             switch (sort) {
                 case "codeAsc": sql.append(" ORDER BY b.bike_code ASC "); break;
                 case "codeDesc": sql.append(" ORDER BY b.bike_code DESC "); break;
-                case "statusAsc": sql.append(" ORDER BY b.status ASC "); break;
                 case "idDesc": sql.append(" ORDER BY b.bike_id DESC "); break;
                 default: sql.append(" ORDER BY b.bike_id ASC "); break;
             }
+        } else {
+            sql.append(" ORDER BY b.bike_id ASC ");
         }
 
-        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
         try {
             PreparedStatement st = connection.prepareStatement(sql.toString());
@@ -120,26 +63,20 @@ public class BicycleDAO extends DBContext {
                 st.setString(idx++, "%" + search.trim() + "%");
             }
 
-            if (!"deleted".equals(view)) {
-                if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
-                    st.setString(idx++, statusFilter);
-                }
-            }
-
             int offset = (pageIndex - 1) * pageSize;
             st.setInt(idx++, offset);
             st.setInt(idx, pageSize);
 
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                list.add(new Bicycle(
-                        rs.getInt("bike_id"),
-                        rs.getString("bike_code"),
-                        rs.getInt("service_id"),
-                        rs.getString("status"),
-                        rs.getString("condition"),
-                        rs.getString("service_name")
-                ));
+                Bicycle b = new Bicycle();
+                b.setBikeId(rs.getInt("bike_id"));
+                b.setBikeCode(rs.getString("bike_code"));
+                b.setServiceId(rs.getInt("service_id"));
+                b.setCondition(rs.getString("condition"));
+                b.setServiceName(rs.getString("service_name"));
+                b.setStatus(rs.getString("current_status"));
+                list.add(b);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -149,19 +86,16 @@ public class BicycleDAO extends DBContext {
 
     public int countSearch(String search, String statusFilter, String view) {
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT COUNT(*) ").append(BASE_BICYCLE_SEARCH);
+        sql.append("SELECT COUNT(*) FROM Bicycles b LEFT JOIN Services s ON b.service_id = s.service_id WHERE 1=1 ");
 
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (b.bike_code LIKE ? OR s.service_name LIKE ?) ");
         }
 
         if ("deleted".equals(view)) {
-            sql.append(" AND b.status = 'Deleted' ");
+            sql.append(" AND b.condition = 'Deleted' ");
         } else {
-            sql.append(" AND b.status != 'Deleted' ");
-            if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
-                sql.append(" AND b.status = ? ");
-            }
+            sql.append(" AND (b.condition != 'Deleted' OR b.condition IS NULL) ");
         }
 
         try {
@@ -171,12 +105,6 @@ public class BicycleDAO extends DBContext {
             if (search != null && !search.trim().isEmpty()) {
                 st.setString(idx++, "%" + search.trim() + "%");
                 st.setString(idx++, "%" + search.trim() + "%");
-            }
-            
-            if (!"deleted".equals(view)) {
-                if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
-                    st.setString(idx++, statusFilter);
-                }
             }
 
             ResultSet rs = st.executeQuery();
@@ -189,16 +117,75 @@ public class BicycleDAO extends DBContext {
         return 0;
     }
 
-    public boolean isExistCode(String code, int idToExclude) {
+    public Bicycle getById(int id) {
+        String sql = "SELECT b.bike_id, b.bike_code, b.service_id, b.condition, s.service_name, " +
+                     DYNAMIC_STATUS_SQL +
+                     "FROM Bicycles b LEFT JOIN Services s ON b.service_id = s.service_id WHERE b.bike_id = ?";
         try {
-            PreparedStatement st = connection.prepareStatement(CHECK_DUPLICATE_CODE);
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, id);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                Bicycle b = new Bicycle();
+                b.setBikeId(rs.getInt("bike_id"));
+                b.setBikeCode(rs.getString("bike_code"));
+                b.setServiceId(rs.getInt("service_id"));
+                b.setCondition(rs.getString("condition"));
+                b.setServiceName(rs.getString("service_name"));
+                b.setStatus(rs.getString("current_status"));
+                return b;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void insert(Bicycle b) throws SQLException {
+        String sql = "INSERT INTO Bicycles(bike_code, service_id, condition) VALUES(?,?,?)";
+        PreparedStatement st = connection.prepareStatement(sql);
+        st.setString(1, b.getBikeCode());
+        st.setInt(2, b.getServiceId());
+        st.setString(3, b.getCondition());
+        st.executeUpdate();
+    }
+
+    public void update(Bicycle b) throws SQLException {
+        String sql = "UPDATE Bicycles SET bike_code=?, service_id=?, condition=? WHERE bike_id=?";
+        PreparedStatement st = connection.prepareStatement(sql);
+        st.setString(1, b.getBikeCode());
+        st.setInt(2, b.getServiceId());
+        st.setString(3, b.getCondition());
+        st.setInt(4, b.getBikeId());
+        st.executeUpdate();
+    }
+
+    public void toggleDeleteStatus(int id) throws SQLException {
+        String checkSql = "SELECT condition FROM Bicycles WHERE bike_id = ?";
+        PreparedStatement checkSt = connection.prepareStatement(checkSql);
+        checkSt.setInt(1, id);
+        ResultSet rs = checkSt.executeQuery();
+        String current = "";
+        if (rs.next()) current = rs.getString("condition");
+
+        String newVal = "Deleted".equals(current) ? "Good" : "Deleted";
+        
+        String updateSql = "UPDATE Bicycles SET condition = ? WHERE bike_id = ?";
+        PreparedStatement updateSt = connection.prepareStatement(updateSql);
+        updateSt.setString(1, newVal);
+        updateSt.setInt(2, id);
+        updateSt.executeUpdate();
+    }
+
+    public boolean isExistCode(String code, int idToExclude) {
+        String sql = "SELECT COUNT(*) FROM Bicycles WHERE bike_code = ? AND bike_id != ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, code);
             st.setInt(2, idToExclude);
             ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
+            if (rs.next()) return rs.getInt(1) > 0;
+        } catch(SQLException e) {
             e.printStackTrace();
         }
         return false;

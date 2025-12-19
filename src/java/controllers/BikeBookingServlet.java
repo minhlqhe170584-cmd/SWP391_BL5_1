@@ -56,9 +56,9 @@ public class BikeBookingServlet extends HttpServlet {
         BikeTransactionDAO dao = new BikeTransactionDAO();
         ServiceDAO serviceDAO = new ServiceDAO();
         HttpSession session = request.getSession();
-        
+
         Integer roomId = (Integer) session.getAttribute("ROOM_ID");
-        if (roomId == null) roomId = 1; 
+        if (roomId == null) roomId = 1;
 
         String action = request.getParameter("action");
         String serviceIdRaw = request.getParameter("serviceId");
@@ -75,7 +75,15 @@ public class BikeBookingServlet extends HttpServlet {
             BikeRentalOption option = dao.getOptionById(optionId);
             LocalDateTime startLDT = LocalDateTime.parse(startTimeRaw);
             
-            
+            LocalDateTime now = LocalDateTime.now();
+            if (startLDT.isBefore(now)) {
+                Service service = serviceDAO.getById(serviceId);
+                request.setAttribute("service", service);
+                request.setAttribute("options", dao.getBikeOptions(serviceId));
+                request.setAttribute("errorMessage", "Error: Cannot book in the past!");
+                request.getRequestDispatcher("/WEB-INF/views/client/bike_booking.jsp").forward(request, response);
+                return;
+            }
             
             LocalDateTime endLDT = startLDT.plusMinutes(option.getDurationMinutes());
             
@@ -90,6 +98,8 @@ public class BikeBookingServlet extends HttpServlet {
                 ArrayList<SlotAvailability> slots = dao.getHourlyAvailability(start, end, serviceId);
                 request.setAttribute("checkResult", slots);
                 request.setAttribute("requestQty", quantity);
+                request.setAttribute("startTime", startTimeRaw); // Giữ lại giá trị input
+                request.setAttribute("optionId", optionId);
                 request.getRequestDispatcher("/WEB-INF/views/client/bike_booking.jsp").forward(request, response);
             } 
             else if ("book".equals(action)) {

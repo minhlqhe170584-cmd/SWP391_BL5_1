@@ -12,6 +12,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import models.Service;
 import models.ServiceCategory;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.Part;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024 * 2, // 2MB
+    maxFileSize = 1024 * 1024 * 10,      // 10MB
+    maxRequestSize = 1024 * 1024 * 50    // 50MB
+)
 
 @WebServlet(name = "ServiceServlet", urlPatterns = {"/admin/service"})
 public class ServiceServlet extends HttpServlet {
@@ -51,19 +64,17 @@ public class ServiceServlet extends HttpServlet {
         String categoryId = request.getParameter("categoryId");
         String sort = request.getParameter("sort");
         String pageRaw = request.getParameter("page");
-        String view = request.getParameter("view"); 
+        String view = request.getParameter("view");
 
         int pageIndex = 1;
         int pageSize = 5;
-        
-        //String pageSizeRaw = request.getParameter("pageSize");
-//        if (pageSizeRaw != null) {
-//            pageSize = Integer.parseInt(pageSizeRaw);
-//        } &pageSize=${pageSize}
+
         if (pageRaw != null && !pageRaw.trim().isEmpty()) {
             try {
                 pageIndex = Integer.parseInt(pageRaw);
-                if (pageIndex < 1) pageIndex = 1;
+                if (pageIndex < 1) {
+                    pageIndex = 1;
+                }
             } catch (NumberFormatException e) {
                 pageIndex = 1;
             }
@@ -82,7 +93,6 @@ public class ServiceServlet extends HttpServlet {
         request.setAttribute("view", view);
         request.setAttribute("page", pageIndex);
         request.setAttribute("totalPages", totalPages);
-        //request.setAttribute("pageSize", pageSize);
 
         request.getRequestDispatcher("/WEB-INF/views/service/list.jsp").forward(request, response);
     }
@@ -95,7 +105,8 @@ public class ServiceServlet extends HttpServlet {
             try {
                 int id = Integer.parseInt(idRaw);
                 service = serviceDAO.getById(id);
-            } catch (NumberFormatException e) {}
+            } catch (NumberFormatException e) {
+            }
         }
         ArrayList<ServiceCategory> categories = categoryDAO.getAll();
         request.setAttribute("service", service);
@@ -112,7 +123,7 @@ public class ServiceServlet extends HttpServlet {
             try {
                 int id = Integer.parseInt(idRaw);
                 boolean isDeleted = serviceDAO.isDeleted(id);
-                
+
                 if (isDeleted) {
                     serviceDAO.restore(id);
                     session.setAttribute("message", "Service restored successfully.");
@@ -140,7 +151,8 @@ public class ServiceServlet extends HttpServlet {
                     serviceDAO.updateStatus(id, newStatus);
                     request.getSession().setAttribute("message", "Status updated successfully!");
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
         String currentView = request.getParameter("view");
         response.sendRedirect("service" + (currentView != null ? "?view=" + currentView : ""));
@@ -150,23 +162,84 @@ public class ServiceServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        
         String idRaw = request.getParameter("serviceId");
         String name = request.getParameter("serviceName");
-        String image = request.getParameter("imageUrl");
         String categoryIdStr = request.getParameter("categoryId");
         boolean active = request.getParameter("isActive") != null;
 
         Service s = new Service();
         s.setServiceName(name);
-        s.setImageUrl(image);
         s.setIsActive(active);
 
         if (idRaw != null && !idRaw.trim().isEmpty()) {
-            try { s.setServiceId(Integer.parseInt(idRaw)); } catch (NumberFormatException e) {}
+            try {
+                s.setServiceId(Integer.parseInt(idRaw));
+            } catch (NumberFormatException e) {}
         }
         if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
-            try { s.setCategoryId(Integer.parseInt(categoryIdStr)); } catch (NumberFormatException e) {}
+            try {
+                s.setCategoryId(Integer.parseInt(categoryIdStr));
+            } catch (NumberFormatException e) {}
         }
+
+        String imageUrl = null;
+
+        try {
+            Part filePart = request.getPart("imageFile");
+            String fileName = filePart.getSubmittedFileName();
+
+            if (fileName != null && !fileName.isEmpty()) {
+                
+                if (!filePart.getContentType().startsWith("image/")) {
+                    request.setAttribute("service", s);
+                    request.setAttribute("categories", categoryDAO.getAll());
+                    request.setAttribute("errorMessage", "Error: Only image files (jpg, png, gif) are allowed!");
+                    request.getRequestDispatcher("/WEB-INF/views/service/detail.jsp").forward(request, response);
+                    return;
+                }
+
+                if (filePart.getSize() > 1024 * 1024 * 10) {
+                    request.setAttribute("service", s);
+                    request.setAttribute("categories", categoryDAO.getAll());
+                    request.setAttribute("errorMessage", "Error: Image size is too large (Max 10MB)!");
+                    request.getRequestDispatcher("/WEB-INF/views/service/detail.jsp").forward(request, response);
+                    return;
+                }
+
+                String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
+                
+                String buildPath = request.getServletContext().getRealPath("") + File.separator + "uploads";
+                File buildDir = new File(buildPath);
+                if (!buildDir.exists()) buildDir.mkdir();
+                
+                String savePath = buildPath + File.separator + uniqueFileName;
+                filePart.write(savePath);
+
+                String srcPath = buildPath.replace("build" + File.separator + "web", "web");
+                File srcDir = new File(srcPath);
+                if (!srcDir.exists()) srcDir.mkdir();
+                
+                Path source = Paths.get(savePath);
+                Path dest = Paths.get(srcPath + File.separator + uniqueFileName);
+                Files.copy(source, dest, StandardCopyOption.REPLACE_EXISTING);
+
+                imageUrl = "uploads/" + uniqueFileName;
+            } else {
+                imageUrl = request.getParameter("currentImage");
+            }
+        } catch (IllegalStateException e) {
+            request.setAttribute("service", s);
+            request.setAttribute("categories", categoryDAO.getAll());
+            request.setAttribute("errorMessage", "Error: File size exceeds the limit (Max 10MB)!");
+            request.getRequestDispatcher("/WEB-INF/views/service/detail.jsp").forward(request, response);
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+            imageUrl = request.getParameter("currentImage");
+        }
+
+        s.setImageUrl(imageUrl);
 
         String errorMessage = null;
         if (name == null || name.trim().isEmpty()) {

@@ -16,7 +16,6 @@ public class Bicycle {
         this.bikeId = bikeId;
         this.bikeCode = bikeCode;
         this.serviceId = serviceId;
-        this.status = status;
         this.condition = condition;
         this.serviceName = serviceName;
     }
