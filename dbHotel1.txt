@@ -92,7 +92,7 @@ CREATE TABLE Invoices (
     created_at DATETIME DEFAULT GETDATE(),
     payment_method NVARCHAR(50),
     total_amount DECIMAL(18,0),
-    note NVARCHAR(MAX)
+    note NVARCHAR(MAX),
     status NVARCHAR(20) DEFAULT 'Unpaid'
 );
 
