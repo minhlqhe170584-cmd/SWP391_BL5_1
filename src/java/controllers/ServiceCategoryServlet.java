@@ -134,6 +134,10 @@ public class ServiceCategoryServlet extends HttpServlet {
             errorMessage = "Category name is required.";
         } else if (categoryDAO.isExistName(name, c.getCategoryId())) {
             errorMessage = "Category name '" + name + "' already exists.";
+        } else if (name.length() > 50) {
+            errorMessage = "Category name cannot exceed 50 characters.";
+        } else if (description != null && description.length() > 150) {
+            errorMessage = "Description cannot exceed 150 characters.";
         }
 
         if (errorMessage != null) {

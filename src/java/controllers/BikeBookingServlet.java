@@ -74,6 +74,9 @@ public class BikeBookingServlet extends HttpServlet {
             
             BikeRentalOption option = dao.getOptionById(optionId);
             LocalDateTime startLDT = LocalDateTime.parse(startTimeRaw);
+            
+            
+            
             LocalDateTime endLDT = startLDT.plusMinutes(option.getDurationMinutes());
             
             java.sql.Timestamp start = java.sql.Timestamp.valueOf(startLDT);

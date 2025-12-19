@@ -52,14 +52,14 @@
                                             </div>
                                         </div>
                                         <input type="text" class="form-control" name="categoryName" 
-                                               value="${category.categoryName}" required placeholder="Ex: Food, Laundry...">
+                                               value="${category.categoryName}" required maxlength="50" placeholder="Ex: Food, Laundry...">
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label>Description</label>
                                     <textarea class="form-control" name="description" rows="4" style="height: 100px;" 
-                                              placeholder="Enter detailed description for this category">${category.description}</textarea>
+                                              placeholder="Enter detailed description for this category" maxlength="150">${category.description}</textarea>
                                 </div>
                                 
                                 <div class="form-group text-right">
