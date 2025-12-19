@@ -31,7 +31,7 @@
                     <div class="card card-primary">
                         <div class="card-header">
                             <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
-                            <div class="card-header-action">
+                            <div class="card-header-action" hidden="">
                                 <c:choose>
                                     <c:when test="${room.status == 'Available'}">
                                         <span class="badge badge-success">Available</span>
