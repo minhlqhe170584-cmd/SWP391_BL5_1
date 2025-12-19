@@ -451,6 +451,44 @@ public class LaundryOrderDAO extends DBContext {
             stService.setInt(2, orderId);
             stService.executeUpdate();
             
+            // 3.5. If ServiceOrders status is "Confirmed", create ServiceInvoices
+            if ("Confirmed".equalsIgnoreCase(serviceOrderStatus)) {
+                // Check if ServiceInvoice already exists for this order_id
+                String checkInvoice = "SELECT COUNT(*) FROM ServiceInvoices WHERE order_id = ?";
+                PreparedStatement stCheckInvoice = conn.prepareStatement(checkInvoice);
+                stCheckInvoice.setInt(1, orderId);
+                ResultSet rsCheckInvoice = stCheckInvoice.executeQuery();
+                boolean hasInvoice = false;
+                if (rsCheckInvoice.next()) {
+                    hasInvoice = rsCheckInvoice.getInt(1) > 0;
+                }
+                rsCheckInvoice.close();
+                stCheckInvoice.close();
+                
+                // Only create invoice if it doesn't exist
+                if (!hasInvoice) {
+                    // Get total_amount from ServiceOrders
+                    String getTotalAmount = "SELECT total_amount FROM ServiceOrders WHERE order_id = ?";
+                    PreparedStatement stGetAmount = conn.prepareStatement(getTotalAmount);
+                    stGetAmount.setInt(1, orderId);
+                    ResultSet rsAmount = stGetAmount.executeQuery();
+                    double finalAmount = 0.0;
+                    if (rsAmount.next()) {
+                        finalAmount = rsAmount.getDouble("total_amount");
+                    }
+                    rsAmount.close();
+                    stGetAmount.close();
+                    
+                    // Insert ServiceInvoice
+                    String insertInvoice = "INSERT INTO ServiceInvoices (order_id, created_at, final_amount, status) VALUES (?, GETDATE(), ?, 'Unpaid')";
+                    PreparedStatement stInvoice = conn.prepareStatement(insertInvoice);
+                    stInvoice.setInt(1, orderId);
+                    stInvoice.setDouble(2, finalAmount);
+                    stInvoice.executeUpdate();
+                    stInvoice.close();
+                }
+            }
+            
             // 4. If changing from PENDING, create OrderDetails records
             if ("PENDING".equalsIgnoreCase(currentStatus) && !"PENDING".equalsIgnoreCase(status)) {
                 // Get LaundryOrderDetails
