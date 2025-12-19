@@ -263,145 +263,74 @@
                                 </div>
                             </div>
 
-                            <%-- Dịch Vụ Đã Dùng (OrderDetails) --%>
+                            <%-- Dịch Vụ Đã Dùng (Nhóm theo ServiceOrder) --%>
                             <div class="col-md-8">
                                 <div class="card card-custom">
                                     <div
                                         class="card-header-custom bg-gradient-service">
                                         <i
                                             class="fas fa-concierge-bell me-2"></i>
-                                        Chi Tiết Dịch Vụ (OrderDetails)
+                                        Chi Tiết Dịch Vụ
                                     </div>
                                     <div class="card-body p-0">
                                         <div class="table-responsive"
                                             style="max-height: 400px; overflow-y: auto;">
-                                            <table
-                                                class="table table-hover align-middle mb-0">
-                                                <thead class="bg-light">
-                                                    <tr>
-                                                        <th class="ps-4">Tên
-                                                            món</th>
-                                                        <th
-                                                            class="text-center">SL</th>
-                                                        <th
-                                                            class="text-end pe-4">Đơn
-                                                            giá</th>
-                                                        <th
-                                                            class="text-end pe-4">Thành
-                                                            tiền</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <c:forEach
-                                                        items="${bill.listServiceDetails}"
-                                                        var="d">
-                                                        <tr>
-                                                            <td
-                                                                class="ps-4 fw-bold">${d.itemName}</td>
-                                                            <td
-                                                                class="text-center">
-                                                                <span
-                                                                    class="badge bg-light text-dark border">x${d.quantity}</span>
-                                                            </td>
-                                                            <td
-                                                                class="text-end">
-                                                                <fmt:formatNumber
-                                                                    value="${d.unitPrice}"
-                                                                    pattern="#,###" />
-                                                                ₫
-                                                            </td>
-                                                            <td
-                                                                class="text-end pe-4 fw-bold">
-                                                                <fmt:formatNumber
-                                                                    value="${d.total}"
-                                                                    pattern="#,###" />
-                                                                ₫
-                                                            </td>
-                                                        </tr>
-                                                    </c:forEach>
-                                                    <c:if
-                                                        test="${empty bill.listServiceDetails}">
-                                                        <tr>
-                                                            <td colspan="4"
-                                                                class="text-center py-5 text-muted">
-                                                                Không có dịch vụ
-                                                                phát sinh.
-                                                            </td>
-                                                        </tr>
+                                            <c:if test="${empty bill.listServiceDetails}">
+                                                <div class="text-center py-5 text-muted">
+                                                    Không có dịch vụ phát sinh.
+                                                </div>
+                                            </c:if>
+                                            <c:if test="${not empty bill.listServiceDetails}">
+                                                <c:set var="prevOrderId" value="0" />
+                                                <c:forEach items="${bill.listServiceDetails}" var="d" varStatus="loop">
+                                                    <c:if test="${prevOrderId != d.orderId}">
+                                                        <c:if test="${loop.index > 0}">
+                                                            </tbody>
+                                                        </table>
+                                                        </c:if>
+                                                        <div class="px-4 pt-3 pb-2 bg-light border-bottom">
+                                                            <h6 class="mb-0 fw-bold text-primary">
+                                                                <i class="fas fa-shopping-cart me-2"></i>
+                                                                ${d.serviceName}
+                                                                <small class="text-muted ms-2">
+                                                                    <fmt:formatDate value="${d.orderTime}" pattern="dd/MM/yyyy HH:mm" />
+                                                                </small>
+                                                            </h6>
+                                                        </div>
+                                                        <table class="table table-hover align-middle mb-0">
+                                                            <thead class="bg-light">
+                                                                <tr>
+                                                                    <th class="ps-4">Tên món</th>
+                                                                    <th class="text-center">SL</th>
+                                                                    <th class="text-end pe-4">Đơn giá</th>
+                                                                    <th class="text-end pe-4">Thành tiền</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                        <c:set var="prevOrderId" value="${d.orderId}" />
                                                     </c:if>
-                                                </tbody>
-                                            </table>
+                                                    <tr>
+                                                        <td class="ps-4 fw-bold">${d.itemName}</td>
+                                                        <td class="text-center">
+                                                            <span class="badge bg-light text-dark border">x${d.quantity}</span>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <fmt:formatNumber value="${d.unitPrice}" pattern="#,###" /> ₫
+                                                        </td>
+                                                        <td class="text-end pe-4 fw-bold">
+                                                            <fmt:formatNumber value="${d.total}" pattern="#,###" /> ₫
+                                                        </td>
+                                                    </tr>
+                                                    <c:if test="${loop.last}">
+                                                            </tbody>
+                                                        </table>
+                                                    </c:if>
+                                                </c:forEach>
+                                            </c:if>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <%-- Service Invoices --%>
-                            <c:if test="${not empty bill.listServiceInvoices}">
-                                <div class="col-md-12">
-                                    <div class="card card-custom">
-                                        <div
-                                            class="card-header-custom bg-gradient-invoice">
-                                            <i
-                                                class="fas fa-file-invoice me-2"></i>
-                                            Hóa Đơn Dịch Vụ (ServiceInvoices)
-                                        </div>
-                                        <div class="card-body p-0">
-                                            <div class="table-responsive">
-                                                <table
-                                                    class="table table-hover align-middle mb-0">
-                                                    <thead class="bg-light">
-                                                        <tr>
-                                                            <th class="ps-4">Mã
-                                                                HĐ</th>
-                                                            <th>Order ID</th>
-                                                            <th>Ngày tạo</th>
-                                                            <th
-                                                                class="text-end">Số
-                                                                tiền</th>
-                                                            <th>Trạng thái</th>
-                                                            <th>Phương thức</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <c:forEach
-                                                            items="${bill.listServiceInvoices}"
-                                                            var="inv">
-                                                            <tr>
-                                                                <td
-                                                                    class="ps-4 fw-bold">#${inv.invoiceId}</td>
-                                                                <td>#${inv.orderId}</td>
-                                                                <td>
-                                                                    <fmt:formatDate
-                                                                        value="${inv.createdAt}"
-                                                                        pattern="dd/MM/yyyy HH:mm" />
-                                                                </td>
-                                                                <td
-                                                                    class="text-end fw-bold">
-                                                                    <fmt:formatNumber
-                                                                        value="${inv.finalAmount}"
-                                                                        pattern="#,###" />
-                                                                    ₫
-                                                                </td>
-                                                                <td>
-                                                                    <span
-                                                                        class="badge ${inv.status == 'Paid' ? 'bg-success' : 'bg-warning'}">
-                                                                        ${inv.status}
-                                                                    </span>
-                                                                </td>
-                                                                <td>${inv.paymentMethod
-                                                                    != null ?
-                                                                    inv.paymentMethod
-                                                                    : '-'}</td>
-                                                            </tr>
-                                                        </c:forEach>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </c:if>
 
                             <%-- Tổng Cộng & Thanh Toán --%>
                             <div class="col-12">

@@ -132,6 +132,9 @@ public class LaundryItemServlet extends HttpServlet {
     private void showAddForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         ArrayList<Service> services = itemDAO.getActiveServices();
+        LaundryItem item = new LaundryItem();
+        item.setLaundryItemId(0); // Set to 0 for new item
+        request.setAttribute("item", item);
         request.setAttribute("services", services);
         request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
     }
@@ -139,56 +142,166 @@ public class LaundryItemServlet extends HttpServlet {
     // Add new item
     private void addItem(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Declare variables outside try block for use in catch blocks
+        String serviceIdStr = null;
+        String itemName = null;
+        String description = null;
+        String defaultPriceStr = null;
+        String unit = null;
+        Boolean isActive = false;
+        
         try {
-            String serviceId = request.getParameter("serviceId");
-            String itemName = request.getParameter("itemName");
-            String description = request.getParameter("description");
-            Double defaultPrice = Double.valueOf(request.getParameter("defaultPrice"));
-            String unit = request.getParameter("unit");
-            Boolean isActive = request.getParameter("isActive") != null;
+            serviceIdStr = request.getParameter("serviceId");
+            itemName = request.getParameter("itemName");
+            description = request.getParameter("description");
+            defaultPriceStr = request.getParameter("defaultPrice");
+            unit = request.getParameter("unit");
+            isActive = request.getParameter("isActive") != null;
             
-            LaundryItem item = new LaundryItem();
-                //item.setServiceId(serviceId); 
-                item.setItemName(itemName.trim());
-                item.setDescription(description.trim());
-                item.setDefaultPrice(defaultPrice);
+            // Validate input before parsing
+            String errorMessage = null;
+            if(serviceIdStr == null || serviceIdStr.trim().isEmpty()){
+                errorMessage = "Service is required.";
+            } else if(itemName == null || itemName.trim().isEmpty()){
+                errorMessage = "Item name is required.";
+            } else if(unit == null || unit.trim().isEmpty()){
+                errorMessage = "Unit type is required.";
+            } else if(defaultPriceStr == null || defaultPriceStr.trim().isEmpty()){
+                errorMessage = "Price is required.";
+            }
+            
+            // If validation failed, return to form with error
+            if(errorMessage != null){
+                LaundryItem item = new LaundryItem();
+                if(serviceIdStr != null && !serviceIdStr.trim().isEmpty()) {
+                    try { 
+                        item.setServiceId(Integer.parseInt(serviceIdStr)); 
+                    } catch (NumberFormatException e) {}
+                }
+                item.setItemName(itemName != null ? itemName.trim() : "");
+                item.setDescription(description != null ? description.trim() : "");
+                if(defaultPriceStr != null && !defaultPriceStr.trim().isEmpty()) {
+                    try {
+                        item.setDefaultPrice(Double.parseDouble(defaultPriceStr));
+                    } catch (NumberFormatException e) {}
+                }
                 item.setUnit(unit);
                 item.setIsActive(isActive);
-            
-            if (serviceId != null && !serviceId.trim().isEmpty()) {
-            try { item.setServiceId(Integer.parseInt(serviceId)); } catch (NumberFormatException e) {}
-            }
-            
-            String errorMessage = null;
-            if(itemName == null || itemName.trim().isEmpty()){
-                 errorMessage = "Item name is required.";
-            }else if(unit == null || unit.trim().isEmpty()){
-                errorMessage = "Unit type is required.";
-            }else if (itemDAO.isExistName(itemName)){
-                errorMessage = "Laundry item name " + itemName + " already existed.";
-            }else if(defaultPrice <= 0){
-                errorMessage = "Item price must larger than zero.";
-            }
                 
-            if(errorMessage != null){
                 request.setAttribute("item", item);
-                request.setAttribute("error",errorMessage);
-                request.setAttribute("services",itemDAO.getActiveServices());
+                request.setAttribute("error", errorMessage);
+                request.setAttribute("services", itemDAO.getActiveServices());
                 request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
                 return;
             }
+            
+            // Parse values after validation
+            Integer serviceId = Integer.parseInt(serviceIdStr);
+            Double defaultPrice = Double.parseDouble(defaultPriceStr);
+            String trimmedItemName = itemName.trim();
+            
+            // Additional validation
+            if (itemDAO.isExistName(trimmedItemName)){
+                errorMessage = "Laundry item name " + trimmedItemName + " already existed.";
+            } else if(defaultPrice <= 0){
+                errorMessage = "Item price must larger than zero.";
+            }
+            
+            // If additional validation failed, return to form
+            if(errorMessage != null){
+                LaundryItem item = new LaundryItem();
+                item.setServiceId(serviceId);
+                item.setItemName(trimmedItemName);
+                item.setDescription(description != null ? description.trim() : "");
+                item.setDefaultPrice(defaultPrice);
+                item.setUnit(unit);
+                item.setIsActive(isActive);
+                
+                request.setAttribute("item", item);
+                request.setAttribute("error", errorMessage);
+                request.setAttribute("services", itemDAO.getActiveServices());
+                request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
+                return;
+            }
+            
+            // Create item object
+            LaundryItem item = new LaundryItem();
+            item.setServiceId(serviceId);
+            item.setItemName(trimmedItemName);
+            item.setDescription(description != null ? description.trim() : "");
+            item.setDefaultPrice(defaultPrice);
+            item.setUnit(unit);
+            item.setIsActive(isActive);
+            
+            // Insert to database
+            System.out.println("Attempting to insert item: " + item.getItemName() + ", ServiceId: " + item.getServiceId());
             boolean success = itemDAO.insertItem(item);
+            System.out.println("Insert result: " + success);
             
             if (success) {
                 response.sendRedirect("laundry-item?success=added");
             } else {
-                request.setAttribute("error", "Không thể thêm mục mới");
-                showAddForm(request, response);
+                LaundryItem errorItem = new LaundryItem();
+                errorItem.setLaundryItemId(0);
+                errorItem.setServiceId(serviceId);
+                errorItem.setItemName(trimmedItemName);
+                errorItem.setDescription(description != null ? description.trim() : "");
+                errorItem.setDefaultPrice(defaultPrice);
+                errorItem.setUnit(unit);
+                errorItem.setIsActive(isActive);
+                
+                request.setAttribute("item", errorItem);
+                request.setAttribute("error", "Không thể thêm mục mới. Vui lòng kiểm tra lại thông tin.");
+                request.setAttribute("services", itemDAO.getActiveServices());
+                request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
             }
             
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            LaundryItem errorItem = new LaundryItem();
+            errorItem.setLaundryItemId(0);
+            try {
+                if(serviceIdStr != null && !serviceIdStr.trim().isEmpty()) {
+                    errorItem.setServiceId(Integer.parseInt(serviceIdStr));
+                }
+            } catch (Exception ex) {}
+            errorItem.setItemName(itemName != null ? itemName.trim() : "");
+            errorItem.setDescription(description != null ? description.trim() : "");
+            try {
+                if(defaultPriceStr != null && !defaultPriceStr.trim().isEmpty()) {
+                    errorItem.setDefaultPrice(Double.parseDouble(defaultPriceStr));
+                }
+            } catch (Exception ex) {}
+            errorItem.setUnit(unit);
+            errorItem.setIsActive(isActive);
+            
+            request.setAttribute("item", errorItem);
+            request.setAttribute("error", "Invalid number format: " + e.getMessage());
+            request.setAttribute("services", itemDAO.getActiveServices());
+            request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
         } catch (Exception e) {
+            e.printStackTrace();
+            LaundryItem errorItem = new LaundryItem();
+            errorItem.setLaundryItemId(0);
+            try {
+                if(serviceIdStr != null && !serviceIdStr.trim().isEmpty()) {
+                    errorItem.setServiceId(Integer.parseInt(serviceIdStr));
+                }
+            } catch (Exception ex) {}
+            errorItem.setItemName(itemName != null ? itemName.trim() : "");
+            errorItem.setDescription(description != null ? description.trim() : "");
+            try {
+                if(defaultPriceStr != null && !defaultPriceStr.trim().isEmpty()) {
+                    errorItem.setDefaultPrice(Double.parseDouble(defaultPriceStr));
+                }
+            } catch (Exception ex) {}
+            errorItem.setUnit(unit);
+            errorItem.setIsActive(isActive);
+            
+            request.setAttribute("item", errorItem);
             request.setAttribute("error", "Lỗi: " + e.getMessage());
-            showAddForm(request, response);
+            request.setAttribute("services", itemDAO.getActiveServices());
+            request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
         }
     }
     
@@ -271,7 +384,7 @@ public class LaundryItemServlet extends HttpServlet {
             
             if(errorMessage != null){
                 request.setAttribute("item", item);
-                request.setAttribute("error", errorMessage);
+                request.setAttribute("errorMessage", errorMessage);
                 request.setAttribute("services", itemDAO.getActiveServices());
                 request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
                 return;

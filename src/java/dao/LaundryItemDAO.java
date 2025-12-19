@@ -157,9 +157,11 @@ public class LaundryItemDAO extends DBContext {
             st.setBoolean(6, item.getIsActive());
             
             int rowsAffected = st.executeUpdate();
+            System.out.println("Insert item - Rows affected: " + rowsAffected);
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.out.println("Error inserting item: " + e);
+            System.out.println("Error inserting item: " + e.getMessage());
+            e.printStackTrace();
         }
         return false;
     }

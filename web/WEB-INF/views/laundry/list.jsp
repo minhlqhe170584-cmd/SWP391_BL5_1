@@ -106,7 +106,7 @@ pageEncoding="UTF-8"%>
                     <div class="search-box">
                         <form action="laundry-order" method="get">
                             <input type="hidden" name="action" value="list">
-                            <input type="hidden" name="view" value="${view}">
+                                <input type="hidden" name="view" value="${view}">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label>Search</label>
@@ -252,7 +252,11 @@ pageEncoding="UTF-8"%>
                                                     test="${not empty order.note}">
                                                     <span data-toggle="tooltip"
                                                         title="${order.note}">
-                                                        ${order.note.length() > 20 ? order.note.substring(0,20) += '...' : order.note}
+                                                        ${order.note.length() >
+                                                        20 ?
+                                                        order.note.substring(0,
+                                                        20) += '...' :
+                                                        order.note}
                                                     </span>
                                                 </c:when>
                                                 <c:otherwise>-</c:otherwise>
@@ -345,7 +349,7 @@ pageEncoding="UTF-8"%>
                                             </a>
                                         </li>
                                     </c:if>
-                                </c:forEach>>
+                                </c:forEach>
 
                                 <li
                                     class="page-item ${currentPage == totalPages ? 'disabled' : ''}">

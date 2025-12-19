@@ -56,6 +56,7 @@
                         <button class="close" data-dismiss="alert">
                             <span>&times;</span>
                         </button>
+                         <i class="fas fa-exclamation-circle"></i>
                         ${errorMessage}
                     </div>
                 </div>
