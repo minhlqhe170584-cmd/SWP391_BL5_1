@@ -7,8 +7,8 @@
     <head>
         <title>Menu Đồ Ăn & Đồ Uống | Smart Hotel</title>
         <jsp:include page="../components/head.jsp"></jsp:include>
-        
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap.min.css" type="text/css">
+
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/css/bootstrap.min.css" type="text/css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/font-awesome.min.css" type="text/css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
 
@@ -28,7 +28,7 @@
                 font-style: italic;
                 color: #777;
             }
-            
+
             /* Card món ăn */
             .menu-item-inner {
                 background: #fff;
@@ -52,11 +52,17 @@
             .service-image {
                 width: 90px;
                 height: 90px;
+
+                /* THÊM 3 DÒNG NÀY */
+                min-width: 90px;       /* Bắt buộc giữ chiều rộng tối thiểu, không cho co lại */
+                min-height: 90px;      /* Bắt buộc giữ chiều cao */
+                background-color: #eee; /* Nếu ảnh lỗi thì hiện nền màu xám nhạt cho đẹp */
+
                 object-fit: cover;
                 border-radius: 8px;
                 border: 1px solid #f0f0f0;
                 margin-right: 20px;
-                flex-shrink: 0; /* Không bị co lại trên mobile */
+                flex-shrink: 0;/* Không bị co lại trên mobile */
             }
 
             /* Thông tin món ăn */
@@ -126,7 +132,7 @@
                 color: #ef6c00;
                 border: 1px solid #ffe0b2;
             }
-            
+
             /* Form nhập thông tin */
             .order-form-box {
                 background: #fff;
@@ -152,16 +158,16 @@
     </head>
     <body>
         <div id="preloder"><div class="loader"></div></div>
-        <jsp:include page="../components/navbar.jsp"></jsp:include>
+            <jsp:include page="../components/navbar.jsp"></jsp:include>
 
-        <div class="breadcrumb-section">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="breadcrumb-text">
-                            <h2>Thực Đơn Tại Phòng</h2>
-                            <div class="bt-option">
-                                <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
+            <div class="breadcrumb-section">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="breadcrumb-text">
+                                <h2>Thực Đơn Tại Phòng</h2>
+                                <div class="bt-option">
+                                    <a href="${pageContext.request.contextPath}/home">Trang chủ</a>
                                 <span>Menu</span>
                             </div>
                         </div>
@@ -190,12 +196,12 @@
                 </c:if>
 
                 <form action="checkout-order" method="POST">
-                    
+
                     <div class="d-flex align-items-center mb-4 mt-2">
                         <span style="font-size: 24px; margin-right: 10px;">🍔</span>
                         <h3 class="m-0 font-weight-bold text-dark">Món Ăn Hấp Dẫn</h3>
                     </div>
-                    
+
                     <div class="row">
                         <c:choose>
                             <c:when test="${not empty requestScope.foodList}">
@@ -206,8 +212,8 @@
                                                 <img src="${pageContext.request.contextPath}/uploads/${food.imageUrl}" 
                                                      alt="${food.name}" 
                                                      class="service-image"
-                                                     onerror="this.src='${pageContext.request.contextPath}/img/room/room-1.jpg'"> 
-                                                <div class="food-info pr-2">
+                                                     onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/uploads/default.jpg';">
+                                                     <div class="food-info pr-2">
                                                     <h5>
                                                         ${food.name}
                                                         <c:if test="${food.isVegetarian}">
@@ -258,9 +264,9 @@
                                                 <img src="${pageContext.request.contextPath}/uploads/${drink.imageUrl}" 
                                                      alt="${drink.name}" 
                                                      class="service-image"
-                                                     onerror="this.src='${pageContext.request.contextPath}/img/room/room-2.jpg'">
-                                                
-                                                <div class="food-info pr-2">
+                                                     onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/uploads/default.jpg';">
+
+                                                     <div class="food-info pr-2">
                                                     <h5>
                                                         ${drink.name}
                                                         <c:if test="${drink.isAlcoholic}">
@@ -326,8 +332,8 @@
         </section>
 
         <jsp:include page="../components/footer.jsp"></jsp:include>
-        
-        <script src="${pageContext.request.contextPath}/js/jquery-3.3.1.min.js"></script>
+
+            <script src="${pageContext.request.contextPath}/js/jquery-3.3.1.min.js"></script>
         <script src="${pageContext.request.contextPath}/js/bootstrap.min.js"></script>
         <script src="${pageContext.request.contextPath}/js/main.js"></script>
     </body>
