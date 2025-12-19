@@ -20,10 +20,9 @@ public class ListRoomsServlet extends HttpServlet {
         try {
             RoomDAO dao = new RoomDAO();
             
-            // === SỬA DÒNG NÀY ===
-            int pageSize = 6; // Đổi số 9 thành số 6
-            // ====================
-
+            // Giữ nguyên logic phân trang 6 phòng
+            int pageSize = 6; 
+            
             String pageStr = request.getParameter("page");
             int page = 1;
             
@@ -35,11 +34,11 @@ public class ListRoomsServlet extends HttpServlet {
                 }
             }
             
-            // Tính toán lại tổng số trang (Tự động chia cho 6)
+            // Tính toán tổng số trang
             int totalRooms = dao.countTotalRooms();
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
             
-            // Lấy 6 phòng tương ứng
+            // Lấy danh sách phòng theo trang
             List<Room> list = dao.getRoomsByPage(page, pageSize);
             
             request.setAttribute("listRooms", list);

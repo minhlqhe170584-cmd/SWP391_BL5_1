@@ -1,6 +1,6 @@
 <%-- 
     Document   : listRooms
-    Description: Danh sách phòng (Tích hợp SweetAlert2 & Logic đổi nút bấm)
+    Description: Danh sách phòng (Đã bỏ hiển thị trạng thái & Cho phép đặt mọi lúc)
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -29,7 +29,7 @@
             transition: all 0.3s ease;
         }
         /* Hiệu ứng hover cho nút Đặt Ngay */
-        .btn-booking-custom:not(.disabled):not(.btn-detail):hover {
+        .btn-booking-custom:not(.disabled):hover {
             background: #dfa974;
             color: #fff;
             border-color: #dfa974;
@@ -38,19 +38,13 @@
             cursor: pointer;
         }
 
-        /* Style nút Chi Tiết (Khi hết phòng - Màu xám) */
-        .btn-booking-custom.btn-detail {
-            background: #e9ecef;
-            color: #495057;
-            border-color: #dee2e6;
-            cursor: not-allowed; /* Con trỏ chuột báo không bấm được */
-        }
-        
         /* Style nút Vô hiệu hóa (Role Room) */
         .btn-booking-custom.disabled {
             opacity: 0.6;
             cursor: not-allowed;
             pointer-events: none;
+            background: #e9ecef;
+            color: #495057;
         }
 
         /* Phân trang */
@@ -141,49 +135,21 @@
                                                 </c:choose>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <td class="r-o">Trạng thái:</td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${r.status == 'Available'}">
-                                                        <span class="badge badge-success" style="font-weight: 500;">Còn trống</span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="badge badge-secondary" style="font-weight: 500;">Hết phòng</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                        </tr>
+                                        <%-- ĐÃ XÓA PHẦN HIỂN THỊ TRẠNG THÁI Ở ĐÂY --%>
                                     </tbody>
                                 </table>
                                 
                                 <c:choose>
-                                    <%-- 1. Nếu là ROLE ROOM -> Nút Disabled --%>
+                                    <%-- 1. Nếu là ROLE ROOM -> Nút Disabled (Chỉ xem) --%>
                                     <c:when test="${sessionScope.ROLE == 'ROOM'}">
                                         <a href="#" class="btn-booking-custom disabled">Chi Tiết</a>
                                     </c:when>
 
-                                    <%-- 2. Nếu là CUSTOMER / GUEST --%>
+                                    <%-- 2. Nếu là CUSTOMER / GUEST -> Luôn hiện nút Đặt Ngay --%>
                                     <c:otherwise>
-                                        <c:choose>
-                                            
-                                            <%-- TRƯỜNG HỢP 1: Phòng trống -> Hiện nút ĐẶT NGAY --%>
-                                            <c:when test="${r.status == 'Available'}">
-                                                <a href="${pageContext.request.contextPath}/booking?roomId=${r.roomId}" class="btn-booking-custom">
-                                                    Đặt Ngay
-                                                </a>
-                                            </c:when>
-                                            
-                                            <%-- TRƯỜNG HỢP 2: Hết phòng -> Hiện nút CHI TIẾT (Không cho click link) --%>
-                                            <c:otherwise>
-                                                <a href="javascript:void(0);" 
-                                                   class="btn-booking-custom btn-detail"
-                                                   onclick="Swal.fire('Thông báo', 'Phòng này hiện đã có người đặt hoặc đang bảo trì.', 'info')">
-                                                    Chi Tiết
-                                                </a>
-                                            </c:otherwise>
-
-                                        </c:choose>
+                                        <a href="${pageContext.request.contextPath}/booking?roomId=${r.roomId}" class="btn-booking-custom">
+                                            Đặt Ngay
+                                        </a>
                                     </c:otherwise>
                                 </c:choose>
 
@@ -229,7 +195,7 @@
                 title: 'Thành công!',
                 text: '${sessionScope.bookingSuccess}',
                 confirmButtonColor: '#dfa974',
-                confirmButtonText: 'Tuyệt vời'
+                confirmButtonText: 'Tiếp tục đặt phòng'
             });
             <c:remove var="bookingSuccess" scope="session"/>
         </c:if>
