@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class LaundryOrderDAO extends DBContext {
 
     // SQL Queries
-    private static final String GET_ALL_ORDERS = "SELECT lo.laundry_id, lo.order_id, lo.pickup_time, "
+    private static final String GET_ALL_ORDERS = "SELECT lo.laundry_id, lo.order_id, "
             + "lo.expected_pickup_time, lo.expected_return_time, lo.status, lo.note, "
             + "so.room_id, so.order_date, so.total_amount "
             + "FROM LaundryOrders lo "
@@ -17,7 +17,7 @@ public class LaundryOrderDAO extends DBContext {
             + "WHERE so.status LIKE N'%Pending%' "
             + "ORDER BY lo.laundry_id DESC";
 
-    private static final String GET_ORDER_BY_ID = "SELECT lo.laundry_id, lo.order_id, lo.pickup_time, "
+    private static final String GET_ORDER_BY_ID = "SELECT lo.laundry_id, lo.order_id, "
             + "lo.expected_pickup_time, lo.expected_return_time, lo.status, lo.note, "
             + "so.room_id, so.order_date, so.total_amount, so.status AS service_status, r.room_number "
             + "FROM LaundryOrders lo "
@@ -34,13 +34,13 @@ public class LaundryOrderDAO extends DBContext {
             + "LEFT JOIN Services s ON li.service_id = s.service_id "
             + "WHERE lod.laundry_id = ?";
 
-    private static final String INSERT_ORDER = "INSERT INTO LaundryOrders(order_id, pickup_time, "
-            + "expected_pickup_time, expected_return_time, status, note) VALUES(?,?,?,?,?,?)";
+    private static final String INSERT_ORDER = "INSERT INTO LaundryOrders(order_id, "
+            + "expected_pickup_time, expected_return_time, status, note) VALUES(?,?,?,?,?)";
 
     private static final String INSERT_ORDER_DETAIL = "INSERT INTO LaundryOrderDetails(laundry_id, "
             + "laundry_item_id, quantity, unit_price) VALUES(?,?,?,?)";
 
-    private static final String UPDATE_ORDER = "UPDATE LaundryOrders SET pickup_time=?, "
+    private static final String UPDATE_ORDER = "UPDATE LaundryOrders SET "
             + "expected_pickup_time=?, expected_return_time=?, status=?, note=? WHERE laundry_id=?";
 
     private static final String UPDATE_ORDER_STATUS = "UPDATE LaundryOrders SET status=? WHERE laundry_id=?";
@@ -54,11 +54,11 @@ public class LaundryOrderDAO extends DBContext {
             + "LEFT JOIN Rooms r ON so.room_id = r.room_id WHERE 1=1 ";
     
     private static final String CANCEL_SERVICE_ORDER = 
-    "UPDATE ServiceOrders SET status = 'Canceled' " +
+    "UPDATE ServiceOrders SET status = 'Cancelled' " +
     "WHERE order_id = (SELECT order_id FROM LaundryOrders WHERE laundry_id = ?)";
 
     private static final String CANCEL_LAUNDRY_ORDER = 
-    "UPDATE LaundryOrders SET status = 'Canceled' WHERE laundry_id = ?";
+    "UPDATE LaundryOrders SET status = 'Cancelled' WHERE laundry_id = ?";
 
     // Get all laundry orders
     public ArrayList<LaundryOrder> getAllOrders() {
@@ -70,11 +70,6 @@ public class LaundryOrderDAO extends DBContext {
                 LaundryOrder order = new LaundryOrder();
                 order.setLaundryId(rs.getInt("laundry_id"));
                 order.setOrderId(rs.getInt("order_id"));
-
-                Timestamp pickup = rs.getTimestamp("pickup_time");
-                if (pickup != null) {
-                    order.setPickupTime(pickup.toLocalDateTime());
-                }
 
                 Timestamp delivery = rs.getTimestamp("expected_pickup_time");
                 if (delivery != null) {
@@ -120,11 +115,6 @@ public class LaundryOrderDAO extends DBContext {
                 order = new LaundryOrder();
                 order.setLaundryId(rs.getInt("laundry_id"));
                 order.setOrderId(rs.getInt("order_id"));
-
-                Timestamp pickup = rs.getTimestamp("pickup_time");
-                if (pickup != null) {
-                    order.setPickupTime(pickup.toLocalDateTime());
-                }
 
                 Timestamp delivery = rs.getTimestamp("expected_pickup_time");
                 if (delivery != null) {
@@ -222,12 +212,11 @@ public class LaundryOrderDAO extends DBContext {
             
             // Insert order
             PreparedStatement st = connection.prepareStatement(INSERT_ORDER, Statement.RETURN_GENERATED_KEYS);
-            st.setInt(1, orderId);
-            st.setTimestamp(2, order.getPickupTime() != null ? Timestamp.valueOf(order.getPickupTime()) : null);
-            st.setTimestamp(3, order.getExpectedPickupTime() != null ? Timestamp.valueOf(order.getExpectedPickupTime()) : null);
-            st.setTimestamp(4, order.getExpectedReturnTime() != null ? Timestamp.valueOf(order.getExpectedReturnTime()) : null);
-            st.setString(5, order.getStatus());
-            st.setString(6, order.getNote());
+            st.setInt(1, orderId);           
+            st.setTimestamp(2, order.getExpectedPickupTime() != null ? Timestamp.valueOf(order.getExpectedPickupTime()) : null);
+            st.setTimestamp(3, order.getExpectedReturnTime() != null ? Timestamp.valueOf(order.getExpectedReturnTime()) : null);
+            st.setString(4, order.getStatus());
+            st.setString(5, order.getNote());
 
             int rowsAffected = st.executeUpdate();
 
@@ -342,21 +331,19 @@ public class LaundryOrderDAO extends DBContext {
             connection.setAutoCommit(false);
 
             // 1. Update Main Order
-            st = connection.prepareStatement(UPDATE_ORDER);
-            st.setTimestamp(1, order.getPickupTime() != null ? Timestamp.valueOf(order.getPickupTime()) : null);
-            st.setTimestamp(2, order.getExpectedPickupTime() != null ? Timestamp.valueOf(order.getExpectedPickupTime()) : null);
-            st.setTimestamp(3, order.getExpectedReturnTime() != null ? Timestamp.valueOf(order.getExpectedReturnTime()) : null);
-            st.setString(4, order.getStatus());
-            st.setString(5, order.getNote());
-            st.setInt(6, order.getLaundryId());
+            st = connection.prepareStatement(UPDATE_ORDER);         
+            st.setTimestamp(1, order.getExpectedPickupTime() != null ? Timestamp.valueOf(order.getExpectedPickupTime()) : null);
+            st.setTimestamp(2, order.getExpectedReturnTime() != null ? Timestamp.valueOf(order.getExpectedReturnTime()) : null);
+            st.setString(3, order.getStatus());
+            st.setString(4, order.getNote());
+            st.setInt(5, order.getLaundryId());
 
             int rowsAffected = st.executeUpdate();
 
             deleteOrderDetails(order.getLaundryId());
 
             if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-                for (LaundryOrderDetail detail : order.getOrderDetails()) {
-                    // Now this throws exception if it fails, triggering the rollback below
+                for (LaundryOrderDetail detail : order.getOrderDetails()) {      
                     insertOrderDetail(order.getLaundryId(), detail);
                 }
             }
@@ -366,8 +353,6 @@ public class LaundryOrderDAO extends DBContext {
 
         } catch (SQLException e) {
             try {
-                // 
-                // If ANY step above fails (main update, delete, or insert), we undo everything.
                 connection.rollback();
             } catch (SQLException ex) {
                 System.out.println("Error rollback: " + ex);
@@ -396,8 +381,7 @@ public class LaundryOrderDAO extends DBContext {
         try {
             conn = connection;
             conn.setAutoCommit(false);
-            
-            // First, get current status and order_id
+                      
             String getCurrentInfo = "SELECT lo.status AS current_status, lo.order_id " +
                                    "FROM LaundryOrders lo WHERE lo.laundry_id = ?";
             PreparedStatement stGetInfo = conn.prepareStatement(getCurrentInfo);
@@ -415,24 +399,22 @@ public class LaundryOrderDAO extends DBContext {
             rsInfo.close();
             stGetInfo.close();
             
-            // 1. Update LaundryOrders status
+       
             stLaundry = conn.prepareStatement(UPDATE_ORDER_STATUS);
             stLaundry.setString(1, status);
             stLaundry.setInt(2, laundryId);
             stLaundry.executeUpdate();
             
-            // 2. Determine ServiceOrders status based on new status
-            String serviceOrderStatus = "Pending"; // default
+           
+            String serviceOrderStatus = "Pending"; 
             
             if ("COMPLETED".equalsIgnoreCase(status)) {
                 serviceOrderStatus = "Completed";
             } else if ("CANCELLED".equalsIgnoreCase(status)) {
-                serviceOrderStatus = "CANCELLED";
-            } else if ("PENDING".equalsIgnoreCase(currentStatus) && !"PENDING".equalsIgnoreCase(status)) {
-                // If changing from PENDING to anything else, set to Confirmed
+                serviceOrderStatus = "Cancelled";
+            } else if ("PENDING".equalsIgnoreCase(currentStatus) && !"PENDING".equalsIgnoreCase(status)) {              
                 serviceOrderStatus = "Confirmed";
-            } else {
-                // Keep current ServiceOrders status if not one of the above cases
+            } else {              
                 String getServiceStatus = "SELECT status FROM ServiceOrders WHERE order_id = ?";
                 PreparedStatement stGetServiceStatus = conn.prepareStatement(getServiceStatus);
                 stGetServiceStatus.setInt(1, orderId);
@@ -444,16 +426,13 @@ public class LaundryOrderDAO extends DBContext {
                 stGetServiceStatus.close();
             }
             
-            // 3. Update ServiceOrders status
             String updateServiceStatus = "UPDATE ServiceOrders SET status = ? WHERE order_id = ?";
             stService = conn.prepareStatement(updateServiceStatus);
             stService.setString(1, serviceOrderStatus);
             stService.setInt(2, orderId);
             stService.executeUpdate();
             
-            // 3.5. If ServiceOrders status is "Confirmed", create ServiceInvoices
-            if ("Confirmed".equalsIgnoreCase(serviceOrderStatus)) {
-                // Check if ServiceInvoice already exists for this order_id
+            if ("Confirmed".equalsIgnoreCase(serviceOrderStatus)) {       
                 String checkInvoice = "SELECT COUNT(*) FROM ServiceInvoices WHERE order_id = ?";
                 PreparedStatement stCheckInvoice = conn.prepareStatement(checkInvoice);
                 stCheckInvoice.setInt(1, orderId);
@@ -464,22 +443,20 @@ public class LaundryOrderDAO extends DBContext {
                 }
                 rsCheckInvoice.close();
                 stCheckInvoice.close();
-                
-                // Only create invoice if it doesn't exist
-                if (!hasInvoice) {
-                    // Get total_amount from ServiceOrders
+                            
+                if (!hasInvoice) {  
                     String getTotalAmount = "SELECT total_amount FROM ServiceOrders WHERE order_id = ?";
                     PreparedStatement stGetAmount = conn.prepareStatement(getTotalAmount);
                     stGetAmount.setInt(1, orderId);
                     ResultSet rsAmount = stGetAmount.executeQuery();
                     double finalAmount = 0.0;
-                    if (rsAmount.next()) {
+                    if (rsAmount.next()) 
+                    {
                         finalAmount = rsAmount.getDouble("total_amount");
                     }
                     rsAmount.close();
                     stGetAmount.close();
                     
-                    // Insert ServiceInvoice
                     String insertInvoice = "INSERT INTO ServiceInvoices (order_id, created_at, final_amount, status) VALUES (?, GETDATE(), ?, 'Unpaid')";
                     PreparedStatement stInvoice = conn.prepareStatement(insertInvoice);
                     stInvoice.setInt(1, orderId);
@@ -489,9 +466,8 @@ public class LaundryOrderDAO extends DBContext {
                 }
             }
             
-            // 4. If changing from PENDING, create OrderDetails records
+            //Create OrderDetails records
             if ("PENDING".equalsIgnoreCase(currentStatus) && !"PENDING".equalsIgnoreCase(status)) {
-                // Get LaundryOrderDetails
                 String getLaundryDetails = "SELECT lod.laundry_item_id, lod.quantity, lod.unit_price, " +
                                          "li.item_name, li.service_id " +
                                          "FROM LaundryOrderDetails lod " +
@@ -501,7 +477,6 @@ public class LaundryOrderDAO extends DBContext {
                 stGetDetails.setInt(1, laundryId);
                 ResultSet rsDetails = stGetDetails.executeQuery();
                 
-                // Check if OrderDetails already exist for this order_id
                 String checkExisting = "SELECT COUNT(*) FROM OrderDetails WHERE order_id = ?";
                 PreparedStatement stCheck = conn.prepareStatement(checkExisting);
                 stCheck.setInt(1, orderId);
@@ -564,7 +539,7 @@ public class LaundryOrderDAO extends DBContext {
         }
     }
 
-    // Delete order details
+  
     private boolean deleteOrderDetails(int laundryId) {
         try {
             PreparedStatement st = connection.prepareStatement(DELETE_ORDER_DETAILS);
@@ -577,7 +552,7 @@ public class LaundryOrderDAO extends DBContext {
         return false;
     }
 
-    // Delete order
+   
     public boolean deleteOrder(int laundryId) {
         try {
             connection.setAutoCommit(false);
@@ -657,7 +632,7 @@ public class LaundryOrderDAO extends DBContext {
     public ArrayList<LaundryOrder> search(String search, String status, String filter, String sort, int pageIndex, int pageSize) {
         ArrayList<LaundryOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT lo.laundry_id, lo.order_id, lo.pickup_time, lo.expected_pickup_time, ")
+        sql.append("SELECT lo.laundry_id, lo.order_id, lo.expected_pickup_time, ")
                 .append("lo.expected_return_time, lo.status, lo.note, so.room_id, so.order_date, so.total_amount, so.status, r.room_number ")
                 .append(BASE_ORDER_SEARCH);
 
@@ -757,11 +732,6 @@ public class LaundryOrderDAO extends DBContext {
                 order.setLaundryId(rs.getInt("laundry_id"));
                 order.setOrderId(rs.getInt("order_id"));
                 order.setRoomNumber(rs.getString("room_number"));
-
-                Timestamp pickup = rs.getTimestamp("pickup_time");
-                if (pickup != null) {
-                    order.setPickupTime(pickup.toLocalDateTime());
-                }
 
                 Timestamp delivery = rs.getTimestamp("expected_pickup_time");
                 if (delivery != null) {

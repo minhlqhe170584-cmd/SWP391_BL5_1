@@ -7,10 +7,10 @@
 <div class="main-content">
     <section class="section">
         <div class="section-header">
-            <h1>${empty order ? 'Thêm mới' : 'Chỉnh sửa'} đơn giặt ủi</h1>
+            <h1>${empty order ? 'Add new' : 'Chỉnh sửa'} laundry order</h1>
             <div class="section-header-breadcrumb">
-                <div class="breadcrumb-item"><a href="${pageContext.request.contextPath}/laundry-order">Đơn giặt ủi</a></div>
-                <div class="breadcrumb-item">${empty order ? 'Thêm mới' : 'Chỉnh sửa'}</div>
+                <div class="breadcrumb-item"><a href="${pageContext.request.contextPath}/laundry-order">Laundry</a></div>
+                <div class="breadcrumb-item">${empty order ? 'Add' : 'Edit'}</div>
             </div>
         </div>
 
@@ -38,7 +38,7 @@
                         <!-- Basic Information -->
                         <div class="card">
                             <div class="card-header">
-                                <h4><i class="fas fa-info-circle"></i> Thông tin cơ bản</h4>
+                                <h4><i class="fas fa-info-circle"></i> Information</h4>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -52,7 +52,7 @@
                                     </div>-->
                                                    
                                     <div class="col-md-6">
-                                        <label>Số Phòng <span class="text-danger">*</span></label>
+                                        <label>Room <span class="text-danger">*</span></label>
                                         <select name="roomId" class="form-control">
                                            <option value="">-- All Room --</option>
                                            <c:forEach items="${rooms}" var="r">
@@ -65,14 +65,14 @@
 
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Trạng thái <span class="text-danger">*</span></label>
+                                            <label>Status <span class="text-danger">*</span></label>
                                             <select name="status" class="form-control" required>
-                                                <option value="Pending" ${order.status == 'Pending' ? 'selected' : ''}>Chờ xử lý</option>
-                                                <option value="Washing" ${order.status == 'Washing' ? 'selected' : ''}>Đang giặt</option>
-                                                <option value="Ready" ${order.status == 'Ready' ? 'selected' : ''}>Sẵn sàng</option>
-                                                <option value="Delivered" ${order.status == 'Delivered' ? 'selected' : ''}>Đã giao</option>
-                                                <option value="Completed" ${order.status == 'Completed' ? 'selected' : ''}>Hoàn thành</option>
-                                                <option value="Cancelled" ${order.status == 'Canceled' ? 'selected' : ''}>Đã hủy</option>
+                                                <option value="Pending" ${order.status == 'Pending' ? 'selected' : ''}>Pending</option>
+                                                <option value="Washing" ${order.status == 'Washing' ? 'selected' : ''}>Washing</option>
+                                                <option value="Ready" ${order.status == 'Ready' ? 'selected' : ''}>Ready</option>
+                                                <option value="Delivered" ${order.status == 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                                <option value="Completed" ${order.status == 'Completed' ? 'selected' : ''}>Completed</option>
+                                                <option value="Cancelled" ${order.status == 'Canceled' ? 'selected' : ''}>Canceled</option>
                                             </select>
                                         </div>
                                     </div>
@@ -83,21 +83,13 @@
                         <!-- Time Information -->
                         <div class="card">
                             <div class="card-header">
-                                <h4><i class="fas fa-clock"></i> Thông tin thời gian</h4>
+                                <h4><i class="fas fa-clock"></i> Pick Up Information</h4>
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label>Thời gian nhận đồ</label>
-                                            <input type="datetime-local" name="pickupTime" class="form-control"
-                                                   value="<fmt:formatDate value='${order.pickupTime}' pattern='yyyy-MM-dd\'T\'HH:mm'/>">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>Dự kiến thời gian tới lấy đồ</label>
+                                            <label>Expected Pick Up Time</label>
                                             <input type="datetime-local" name="deliveryTime" class="form-control"
                                                    value="<fmt:formatDate value='${order.expectedPickupTime}' pattern='yyyy-MM-dd\'T\'HH:mm'/>">
                                         </div>
@@ -105,7 +97,7 @@
 
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label>Dự kiến thời gian nhận lại đồ</label>
+                                            <label>Expected Return Time</label>
                                             <input type="datetime-local" name="returnTime" class="form-control"
                                                    value="<fmt:formatDate value='${order.expectedReturnTime}' pattern='yyyy-MM-dd\'T\'HH:mm'/>">
                                         </div>
@@ -117,12 +109,12 @@
                         <!-- Note -->
                         <div class="card">
                             <div class="card-header">
-                                <h4><i class="fas fa-sticky-note"></i> Ghi chú</h4>
+                                <h4><i class="fas fa-sticky-note"></i> Note</h4>
                             </div>
                             <div class="card-body">
                                 <div class="form-group">
                                     <textarea name="note" class="form-control" rows="3" 
-                                              placeholder="Nhập ghi chú hoặc yêu cầu đặc biệt...">${order.note}</textarea>
+                                              placeholder="Enter note...">${order.note}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -130,10 +122,10 @@
                         <!-- Order Items -->
                         <div class="card">
                             <div class="card-header">
-                                <h4><i class="fas fa-list"></i> Chi tiết đơn hàng</h4>
+                                <h4><i class="fas fa-list"></i> Detail</h4>
                                 <div class="card-header-action">
                                     <button type="button" class="btn btn-success" onclick="addItem()">
-                                        <i class="fas fa-plus"></i> Thêm mục
+                                        <i class="fas fa-plus"></i> Add items
                                     </button>
                                 </div>
                             </div>
@@ -147,10 +139,10 @@
                                                         <div class="row">
                                                             <div class="col-md-4">
                                                                 <div class="form-group">
-                                                                    <label>Tên mục</label>
+                                                                    <label>Name</label>
                                                                     <select name="itemId" class="form-control item-select" required 
                                                                             onchange="updatePrice(this)">
-                                                                        <option value="">Chọn mục</option>
+                                                                        <option value="">Item</option>
                                                                         <c:forEach var="item" items="${items}">
                                                                             <option value="${item.laundryItemId}" 
                                                                                     data-price="${item.defaultPrice}"
@@ -165,7 +157,7 @@
 
                                                             <div class="col-md-2">
                                                                 <div class="form-group">
-                                                                    <label>Số lượng</label>
+                                                                    <label>Quantity</label>
                                                                     <input type="number" name="quantity" class="form-control" 
                                                                            min="1" value="${detail.quantity}" required
                                                                            onchange="calculateSubtotal(this)">
@@ -174,7 +166,7 @@
 
                                                             <div class="col-md-2">
                                                                 <div class="form-group">
-                                                                    <label>Đơn giá</label>
+                                                                    <label>Price</label>
                                                                     <input type="number" name="price" class="form-control" 
                                                                            step="0.01" min="0" value="${detail.unitPrice}" required
                                                                            onchange="calculateSubtotal(this)">
@@ -183,7 +175,7 @@
 
                                                             <div class="col-md-2">
                                                                 <div class="form-group">
-                                                                    <label>Tạm tính</label>
+                                                                    <label>Subtotal</label>
                                                                     <input type="text" class="form-control subtotal" readonly
                                                                            value="${detail.subtotal}">
                                                                 </div>
@@ -194,7 +186,7 @@
                                                                     <label>&nbsp;</label>
                                                                     <button type="button" class="btn btn-danger btn-block" 
                                                                             onclick="removeItem(this)">
-                                                                        <i class="fas fa-trash"></i> Xóa
+                                                                        <i class="fas fa-trash"></i> Remove
                                                                     </button>
                                                                 </div>
                                                             </div>
@@ -211,8 +203,8 @@
 
                                 <div class="alert alert-light">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0">Tổng tiền:</h5>
-                                        <h4 class="mb-0 text-success" id="totalAmount">$0.00</h4>
+                                        <h5 class="mb-0">Total:</h5>
+                                        <h4 class="mb-0 text-success" id="totalAmount">0VND</h4>
                                     </div>
                                 </div>
                             </div>
@@ -223,10 +215,10 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <a href="laundry-order" class="btn btn-secondary">
-                                        <i class="fas fa-times"></i> Hủy
+                                        <i class="fas fa-times"></i> Cancel
                                     </a>
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> ${empty order ? 'Tạo đơn' : 'Cập nhật'}
+                                        <i class="fas fa-save"></i> ${empty order ? 'Add' : 'Update'}
                                     </button>
                                 </div>
                             </div>
@@ -339,7 +331,7 @@
         document.querySelectorAll('.subtotal').forEach(function(input) {
             total += parseFloat(input.value) || 0;
         });
-        document.getElementById('totalAmount').textContent = '$' + total.toFixed(2);
+        document.getElementById('totalAmount').textContent = total.toFixed(2) + ' VND';
     }
 
     // Form validation

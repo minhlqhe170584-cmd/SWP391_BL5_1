@@ -37,9 +37,9 @@ public class LaundryItemServlet extends HttpServlet {
         }
         
         switch (action) {
-            case "list":
-                listItems(request, response);
-                break;
+//            case "list":
+//                listItems(request, response);
+//                break;
             case "add":
                 showAddForm(request, response);
                 break;
@@ -149,8 +149,8 @@ public class LaundryItemServlet extends HttpServlet {
             
             LaundryItem item = new LaundryItem();
                 //item.setServiceId(serviceId); 
-                item.setItemName(itemName);
-                item.setDescription(description);
+                item.setItemName(itemName.trim());
+                item.setDescription(description.trim());
                 item.setDefaultPrice(defaultPrice);
                 item.setUnit(unit);
                 item.setIsActive(isActive);
@@ -162,9 +162,9 @@ public class LaundryItemServlet extends HttpServlet {
             String errorMessage = null;
             if(itemName == null || itemName.trim().isEmpty()){
                  errorMessage = "Item name is required.";
-            }else if(unit == null){
+            }else if(unit == null || unit.trim().isEmpty()){
                 errorMessage = "Unit type is required.";
-            }else if (!itemDAO.isExistName(itemName)){
+            }else if (itemDAO.isExistName(itemName)){
                 errorMessage = "Laundry item name " + itemName + " already existed.";
             }else if(defaultPrice <= 0){
                 errorMessage = "Item price must larger than zero.";
@@ -224,22 +224,58 @@ public class LaundryItemServlet extends HttpServlet {
     private void updateItem(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            Integer itemId = Integer.valueOf(request.getParameter("itemId"));
-            Integer serviceId = Integer.valueOf(request.getParameter("serviceId"));
+            String itemIdStr = request.getParameter("itemId");
+            if (itemIdStr == null || itemIdStr.trim().isEmpty()) {
+                request.setAttribute("error", "Item ID is required");
+                listItems(request, response);
+                return;
+            }
+            
+            Integer itemId = Integer.valueOf(itemIdStr);
+            String serviceIdStr = request.getParameter("serviceId");
             String itemName = request.getParameter("itemName");
             String description = request.getParameter("description");
-            Double defaultPrice = Double.parseDouble(request.getParameter("defaultPrice"));
+            String defaultPriceStr = request.getParameter("defaultPrice");
             String unit = request.getParameter("unit");
             Boolean isActive = request.getParameter("isActive") != null;
+            
+            if (serviceIdStr == null || serviceIdStr.trim().isEmpty()) {
+                request.setAttribute("error", "Service is required");
+                showEditForm(request, response);
+                return;
+            }
+            
+            Integer serviceId = Integer.valueOf(serviceIdStr);
+            Double defaultPrice = Double.parseDouble(defaultPriceStr);
             
             LaundryItem item = new LaundryItem();
             item.setLaundryItemId(itemId);
             item.setServiceId(serviceId);
-            item.setItemName(itemName);
-            item.setDescription(description);
+            item.setItemName(itemName.trim());
+            item.setDescription(description.trim());
             item.setDefaultPrice(defaultPrice);
             item.setUnit(unit);
             item.setIsActive(isActive);
+            
+            // Validate
+            String errorMessage = null;
+            if(itemName == null || itemName.trim().isEmpty()){
+                errorMessage = "Item name is required.";
+            }else if(unit == null || unit.trim().isEmpty()){
+                errorMessage = "Unit type is required.";
+            }else if (itemDAO.isExistNameForOtherItem(itemName, itemId)){
+                errorMessage = "Laundry item name " + itemName + " already existed.";
+            }else if(defaultPrice <= 0){
+                errorMessage = "Item price must larger than zero.";
+            }
+            
+            if(errorMessage != null){
+                request.setAttribute("item", item);
+                request.setAttribute("error", errorMessage);
+                request.setAttribute("services", itemDAO.getActiveServices());
+                request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
+                return;
+            }
             
             boolean success = itemDAO.updateItem(item);
             
@@ -250,6 +286,9 @@ public class LaundryItemServlet extends HttpServlet {
                 showEditForm(request, response);
             }
             
+        } catch (NumberFormatException e) {
+            request.setAttribute("error", "Invalid number format: " + e.getMessage());
+            showEditForm(request, response);
         } catch (Exception e) {
             request.setAttribute("error", "Lỗi: " + e.getMessage());
             showEditForm(request, response);

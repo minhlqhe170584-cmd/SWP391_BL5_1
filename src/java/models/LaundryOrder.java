@@ -8,7 +8,6 @@ public class LaundryOrder {
 
     private int laundryId;
     private int orderId;
-    private LocalDateTime pickupTime;
     private LocalDateTime expectedPickupTime;
     private LocalDateTime expectedReturnTime;
     private String status;
@@ -53,21 +52,6 @@ public class LaundryOrder {
 
     public void setOrderId(int orderId) {
         this.orderId = orderId;
-    }
-
-    public LocalDateTime getPickupTime() {
-        return pickupTime;
-    }
-
-    public void setPickupTime(LocalDateTime pickupTime) {
-        this.pickupTime = pickupTime;
-    }
-
-    public String getFormattedPickupTime() {
-        if (this.pickupTime == null) {
-            return "";
-        }
-        return this.pickupTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
     }
 
     public LocalDateTime getExpectedPickupTime() {

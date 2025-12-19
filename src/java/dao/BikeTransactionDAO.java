@@ -225,8 +225,7 @@ public class BikeTransactionDAO extends DBContext {
         } catch (SQLException e) { e.printStackTrace(); }
         return 0;
     }
-
-    //Update status cho task ? 
+  
     public void handoverBikes(int orderId, String[] bikeIds) {
         Connection conn = null;
         try {

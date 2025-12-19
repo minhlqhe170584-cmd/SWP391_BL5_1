@@ -146,7 +146,7 @@ public class LaundryItemDAO extends DBContext {
     }
     
     // Insert new item
-    public boolean insertItem(LaundryItem item) {
+     public boolean insertItem(LaundryItem item) {
         try {
             PreparedStatement st = connection.prepareStatement(INSERT_ITEM);
             st.setInt(1, item.getServiceId());
@@ -427,6 +427,23 @@ public class LaundryItemDAO extends DBContext {
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, name);
+            
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    public boolean isExistNameForOtherItem(String name, int excludeItemId) {
+        String sql = "SELECT COUNT(*) FROM LaundryItems WHERE item_name = ? AND is_active = 1 AND laundry_item_id != ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, name);
+            st.setInt(2, excludeItemId);
             
             ResultSet rs = st.executeQuery();
             if (rs.next()) {
