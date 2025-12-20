@@ -64,7 +64,7 @@ pageEncoding="UTF-8"%>
             <h1>Order Details #${order.laundryId}</h1>
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item"><a
-                        href="laundry-orders">Laundry</a></div>
+                        href="laundry-order">Laundry</a></div>
                 <div class="breadcrumb-item active">Details</div>
             </div>
         </div>
@@ -133,7 +133,7 @@ pageEncoding="UTF-8"%>
                                 <div class="info-value">#${order.orderId}</div>
                             </div>
                             <div class="info-row">
-                                <div class="info-label">Room ID</div>
+                                <div class="info-label">Room</div>
                                 <div class="info-value">
                                     <c:if
                                         test="${not empty order.serviceOrder}">

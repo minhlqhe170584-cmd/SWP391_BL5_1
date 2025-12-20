@@ -425,7 +425,7 @@ public class LaundryItemDAO extends DBContext {
     }
     
         public boolean isExistName(String name) {
-        String sql = "SELECT COUNT(*) FROM LaundryItems WHERE item_name = ? AND  is_active = 1";
+        String sql = "SELECT COUNT(*) FROM LaundryItems WHERE item_name = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, name);

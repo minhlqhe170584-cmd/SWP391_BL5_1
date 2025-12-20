@@ -147,11 +147,11 @@ public class LaundryOrderServlet extends HttpServlet {
                     request.setAttribute("order", order);
                     request.getRequestDispatcher("/WEB-INF/views/laundry/view.jsp").forward(request, response);
                 } else {
-                    request.setAttribute("error", "Order not found");
+                    request.setAttribute("errorMessage", "Order not found");
                     listOrders(request, response);
                 }
             } catch (NumberFormatException e) {
-                request.setAttribute("error", "Invalid order ID");
+                request.setAttribute("errorMessage", "Invalid order ID");
                 listOrders(request, response);
             }
         } else {
@@ -223,12 +223,12 @@ public class LaundryOrderServlet extends HttpServlet {
                 request.setAttribute("success", "Order added successfully!");
                 response.sendRedirect("laundry-order?action=view&id=" + newId);
             } else {
-                request.setAttribute("error", "Failed to add order");
+                request.setAttribute("errorMessage", "Failed to add order");
                 showAddForm(request, response);
             }
             
         } catch (Exception e) {
-            request.setAttribute("error", "Error adding order: " + e.getMessage());
+            request.setAttribute("errorMessage", "Error adding order: " + e.getMessage());
             showAddForm(request, response);
         }
     }
@@ -317,12 +317,12 @@ public class LaundryOrderServlet extends HttpServlet {
             if (success) {
                 response.sendRedirect("laundry-order?action=view&id=" + laundryId + "&success=updated");
             } else {
-                request.setAttribute("error", "Failed to update order");
+                request.setAttribute("errorMessage", "Failed to update order");
                 showEditForm(request, response);
             }
             
         } catch (Exception e) {
-            request.setAttribute("error", "Error updating order: " + e.getMessage());
+            request.setAttribute("errorMessage", "Error updating order: " + e.getMessage());
             showEditForm(request, response);
         }
     }

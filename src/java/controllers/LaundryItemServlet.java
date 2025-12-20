@@ -176,20 +176,29 @@ public class LaundryItemServlet extends HttpServlet {
                 if(serviceIdStr != null && !serviceIdStr.trim().isEmpty()) {
                     try { 
                         item.setServiceId(Integer.parseInt(serviceIdStr)); 
-                    } catch (NumberFormatException e) {}
+                    } catch (NumberFormatException e) {
+                        errorMessage = "Please select a service";
+                    }
                 }
                 item.setItemName(itemName != null ? itemName.trim() : "");
                 item.setDescription(description != null ? description.trim() : "");
                 if(defaultPriceStr != null && !defaultPriceStr.trim().isEmpty()) {
                     try {
-                        item.setDefaultPrice(Double.parseDouble(defaultPriceStr));
-                    } catch (NumberFormatException e) {}
+                        java.math.BigDecimal bd = new java.math.BigDecimal(defaultPriceStr);
+                        double prc = bd.doubleValue();                      
+                        if(prc < 0){
+                            errorMessage = "Price can be a negative";
+                        }  
+                        item.setDefaultPrice(prc);
+                    } catch (NumberFormatException e) {
+                            errorMessage = "Accept only number";
+                    }
                 }
                 item.setUnit(unit);
                 item.setIsActive(isActive);
                 
                 request.setAttribute("item", item);
-                request.setAttribute("error", errorMessage);
+                request.setAttribute("errorMessage", errorMessage);
                 request.setAttribute("services", itemDAO.getActiveServices());
                 request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
                 return;
@@ -218,7 +227,7 @@ public class LaundryItemServlet extends HttpServlet {
                 item.setIsActive(isActive);
                 
                 request.setAttribute("item", item);
-                request.setAttribute("error", errorMessage);
+                request.setAttribute("errorMessage", errorMessage);
                 request.setAttribute("services", itemDAO.getActiveServices());
                 request.getRequestDispatcher("/WEB-INF/views/laundry/item-form.jsp").forward(request, response);
                 return;
