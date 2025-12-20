@@ -21,7 +21,7 @@
             <div class="row">
                 <div class="col-12 col-lg-8 offset-lg-2">
                     <!-- Error Message -->
-                    <c:if test="${not empty error}">
+                    <c:if test="${not empty errorMessage}">
                         <div
                             class="alert alert-danger alert-dismissible show fade">
                             <div class="alert-body">
@@ -29,7 +29,7 @@
                                     <span>&times;</span>
                                 </button>
                                 <i class="fas fa-exclamation-circle"></i>
-                                ${error}
+                                ${errorMessage}
                             </div>
                         </div>
                     </c:if>
@@ -52,7 +52,7 @@
                                     <label>Laundry Service<span
                                             class="text-danger">*</span></label>
                                     <select name="serviceId"
-                                        class="form-control" required>
+                                        class="form-control">
                                         <option value>Select a Laundry
                                             Service</option>
                                         <c:forEach var="service"
@@ -72,7 +72,7 @@
                                             class="text-danger">*</span></label>
                                     <input type="text" name="itemName"
                                         class="form-control"
-                                        value="${item.itemName}" required
+                                        value="${item.itemName}"
                                         placeholder="Example: Áo sơ mi, Quần jean...">
                                 </div>
 
@@ -97,10 +97,10 @@
                                                 <input type="number"
                                                     name="defaultPrice"
                                                     class="form-control"
-                                                    step="0.01" min="0"
-                                                    value="${item.defaultPrice}"
+                                                    step="1000" 
                                                     required
-                                                    placeholder="0.00">
+                                                    value="<fmt:formatNumber value="${item.defaultPrice}" pattern="#" />"                                                  
+                                                    >
                                             </div>
                                         </div>
                                     </div>

@@ -223,16 +223,16 @@ public class LaundryBookingServlet extends HttpServlet {
             if (errorMessage == null) {
                 if (pickupTime != null && returnTime != null) {
                     if (returnTime.isBefore(pickupTime)) {
-                        errorMessage = "Return time must be later than pickup time";
+                        errorMessage = "Thời gian trả đồ phải lớn hơn thời gian lấy đồ";
                     } else if (returnTime.isBefore(LocalDateTime.now())) {
-                        errorMessage = "Return time must be later than current time";
+                        errorMessage = "Thời gian trả đồ phải lớn hơn thời gian hiện tại";
                     } else if (pickupTime.isBefore(LocalDateTime.now())) {
-                        errorMessage = "Pickup time must be later than current time";
+                        errorMessage = "Thời gian lấy đồ phải lớn hơn thời gian hiện tại";
                     }
                 } else if (pickupTime != null && pickupTime.isBefore(LocalDateTime.now())) {
-                    errorMessage = "Pickup time must be later than current time";
+                    errorMessage = "ời gian lấy đồ phải lớn hơn thời gian hiện tại";
                 } else if (returnTime != null && returnTime.isBefore(LocalDateTime.now())) {
-                    errorMessage = "Return time must be later than current time";
+                    errorMessage = "Thời gian trả đồ phải lớn hơn thời gian hiện tại";
                 }
             }
 

@@ -89,6 +89,19 @@ pageEncoding="UTF-8"%>
                     </div>
                 </div>
             </c:if>
+            
+            <c:if test="${not empty errorMessage}">
+                        <div
+                            class="alert alert-danger alert-dismissible show fade">
+                            <div class="alert-body">
+                                <button class="close" data-dismiss="alert">
+                                    <span>&times;</span>
+                                </button>
+                                <i class="fas fa-exclamation-circle"></i>
+                                ${errorMessage}
+                            </div>
+                        </div>
+            </c:if>
 
             <div class="card">
                 <div
@@ -116,7 +129,7 @@ pageEncoding="UTF-8"%>
                                         value="${search}">
                                 </div>
 
-                                <div class="col-md-3 mb-3">
+<!--                                <div class="col-md-3 mb-3">
                                     <label>Progress</label>
                                     <select name="status" class="form-control">
                                         <option value>All Status</option>
@@ -139,9 +152,9 @@ pageEncoding="UTF-8"%>
                                             'Cancelled' ? 'selected' :
                                             ''}>Cancelled</option>
                                     </select>
-                                </div>
+                                </div>-->
 
-                                <div class="col-md-3 mb-3">
+                                <div class="col-md-4 mb-3">
                                     <label>Sort By</label>
                                     <select name="sort" class="form-control">
                                         <option value="idDesc" ${sort ==
@@ -231,7 +244,7 @@ pageEncoding="UTF-8"%>
                                                 test="${not empty order.serviceOrder}">
                                                 <span
                                                     class="badge badge-light">Room
-                                                    ${order.serviceOrder.roomId}</span>
+                                                    ${order.roomNumber}</span>
                                             </c:if>
                                         </td>
                                         <td>
