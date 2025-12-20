@@ -129,6 +129,25 @@ public class EventPackageServlet extends HttpServlet {
                     // 2. Gọi DAO lấy danh sách FULL (theo điều kiện search)
                     List<Event> fullList = eventDAO.searchEventPackages(keyword, status);
 
+                    // --- PHẦN BỔ SUNG: Chuyển đổi ID thành Name cho cột Location ---
+                    // Xử lý chuyển đổi ID -> Name cho từng Event
+                    for (Event e : fullList) {
+                        if (e.getLocation() != null && !e.getLocation().isEmpty()) {
+                            // 1. Gọi hàm DAO bạn đã có
+                            List<Room> rooms = roomDAO.getRoomsByIds(e.getLocation());
+
+                            // 2. Trích xuất roomNumber và nối lại thành chuỗi "Room 101, Room 102"
+                            List<String> roomNumbers = new ArrayList<>();
+                            for (Room r : rooms) {
+                                roomNumbers.add(r.getRoomNumber());
+                            }
+                            String displayLocation = String.join(", ", roomNumbers);
+
+                            // 3. Ghi đè lại vào field location để hiển thị ra JSP
+                            e.setLocation(displayLocation);
+                        }
+                    }
+
                     // 3. Phân trang (SubList)
                     int count = fullList.size();
                     int pageSize = 5; // Số dòng mỗi trang
