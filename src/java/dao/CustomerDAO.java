@@ -371,8 +371,8 @@ public class CustomerDAO extends DBContext{
         try {
             // Dùng biến 'connection' có sẵn từ DBContext cũ
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setString(1, email);
-            ps.setString(2, password);
+            ps.setString(1, email.trim());
+            ps.setString(2, password.trim());
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
