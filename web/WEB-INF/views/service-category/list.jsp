@@ -61,7 +61,7 @@
                                 </tr>
                             </c:if>
 
-                            <c:forEach items="${listCategories}" var="c">
+                            <c:forEach items="${categories}" var="c">
                                 <tr>
                                     <td>${c.categoryId}</td>
 

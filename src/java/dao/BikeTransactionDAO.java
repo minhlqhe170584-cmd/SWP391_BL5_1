@@ -176,7 +176,7 @@ public class BikeTransactionDAO extends DBContext {
                      "JOIN OrderDetails d ON o.order_id = d.order_id " + 
                      "LEFT JOIN Services s ON d.service_id = s.service_id " +
                      "LEFT JOIN ServiceCategories c ON s.category_id = c.category_id " +
-                     "WHERE (c.category_name LIKE N'%Xe đạp%' OR c.category_name LIKE '%Bike%') AND o.status = ?";
+                     "WHERE (c.category_name LIKE N'%Xe đạp%' OR c.category_name LIKE '%Bike%' OR c.category_name LIKE '%Rental%') AND o.status = ?";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, status);
@@ -234,21 +234,46 @@ public class BikeTransactionDAO extends DBContext {
         return 0;
     }
  
-    public void handoverBikes(int orderId, String[] bikeIds) {
+    public String handoverBikes(int orderId, String[] bikeIds, int staffId) {
         Connection conn = null;
         try {
             conn = this.connection;
             conn.setAutoCommit(false);
             
-            PreparedStatement psOrder = conn.prepareStatement("SELECT total_amount FROM ServiceOrders WHERE order_id = ?");
-            psOrder.setInt(1, orderId);
-            ResultSet rs = psOrder.executeQuery();
+            PreparedStatement psCheck = conn.prepareStatement("SELECT booking_start_date, booking_end_date, total_amount, status FROM ServiceOrders WHERE order_id = ?");
+            psCheck.setInt(1, orderId);
+            ResultSet rs = psCheck.executeQuery();
             
-            if (!rs.next()) return;
+            if (!rs.next()) return "NOT_FOUND";
+            
+            Timestamp start = rs.getTimestamp("booking_start_date");
+            Timestamp end = rs.getTimestamp("booking_end_date");
+            String currentStatus = rs.getString("status");
             double amount = rs.getDouble("total_amount");
 
-            PreparedStatement psRental = conn.prepareStatement("INSERT INTO BikeRentals (order_id, bike_id, start_time, status) VALUES (?, ?, GETDATE(), 'Active')");
+            if (!"Pending".equalsIgnoreCase(currentStatus)) return "INVALID_STATUS";
+
+            long now = System.currentTimeMillis();
+            long startTime = start.getTime();
+            long endTime = end.getTime();
             
+            if (now > endTime) {
+                PreparedStatement psCancel = conn.prepareStatement("UPDATE ServiceOrders SET status = 'Cancelled' WHERE order_id = ?");
+                psCancel.setInt(1, orderId);
+                psCancel.executeUpdate();
+                conn.commit();
+                return "EXPIRED";
+            }
+            
+            if (now < (startTime - 300000)) {
+                return "TOO_EARLY"; 
+            }
+
+            if (now > (endTime - 600000)) { 
+                return "TOO_LATE";
+            }
+
+            PreparedStatement psRental = conn.prepareStatement("INSERT INTO BikeRentals (order_id, bike_id, start_time, status) VALUES (?, ?, GETDATE(), 'Active')");
             for (String bid : bikeIds) {
                 psRental.setInt(1, orderId);
                 psRental.setInt(2, Integer.parseInt(bid));
@@ -264,17 +289,30 @@ public class BikeTransactionDAO extends DBContext {
             PreparedStatement psUpdateOrder = conn.prepareStatement("UPDATE ServiceOrders SET status = 'Confirmed' WHERE order_id = ?");
             psUpdateOrder.setInt(1, orderId);
             psUpdateOrder.executeUpdate();
+            
+            if (staffId > 0) {
+                String sqlTask = "INSERT INTO Tasks (task_name, description, order_id, staff_id, status, created_at) VALUES (?, ?, ?, ?, ?, GETDATE())";
+                PreparedStatement psTask = conn.prepareStatement(sqlTask);
+                psTask.setString(1, "Handover Bikes");
+                psTask.setString(2, "Staff handed over bikes for Order #" + orderId);
+                psTask.setInt(3, orderId);
+                psTask.setInt(4, staffId);
+                psTask.setString(5, "Completed");
+                psTask.executeUpdate();
+            }
 
             conn.commit();
+            return "SUCCESS";
         } catch (Exception e) {
             try { if (conn != null) conn.rollback(); } catch (SQLException ex) {}
             e.printStackTrace();
+            return "ERROR";
         } finally {
             try { if (conn != null) conn.setAutoCommit(true); } catch (SQLException ex) {}
         }
     }
 
-    public void returnBikes(int orderId) {
+    public void returnBikes(int orderId, int staffId) {
         Connection conn = null;
         try {
             conn = this.connection;
@@ -287,6 +325,17 @@ public class BikeTransactionDAO extends DBContext {
             PreparedStatement psOrder = conn.prepareStatement("UPDATE ServiceOrders SET status = 'Completed' WHERE order_id = ?");
             psOrder.setInt(1, orderId);
             psOrder.executeUpdate();
+            
+            if (staffId > 0) {
+                String sqlTask = "INSERT INTO Tasks (task_name, description, order_id, staff_id, status, created_at) VALUES (?, ?, ?, ?, ?, GETDATE())";
+                PreparedStatement psTask = conn.prepareStatement(sqlTask);
+                psTask.setString(1, "Return Bikes");
+                psTask.setString(2, "Staff received returned bikes for Order #" + orderId);
+                psTask.setInt(3, orderId);
+                psTask.setInt(4, staffId);
+                psTask.setString(5, "Completed");
+                psTask.executeUpdate();
+            }
 
             conn.commit();
         } catch (Exception e) {

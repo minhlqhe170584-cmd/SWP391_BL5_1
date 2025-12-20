@@ -25,12 +25,26 @@
                 </li>
             </ul>
 
-            <c:if test="${not empty param.error}">
-                <div class="alert alert-danger">Error: Please select the correct number of bikes!</div>
-            </c:if>
-            <c:if test="${not empty param.msg}">
-                <div class="alert alert-success">Action completed successfully!</div>
-            </c:if>
+            <c:choose>
+                <c:when test="${param.error == 'TooEarly'}">
+                    <div class="alert alert-warning">Cannot handover yet! Allowed 5 minutes before booking start time.</div>
+                </c:when>
+                <c:when test="${param.error == 'TooLate'}">
+                    <div class="alert alert-warning">Cannot handover! Less than 10 minutes remaining or booking ended.</div>
+                </c:when>
+                <c:when test="${param.error == 'OrderExpiredAndCancelled'}">
+                    <div class="alert alert-danger">Booking time expired. Order has been automatically cancelled.</div>
+                </c:when>
+                <c:when test="${param.error == 'NoBikeSelected'}">
+                    <div class="alert alert-danger">Please select the correct number of bikes.</div>
+                </c:when>
+                <c:when test="${not empty param.error}">
+                    <div class="alert alert-danger">Operation failed. Please try again.</div>
+                </c:when>
+                <c:when test="${not empty param.msg}">
+                    <div class="alert alert-success">Action completed successfully!</div>
+                </c:when>
+            </c:choose>
 
             <div class="card">
                 <div class="card-body">
@@ -109,16 +123,9 @@
                                                         <input type="hidden" name="action" value="return">
                                                         <input type="hidden" name="orderId" value="${o.orderId}">
                                                         
-                                                        <select name="paymentMethod" class="form-control form-control-sm mr-2" required>
-                                                            <option value="Cash">Cash</option>
-                                                            <option value="Transfer">Transfer</option>
-                                                            <option value="Credit Card">Credit Card</option>
-                                                            <option value="Charge to Room">Charge to Room</option>
-                                                        </select>
-
-                                                        <button type="submit" class="btn btn-success btn-sm" 
-                                                                onclick="return confirm('Confirm Return & Payment?');">
-                                                            <i class="fas fa-check-double"></i> Return & Pay
+                                                        <button type="submit" class="btn btn-warning btn-sm" 
+                                                                onclick="return confirm('Confirm return bikes for Order #${o.orderId}?');">
+                                                            <i class="fas fa-undo"></i> Return
                                                         </button>
                                                     </form>
                                                 </c:when>

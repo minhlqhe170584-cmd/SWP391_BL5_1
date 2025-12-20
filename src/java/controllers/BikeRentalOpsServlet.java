@@ -7,9 +7,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import models.Bicycle;
 import models.BikeServiceOrder;
+import models.Staff;
 
 @WebServlet(name = "BikeRentalOpsServlet", urlPatterns = {"/bike-ops"})
 public class BikeRentalOpsServlet extends HttpServlet {
@@ -50,6 +52,15 @@ public class BikeRentalOpsServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        HttpSession session = request.getSession();
+        Staff staff = (Staff) session.getAttribute("USER");
+        
+        if (staff == null) {
+            response.sendRedirect("login");
+            return;
+        }
+        
+        int staffId = staff.getStaffId();
         String action = request.getParameter("action");
         String orderIdRaw = request.getParameter("orderId");
 
@@ -59,13 +70,30 @@ public class BikeRentalOpsServlet extends HttpServlet {
             if ("handover".equals(action)) {
                 String[] bikeIds = request.getParameterValues("bikeIds");
                 if (bikeIds != null && bikeIds.length > 0) {
-                    dao.handoverBikes(orderId, bikeIds);
-                    response.sendRedirect("bike-ops?view=active");
+                    String result = dao.handoverBikes(orderId, bikeIds, staffId);
+                    
+                    switch (result) {
+                        case "SUCCESS":
+                            response.sendRedirect("bike-ops?view=active&msg=HandoverSuccess");
+                            break;
+                        case "EXPIRED":
+                            response.sendRedirect("bike-ops?view=pending&error=OrderExpiredAndCancelled");
+                            break;
+                        case "TOO_EARLY":
+                            response.sendRedirect("bike-ops?view=pending&error=TooEarly");
+                            break;
+                        case "TOO_LATE":
+                            response.sendRedirect("bike-ops?view=pending&error=TooLate");
+                            break;
+                        default:
+                            response.sendRedirect("bike-ops?view=pending&error=SystemError");
+                            break;
+                    }
                 } else {
                     response.sendRedirect("bike-ops?view=pending&error=NoBikeSelected");
                 }
             } else if ("return".equals(action)) {
-                dao.returnBikes(orderId);
+                dao.returnBikes(orderId, staffId);
                 response.sendRedirect("bike-ops?view=active&msg=Returned");
             }
         } catch (Exception e) {

@@ -63,6 +63,7 @@ public class BicycleServlet extends HttpServlet {
         }
 
         ArrayList<Bicycle> list = bicycleDAO.search(search, statusFilter, view, sort, pageIndex, pageSize);
+        
         int totalRecords = bicycleDAO.countSearch(search, statusFilter, view);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
@@ -129,7 +130,7 @@ public class BicycleServlet extends HttpServlet {
         String idRaw = request.getParameter("bikeId");
         String bikeCode = request.getParameter("bikeCode");
         String serviceIdStr = request.getParameter("serviceId");
-        String condition = request.getParameter("condition");
+        String condition = request.getParameter("condition"); // Dùng condition thay vì status
 
         Bicycle b = new Bicycle();
         b.setBikeCode(bikeCode);
