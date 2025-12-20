@@ -108,7 +108,7 @@ public class EventBookingServlet extends HttpServlet {
                 throw new Exception("Insert failed");
             }
 
-            request.setAttribute("message", "Booking successful! Wait until staff go to take your stuffs.");
+            request.setAttribute("message", "Booking successful!");
                 request.getRequestDispatcher("/WEB-INF/views/client/success_event.jsp").forward(request, response);
 
         } catch (Exception e) {
