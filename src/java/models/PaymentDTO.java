@@ -81,15 +81,17 @@ public class PaymentDTO {
         private double unitPrice;   
         private double total;       
         private Timestamp orderTime;
+        private int orderId;
 
         public ServiceDetail() {}
-        public ServiceDetail(String serviceName, String itemName, int quantity, double unitPrice, double total, Timestamp orderTime) {
+        public ServiceDetail(String serviceName, String itemName, int quantity, double unitPrice, double total, Timestamp orderTime, int orderId) {
             this.serviceName = serviceName;
             this.itemName = itemName;
             this.quantity = quantity;
             this.unitPrice = unitPrice;
             this.total = total;
             this.orderTime = orderTime;
+            this.orderId = orderId;
         }
 
         // Getters & Setters cho ServiceDetail
@@ -105,6 +107,8 @@ public class PaymentDTO {
         public void setTotal(double total) { this.total = total; }
         public Timestamp getOrderTime() { return orderTime; }
         public void setOrderTime(Timestamp orderTime) { this.orderTime = orderTime; }
+        public int getOrderId() { return orderId; }
+        public void setOrderId(int orderId) { this.orderId = orderId; }
     }
 
     // Getters & Setters cho PaymentDTO

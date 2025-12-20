@@ -48,6 +48,7 @@
                                         <i class="fa fa-exclamation-circle"></i>
                                         ${errorMessage}
                                     </div>
+                                    <a href="${pageContext.request.contextPath}/home" class="primary-btn" style="background: #333;">Về Trang Chủ</a>
                                 </c:if>
 
                                 <c:if test="${not empty successMessage}">
@@ -55,6 +56,7 @@
                                         <i class="fa fa-check-circle"></i>
                                         ${successMessage}
                                     </div>
+                                    <a href="${pageContext.request.contextPath}/home" class="primary-btn" style="background: #333;">Về Trang Chủ</a>
                                 </c:if>
 
 
@@ -164,42 +166,42 @@
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
         <script>
-                                                        document.addEventListener('DOMContentLoaded', function () {
-                                                            const checkOutInput = document.getElementById('checkOutDate');
-                                                            const checkInInput = document.getElementById('checkInDate');
+                                                document.addEventListener('DOMContentLoaded', function () {
+                                                    const checkOutInput = document.getElementById('checkOutDate');
+                                                    const checkInInput = document.getElementById('checkInDate');
 
-                                                            // Khởi tạo cho trường KẾT THÚC (checkOutDate)
-                                                            const checkOutPicker = flatpickr("#checkOutDate", {
-                                                                enableTime: true,
-                                                                dateFormat: "Y-m-d H:i",
-                                                                time_24hr: true,
-                                                                minDate: new Date(), // lấy đúng ngày + giờ hiện tại
-                                                                minuteIncrement: 15,
-                                                                defaultDate: checkOutInput.value || new Date() // giữ giá trị cũ, nếu rỗng thì giờ hiện tại
-                                                            });
+                                                    // Khởi tạo cho trường KẾT THÚC (checkOutDate)
+                                                    const checkOutPicker = flatpickr("#checkOutDate", {
+                                                        enableTime: true,
+                                                        dateFormat: "Y-m-d H:i",
+                                                        time_24hr: true,
+                                                        minDate: new Date(), // lấy đúng ngày + giờ hiện tại
+                                                        minuteIncrement: 15,
+                                                        defaultDate: checkOutInput.value || new Date() // giữ giá trị cũ, nếu rỗng thì giờ hiện tại
+                                                    });
 
-                                                            // Khởi tạo cho trường BẮT ĐẦU (checkInDate)
-                                                            const checkInPicker = flatpickr("#checkInDate", {
-                                                                enableTime: true,
-                                                                dateFormat: "Y-m-d H:i",
-                                                                time_24hr: true,
-                                                                minDate: new Date(), // lấy đúng ngày + giờ hiện tại
-                                                                minuteIncrement: 15,
-                                                                defaultDate: checkInInput.value || new Date(), // giữ giá trị cũ, nếu rỗng thì giờ hiện tại
+                                                    // Khởi tạo cho trường BẮT ĐẦU (checkInDate)
+                                                    const checkInPicker = flatpickr("#checkInDate", {
+                                                        enableTime: true,
+                                                        dateFormat: "Y-m-d H:i",
+                                                        time_24hr: true,
+                                                        minDate: new Date(), // lấy đúng ngày + giờ hiện tại
+                                                        minuteIncrement: 15,
+                                                        defaultDate: checkInInput.value || new Date(), // giữ giá trị cũ, nếu rỗng thì giờ hiện tại
 
-                                                                // Ngày kết thúc phải sau ngày bắt đầu
-                                                                onChange: function (selectedDates) {
-                                                                    if (selectedDates.length > 0) {
-                                                                        checkOutPicker.set('minDate', selectedDates[0]);
-                                                                    }
-                                                                }
-                                                            });
-
-                                                            // Nếu checkInDate đã có giá trị từ trước thì đặt minDate cho checkOutPicker
-                                                            if (checkInInput.value) {
-                                                                checkOutPicker.set('minDate', checkInInput.value);
+                                                        // Ngày kết thúc phải sau ngày bắt đầu
+                                                        onChange: function (selectedDates) {
+                                                            if (selectedDates.length > 0) {
+                                                                checkOutPicker.set('minDate', selectedDates[0]);
                                                             }
-                                                        });
+                                                        }
+                                                    });
+
+                                                    // Nếu checkInDate đã có giá trị từ trước thì đặt minDate cho checkOutPicker
+                                                    if (checkInInput.value) {
+                                                        checkOutPicker.set('minDate', checkInInput.value);
+                                                    }
+                                                });
 
 
 

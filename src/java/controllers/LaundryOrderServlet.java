@@ -64,9 +64,9 @@ public class LaundryOrderServlet extends HttpServlet {
             case "cancel":
                 deleteOrder(request, response);
                 break;
-            case "updateStatus":
-                showUpdateStatusForm(request, response);
-                break;
+//            case "updateStatus":
+//                showUpdateStatusForm(request, response);
+//                break;
             default:
                 listOrders(request, response);
                 break;
@@ -98,7 +98,6 @@ public class LaundryOrderServlet extends HttpServlet {
         }
     }
     
-    // List all orders with search, filter, and pagination
     private void listOrders(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String search = request.getParameter("search");
@@ -187,9 +186,6 @@ public class LaundryOrderServlet extends HttpServlet {
             
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
             
-            if (pickupTimeStr != null && !pickupTimeStr.isEmpty()) {
-                order.setPickupTime(LocalDateTime.parse(pickupTimeStr, formatter));
-            }
             if (deliveryTimeStr != null && !deliveryTimeStr.isEmpty()) {
                 order.setExpectedPickupTime(LocalDateTime.parse(deliveryTimeStr, formatter));
             }
@@ -271,7 +267,6 @@ public class LaundryOrderServlet extends HttpServlet {
         try {
             int laundryId = Integer.parseInt(request.getParameter("laundryId"));
             int orderId = Integer.parseInt(request.getParameter("orderId"));
-            String pickupTimeStr = request.getParameter("pickupTime");
             String expectedPickupTimeStr = request.getParameter("deliveryTime");
             String returnTimeStr = request.getParameter("returnTime");
             String status = request.getParameter("status");
@@ -285,9 +280,6 @@ public class LaundryOrderServlet extends HttpServlet {
             
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
             
-            if (pickupTimeStr != null && !pickupTimeStr.isEmpty()) {
-                order.setPickupTime(LocalDateTime.parse(pickupTimeStr, formatter));
-            }
             if (expectedPickupTimeStr != null && !expectedPickupTimeStr.isEmpty()) {
                 order.setExpectedPickupTime(LocalDateTime.parse(expectedPickupTimeStr, formatter));
             }
@@ -357,34 +349,33 @@ public class LaundryOrderServlet extends HttpServlet {
             response.sendRedirect("laundry-order");
         }
     }
+       
+//    private void showUpdateStatusForm(HttpServletRequest request, HttpServletResponse response)
+//            throws ServletException, IOException {
+//        String idStr = request.getParameter("id");
+//        
+//        if (idStr != null && !idStr.isEmpty()) {
+//            try {
+//                int laundryId = Integer.parseInt(idStr);
+//                LaundryOrder order = orderDAO.getOrderById(laundryId);
+//                
+//                if (order != null) {
+//                    request.setAttribute("order", order);
+//                    request.getRequestDispatcher("/WEB-INF/views/laundry/update-status.jsp").forward(request, response);
+//                } else {
+//                    request.setAttribute("error", "Order not found");
+//                    listOrders(request, response);
+//                }
+//            } catch (NumberFormatException e) {
+//                request.setAttribute("error", "Invalid order ID");
+//                listOrders(request, response);
+//            }
+//        } else {
+//            listOrders(request, response);
+//        }
+//    }
     
-    // Show update status form
-    private void showUpdateStatusForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String idStr = request.getParameter("id");
-        
-        if (idStr != null && !idStr.isEmpty()) {
-            try {
-                int laundryId = Integer.parseInt(idStr);
-                LaundryOrder order = orderDAO.getOrderById(laundryId);
-                
-                if (order != null) {
-                    request.setAttribute("order", order);
-                    request.getRequestDispatcher("/WEB-INF/views/laundry/update-status.jsp").forward(request, response);
-                } else {
-                    request.setAttribute("error", "Order not found");
-                    listOrders(request, response);
-                }
-            } catch (NumberFormatException e) {
-                request.setAttribute("error", "Invalid order ID");
-                listOrders(request, response);
-            }
-        } else {
-            listOrders(request, response);
-        }
-    }
-    
-    // Update order status
+
     private void updateStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {

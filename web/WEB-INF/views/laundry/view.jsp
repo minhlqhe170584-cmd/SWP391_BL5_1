@@ -16,14 +16,14 @@ pageEncoding="UTF-8"%>
         display: inline-block;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .status-PENDING { background-color: #ffc107; color: #000; }
-    .status-PROCESSING { background-color: #17a2b8; color: #fff; }
-    .status-WASHING { background-color: #007bff; color: #fff; }
-    .status-DRYING { background-color: #6c757d; color: #fff; }
-    .status-READY { background-color: #28a745; color: #fff; }
-    .status-DELIVERED { background-color: #20c997; color: #fff; }
-    .status-COMPLETED { background-color: #198754; color: #fff; }
-    .status-CANCELLED { background-color: #dc3545; color: #fff; }
+    .status-Pending { background-color: #ffc107; color: #000; }
+    .status-Processing { background-color: #17a2b8; color: #fff; }
+    .status-Washing { background-color: #007bff; color: #fff; }
+    .status-Drying { background-color: #6c757d; color: #fff; }
+    .status-Ready { background-color: #28a745; color: #fff; }
+    .status-Delivered { background-color: #20c997; color: #fff; }
+    .status-Completed { background-color: #198754; color: #fff; }
+    .status-Cancelled { background-color: #dc3545; color: #fff; }
     
     /* Custom Info Row Styling */
     .info-row {
@@ -174,21 +174,7 @@ pageEncoding="UTF-8"%>
                         </div>
                         <div class="card-body">
                             <div class="info-row">
-                                <div class="info-label">Pickup Time</div>
-                                <div class="info-value">
-                                    <c:choose>
-                                        <c:when
-                                            test="${not empty order.pickupTime}">
-                                            ${order.formattedPickupTime}
-                                        </c:when>
-                                        <c:otherwise><span
-                                                class="text-muted text-small">Not
-                                                set</span></c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-label">Expect Pick Up</div>
+                                <div class="info-label">Expected Pick Up</div>
                                 <div class="info-value">
                                     <c:choose>
                                         <c:when
@@ -290,7 +276,7 @@ pageEncoding="UTF-8"%>
                                             </tr>
                                             <c:set var="total"
                                                 value="${total + detail.subtotal}" />
-                                        </c:forEach>>>
+                                        </c:forEach>
 
                                         <c:if
                                             test="${empty order.orderDetails}">
@@ -335,7 +321,7 @@ pageEncoding="UTF-8"%>
                             <div class="row align-items-center">
                                 <div class="col-md-6">
                                     <c:if
-                                        test="${order.status != 'COMPLETED' && order.status != 'CANCELLED'}">
+                                        test="${order.status != 'Completed' && order.status != 'Cancelled'}">
                                         <form action="laundry-order"
                                             method="post" id="statusUpdateForm"
                                             class="d-inline-block">
@@ -356,11 +342,11 @@ pageEncoding="UTF-8"%>
                                         </form>
                                     </c:if>
                                     <c:if
-                                        test="${order.status == 'COMPLETED' || order.status == 'CANCELLED'}">
+                                        test="${order.status == 'Completed' || order.status == 'Cancelled'}">
                                         <span
-                                            class="badge badge-lg ${order.status == 'COMPLETED' ? 'badge-success' : 'badge-danger'}">
+                                            class="badge badge-lg ${order.status == 'Completed' ? 'badge-success' : 'badge-danger'}">
                                             <i
-                                                class="fas fa-${order.status == 'COMPLETED' ? 'check-circle' : 'times-circle'}"></i>
+                                                class="fas fa-${order.status == 'Completed' ? 'check-circle' : 'times-circle'}"></i>
                                             Order ${order.status}
                                         </span>
                                     </c:if>
@@ -368,7 +354,7 @@ pageEncoding="UTF-8"%>
                                 <div class="col-md-6 text-right">
                                     <c:choose>
                                         <c:when
-                                            test="${order.serviceOrder.status.equalsIgnoreCase('pending')}">
+                                            test="${order.serviceOrder.status == 'Pending'}">
                                             <a
                                                 href="laundry-order?action=edit&id=${order.laundryId}"
                                                 class="btn btn-primary btn-icon icon-left">
@@ -398,81 +384,61 @@ pageEncoding="UTF-8"%>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
 <script>
-    function confirmDelete(id) {
-        if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-            window.location.href = 'laundry-order?action=cancel&id=' + id;
-        }
-    }
-    
-    // Function to get next status in the progression
+    // Lấy status tiếp theo trong quy trình (database dùng Title Case)
     function getNextStatus(currentStatus) {
         const statusFlow = {
-            'PENDING': 'WASHING',
-            'WASHING': 'READY',
-            'READY': 'DELIVERED',
-            'DELIVERED': 'COMPLETED'
+            'Pending': 'Ready',
+            'Washing': 'Washing',
+            'Ready': 'Delivered',
+            'Delivered': 'Completed'
         };
         return statusFlow[currentStatus] || null;
     }
     
-    // Function to get status display text (text for the NEXT status action)
-    function getStatusText(nextStatus) {
-        const statusTexts = {
-            'WASHING': 'Start Washing',
-            'READY': 'Mark as Ready',
-            'DELIVERED': 'Mark as Delivered',
-            'COMPLETED': 'Complete Order'
+    // Lấy text hiển thị cho nút (hành động tiếp theo)
+    function getStatusButtonText(nextStatus) {
+        const buttonTexts = {
+            'Ready': 'Mark as Ready',
+            'Washing': 'Start Washing',
+            'Delivered': 'Mark as Delivered',
+            'Completed': 'Complete Order'
         };
-        return statusTexts[nextStatus] || nextStatus;
+        return buttonTexts[nextStatus] || nextStatus;
     }
     
-    // Function to get current status display
-    function getCurrentStatusText(currentStatus) {
-        const statusTexts = {
-            'PENDING': 'Pending - Ready to Start',
-            'WASHING': 'Washing - In Progress',
-            'READY': 'Ready - Awaiting Delivery',
-            'DELIVERED': 'Delivered - Almost Complete',
-            'COMPLETED': 'Completed',
-            'CANCELLED': 'Cancelled'
-        };
-        return statusTexts[currentStatus] || currentStatus;
-    }
-    
-    // Function to get status button class
+    // Lấy class CSS cho nút theo status
     function getStatusButtonClass(status) {
         const buttonClasses = {
-            'PENDING': 'btn-warning',
-            'WASHING': 'btn-info',
-            'READY': 'btn-success',
-            'DELIVERED': 'btn-primary',
-            'COMPLETED': 'btn-success'
+            'Pending': 'btn-warning',
+            'Washing': 'btn-info',
+            'Ready': 'btn-success',
+            'Delivered': 'btn-primary',
+            'Completed': 'btn-success'
         };
         return buttonClasses[status] || 'btn-warning';
     }
     
-    // Auto-hide alerts (jQuery for BS4)
+    // Khởi tạo khi trang load
     $(document).ready(function() {
+        // Tự động ẩn thông báo sau 5 giây
         setTimeout(function() {
             $(".alert").fadeOut("slow");
         }, 5000);
         
-        // Initialize status button
+        // Khởi tạo nút cập nhật status
         const currentStatus = '${order.status}';
         const nextStatus = getNextStatus(currentStatus);
         
-        if (nextStatus && currentStatus !== 'COMPLETED' && currentStatus !== 'CANCELLED') {
+        if (nextStatus && currentStatus !== 'Completed' && currentStatus !== 'Cancelled') {
             $('#nextStatus').val(nextStatus);
-            // Show next action text
-            const buttonText = getStatusText(nextStatus);
-            $('#statusBtnText').text(buttonText);
+            $('#statusBtnText').text(getStatusButtonText(nextStatus));
             $('#statusUpdateBtn').removeClass('btn-warning btn-info btn-success btn-primary btn-lg')
                                  .addClass(getStatusButtonClass(currentStatus) + ' btn-lg');
         } else {
             $('#statusUpdateForm').hide();
         }
         
-        // Handle form submission
+        // Xác nhận trước khi submit form
         $('#statusUpdateForm').on('submit', function(e) {
             const nextStatusVal = $('#nextStatus').val();
             if (!nextStatusVal) {
@@ -480,7 +446,7 @@ pageEncoding="UTF-8"%>
                 return false;
             }
             
-            const confirmMsg = 'Are you sure you want to change status to ' + nextStatusVal + '?';
+            const confirmMsg = 'Bạn có chắc muốn đổi status sang ' + nextStatusVal + '?';
             if (!confirm(confirmMsg)) {
                 e.preventDefault();
                 return false;
