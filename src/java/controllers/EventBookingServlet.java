@@ -108,9 +108,8 @@ public class EventBookingServlet extends HttpServlet {
                 throw new Exception("Insert failed");
             }
 
-            request.setAttribute("successMessage", "Gửi yêu cầu đặt sự kiện thành công!");
-            request.getRequestDispatcher("/WEB-INF/views/event/event-booking.jsp")
-                    .forward(request, response);
+            request.setAttribute("message", "Booking successful! Wait until staff go to take your stuffs.");
+                request.getRequestDispatcher("/WEB-INF/views/client/success_event.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
