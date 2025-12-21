@@ -170,7 +170,7 @@ public class BikeTransactionDAO extends DBContext {
 
     public ArrayList<BikeServiceOrder> getOrdersByStatus(String status) {
         ArrayList<BikeServiceOrder> list = new ArrayList<>();
-        String sql = "SELECT o.*, r.room_number, d.item_name, d.quantity " +
+        String sql = "SELECT o.*, r.room_number, d.item_name, d.quantity, d.service_id " +
                      "FROM ServiceOrders o " +
                      "LEFT JOIN Rooms r ON o.room_id = r.room_id " +
                      "JOIN OrderDetails d ON o.order_id = d.order_id " + 
@@ -193,7 +193,8 @@ public class BikeTransactionDAO extends DBContext {
                         rs.getTimestamp("booking_start_date"), 
                         rs.getTimestamp("booking_end_date"),
                         rs.getInt("quantity"), 
-                        rs.getString("item_name")
+                        rs.getString("item_name"),
+                        rs.getInt("service_id")
                 ));
             }
         } catch (SQLException e) { e.printStackTrace(); }
