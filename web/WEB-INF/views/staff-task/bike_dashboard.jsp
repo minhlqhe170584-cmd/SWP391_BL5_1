@@ -98,7 +98,9 @@
                                                             </div>
                                                             
                                                             <div style="max-height: 120px; overflow-y: auto; border: 1px solid #eee; padding: 5px;">
-                                                                <c:forEach var="b" items="${bikes}">
+                                                                <c:set var="currentBikes" value="${bikesMap[o.serviceId]}" />
+                                                                
+                                                                <c:forEach var="b" items="${currentBikes}">
                                                                     <div class="custom-control custom-checkbox">
                                                                         <input type="checkbox" class="custom-control-input bike-checkbox" 
                                                                                id="bike_${b.bikeId}_${o.orderId}" name="bikeIds" value="${b.bikeId}">
@@ -107,12 +109,13 @@
                                                                         </label>
                                                                     </div>
                                                                 </c:forEach>
-                                                                <c:if test="${empty bikes}">
-                                                                    <span class="text-danger small">No bikes available!</span>
+                                                                
+                                                                <c:if test="${empty currentBikes}">
+                                                                    <span class="text-danger small">No bikes available for this service!</span>
                                                                 </c:if>
                                                             </div>
                                                         </div>
-                                                        <button type="submit" class="btn btn-primary btn-sm btn-block" ${empty bikes ? 'disabled' : ''}>
+                                                        <button type="submit" class="btn btn-primary btn-sm btn-block" ${empty currentBikes ? 'disabled' : ''}>
                                                             <i class="fas fa-key"></i> Handover
                                                         </button>
                                                     </form>

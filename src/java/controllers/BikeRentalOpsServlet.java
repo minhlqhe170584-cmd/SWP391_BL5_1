@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
+import java.util.HashMap;
 import models.Bicycle;
 import models.BikeServiceOrder;
 import models.Staff;
@@ -29,16 +30,15 @@ public class BikeRentalOpsServlet extends HttpServlet {
             ArrayList<BikeServiceOrder> orders = dao.getOrdersByStatus("Pending");
             request.setAttribute("orders", orders);
             
-            if (!orders.isEmpty()) {
-                int firstServiceId = dao.getServiceIdByOrderId(orders.get(0).getOrderId());
-                if(firstServiceId > 0) {
-                    request.setAttribute("bikes", dao.getPhysicalBikesForHandover(firstServiceId));
-                } else {
-                    request.setAttribute("bikes", new ArrayList<Bicycle>());
+            HashMap<Integer, ArrayList<Bicycle>> bikesMap = new HashMap<>();
+            
+            for (BikeServiceOrder order : orders) {
+                int sId = order.getServiceId();
+                if (!bikesMap.containsKey(sId)) {
+                    bikesMap.put(sId, dao.getPhysicalBikesForHandover(sId));
                 }
-            } else {
-                request.setAttribute("bikes", new ArrayList<Bicycle>());
             }
+            request.setAttribute("bikesMap", bikesMap);
             
         } else if ("active".equals(view)) {
             request.setAttribute("orders", dao.getOrdersByStatus("Confirmed"));

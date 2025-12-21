@@ -98,7 +98,7 @@ public class BikeBookingServlet extends HttpServlet {
                 ArrayList<SlotAvailability> slots = dao.getHourlyAvailability(start, end, serviceId);
                 request.setAttribute("checkResult", slots);
                 request.setAttribute("requestQty", quantity);
-                request.setAttribute("startTime", startTimeRaw); // Giữ lại giá trị input
+                request.setAttribute("startTime", startTimeRaw);
                 request.setAttribute("optionId", optionId);
                 request.getRequestDispatcher("/WEB-INF/views/client/bike_booking.jsp").forward(request, response);
             } 

@@ -7,17 +7,19 @@ public class BikeServiceOrder extends ServiceOrder {
     private Timestamp bookingEndDate;
     private int quantity;
     private String itemName;
+    private int serviceId;
 
     public BikeServiceOrder() {
     }
 
     public BikeServiceOrder(int orderId, int roomId, Timestamp orderDate, double totalAmount, String status, String note, String roomNumber, 
-                            Timestamp bookingStartDate, Timestamp bookingEndDate, int quantity, String itemName) {
+                            Timestamp bookingStartDate, Timestamp bookingEndDate, int quantity, String itemName, int serviceId) {
         super(orderId, roomId, orderDate, totalAmount, status, note, roomNumber);
         this.bookingStartDate = bookingStartDate;
         this.bookingEndDate = bookingEndDate;
         this.quantity = quantity;
         this.itemName = itemName;
+        this.serviceId = serviceId;
     }
 
     public Timestamp getBookingStartDate() {
@@ -50,6 +52,14 @@ public class BikeServiceOrder extends ServiceOrder {
 
     public void setItemName(String itemName) {
         this.itemName = itemName;
+    }
+
+    public int getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(int serviceId) {
+        this.serviceId = serviceId;
     }
     
     
