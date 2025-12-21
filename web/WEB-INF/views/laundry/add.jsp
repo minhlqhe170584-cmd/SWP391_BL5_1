@@ -16,6 +16,16 @@
 
         <div class="section-body">
             <!-- Error Message -->
+            <c:if test="${not empty errorMessage}">
+                <div class="alert alert-danger alert-dismissible show fade">
+                    <div class="alert-body">
+                        <button class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                        <i class="fas fa-exclamation-circle"></i> ${errorMessage}
+                    </div>
+                </div>
+            </c:if>
             <c:if test="${not empty error}">
                 <div class="alert alert-danger alert-dismissible show fade">
                     <div class="alert-body">
@@ -91,7 +101,7 @@
                                         <div class="form-group">
                                             <label>Expected Pick Up Time</label>
                                             <input type="datetime-local" name="deliveryTime" class="form-control"
-                                                   value="<fmt:formatDate value='${order.expectedPickupTime}' pattern='yyyy-MM-dd\'T\'HH:mm'/>">
+                                                   value="${order.formattedExpectedPickupTime}">
                                         </div>
                                     </div>
 
@@ -99,7 +109,7 @@
                                         <div class="form-group">
                                             <label>Expected Return Time</label>
                                             <input type="datetime-local" name="returnTime" class="form-control"
-                                                   value="<fmt:formatDate value='${order.expectedReturnTime}' pattern='yyyy-MM-dd\'T\'HH:mm'/>">
+                                                   value="${order.formattedExpectedReturnTime}">
                                         </div>
                                     </div>
                                 </div>
