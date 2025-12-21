@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import models.LaundryItem;
 import models.LaundryOrder;
@@ -169,71 +170,234 @@ public class LaundryOrderServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/laundry/add.jsp").forward(request, response);
     }
     
-    // Add new order
+ 
     private void addOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Integer roomId = null;
+        String deliveryTimeStr = null;
+        String returnTimeStr = null;
+        String status = null;
+        String note = null;
+        String[] itemIds = null;
+        String[] quantities = null;
+        String[] prices = null;
+        
         try {
-            Integer roomId = Integer.valueOf(request.getParameter("roomId"));
-            String pickupTimeStr = request.getParameter("pickupTime");
-            String deliveryTimeStr = request.getParameter("deliveryTime");
-            String returnTimeStr = request.getParameter("returnTime");
-            String status = request.getParameter("status");
-            String note = request.getParameter("note");
+            String roomIdStr = request.getParameter("roomId");
+            if (roomIdStr == null || roomIdStr.trim().isEmpty()) {
+                request.setAttribute("errorMessage", "Vui lòng chọn phòng");
+                showAddFormWithData(request, response, null, null);
+                return;
+            }
+            
+            try {
+                roomId = Integer.valueOf(roomIdStr);
+                models.Room room = roomDao.getRoomById(roomId);
+                if (room == null) {
+                    request.setAttribute("errorMessage", "Phòng không tồn tại");
+                    showAddFormWithData(request, response, null, null);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                request.setAttribute("errorMessage", "Mã phòng không hợp lệ");
+                showAddFormWithData(request, response, null, null);
+                return;
+            }
+            
+            deliveryTimeStr = request.getParameter("deliveryTime");
+            returnTimeStr = request.getParameter("returnTime");
+            status = request.getParameter("status");
+            note = request.getParameter("note");
             
             LaundryOrder order = new LaundryOrder();
             order.setStatus(status != null && !status.isEmpty() ? status : "PENDING");
             order.setNote(note);
             
+            LocalDateTime pickupTime = null;
+            LocalDateTime returnTime = null;
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+            String errorMessage = null;
             
             if (deliveryTimeStr != null && !deliveryTimeStr.isEmpty()) {
-                order.setExpectedPickupTime(LocalDateTime.parse(deliveryTimeStr, formatter));
+                try {
+                    pickupTime = LocalDateTime.parse(deliveryTimeStr, formatter);
+                    order.setExpectedPickupTime(pickupTime);
+                } catch (DateTimeParseException e) {
+                    errorMessage = "Định dạng thời gian lấy đồ không hợp lệ";
+                }
             }
+            
             if (returnTimeStr != null && !returnTimeStr.isEmpty()) {
-                order.setExpectedReturnTime(LocalDateTime.parse(returnTimeStr, formatter));
+                try {
+                    returnTime = LocalDateTime.parse(returnTimeStr, formatter);
+                    order.setExpectedReturnTime(returnTime);
+                } catch (DateTimeParseException e) {
+                    errorMessage = "Định dạng thời gian trả đồ không hợp lệ";
+                }
             }
-            
-            // Get order details
-            String[] itemIds = request.getParameterValues("itemId");
-            String[] quantities = request.getParameterValues("quantity");
-            String[] prices = request.getParameterValues("price");
-            
-            ArrayList<LaundryOrderDetail> details = new ArrayList<>();
-            
-            if (itemIds != null && quantities != null && prices != null) {
-                for (int i = 0; i < itemIds.length; i++) {
-                    if (itemIds[i] != null && !itemIds[i].isEmpty() && 
-                        quantities[i] != null && !quantities[i].isEmpty()) {
-                        
-                        LaundryOrderDetail detail = new LaundryOrderDetail();
-                        detail.setLaundryItemId(Integer.parseInt(itemIds[i]));
-                        detail.setQuantity(Integer.valueOf(quantities[i]));
-                        detail.setUnitPrice(Double.valueOf(prices[i]));
-                        detail.setSubtotal(detail.getQuantity() * detail.getUnitPrice());
-                        
-                        details.add(detail);
+
+            //Validate  ngày tháng
+            if (errorMessage == null) {
+               
+                if (note != null && note.length() > 500) {
+                    errorMessage = "Ghi chú không được vượt quá 500 ký tự";
+                }      
+                else {
+                    LocalDateTime now = LocalDateTime.now();
+
+                    if (pickupTime != null && returnTime != null) {
+                        if (returnTime.isBefore(pickupTime)) {
+                            errorMessage = "Thời gian trả đồ phải sau thời gian lấy đồ";
+                        } 
+                        else if (returnTime.isBefore(now)) {
+                            errorMessage = "Thời gian trả đồ phải lớn hơn thời gian hiện tại";
+                        } 
+                        else if (pickupTime.isBefore(now)) {
+                            errorMessage = "Thời gian lấy đồ phải lớn hơn thời gian hiện tại";
+                        }
+                    } 
+                    else if (pickupTime != null) {
+                        if (pickupTime.isBefore(now)) {
+                            errorMessage = "Thời gian lấy đồ phải lớn hơn thời gian hiện tại";
+                        }
+                    } 
+                    else if (returnTime != null) {
+                        if (returnTime.isBefore(now)) {
+                            errorMessage = "Thời gian trả đồ phải lớn hơn thời gian hiện tại";
+                        }
                     }
                 }
-            }           
+            }
+            
+            itemIds = request.getParameterValues("itemId");
+            quantities = request.getParameterValues("quantity");
+            prices = request.getParameterValues("price");
+            
+            ArrayList<LaundryOrderDetail> details = parseOrderDetails(itemIds, quantities, prices);
             order.setOrderDetails(details);
             
+
+            if (errorMessage == null) {
+              
+                if (details.isEmpty()) {
+                    errorMessage = "Vui lòng thêm ít nhất một mục vào đơn hàng";
+                } else {
+                    // Validate từng item
+                    for (LaundryOrderDetail detail : details) {
+                        if (detail.getLaundryItemId() <= 0) {
+                            errorMessage = "Mã sản phẩm không hợp lệ";
+                            break;
+                        }
+                        if (detail.getQuantity() <= 0) {
+                            errorMessage = "Số lượng phải lớn hơn 0";
+                            break;
+                        }
+                        if (detail.getUnitPrice() < 0) {
+                            errorMessage = "Giá không được âm";
+                            break;
+                        }
+                    }
+                }
+            }
+                      
+            if (errorMessage != null) {
+                request.setAttribute("errorMessage", errorMessage);
+                showAddFormWithData(request, response, order, roomId);
+                return;
+            }
+            
+           
             Integer newId = orderDAO.insertOrder(order, roomId);
             
             if (newId != null) {
-                request.setAttribute("success", "Order added successfully!");
+                request.setAttribute("success", "Thêm đơn hàng thành công!");
                 response.sendRedirect("laundry-order?action=view&id=" + newId);
             } else {
-                request.setAttribute("errorMessage", "Failed to add order");
-                showAddForm(request, response);
+                request.setAttribute("errorMessage", "Thêm đơn hàng thất bại");
+                showAddFormWithData(request, response, order, roomId);
             }
             
         } catch (Exception e) {
-            request.setAttribute("errorMessage", "Error adding order: " + e.getMessage());
-            showAddForm(request, response);
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Lỗi thêm đơn hàng: " + e.getMessage());
+            LaundryOrder order = new LaundryOrder();
+            order.setStatus(status != null && !status.isEmpty() ? status : "PENDING");
+            order.setNote(note);
+            try {
+                if (deliveryTimeStr != null && !deliveryTimeStr.isEmpty()) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+                    order.setExpectedPickupTime(LocalDateTime.parse(deliveryTimeStr, formatter));
+                }
+                if (returnTimeStr != null && !returnTimeStr.isEmpty()) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+                    order.setExpectedReturnTime(LocalDateTime.parse(returnTimeStr, formatter));
+                }
+            } catch (Exception ex) {}
+            if (itemIds != null || request.getParameterValues("itemId") != null) {
+                String[] reqItemIds = itemIds != null ? itemIds : request.getParameterValues("itemId");
+                String[] reqQuantities = quantities != null ? quantities : request.getParameterValues("quantity");
+                String[] reqPrices = prices != null ? prices : request.getParameterValues("price");
+                ArrayList<LaundryOrderDetail> details = parseOrderDetails(reqItemIds, reqQuantities, reqPrices);
+                order.setOrderDetails(details);
+            }
+            showAddFormWithData(request, response, order, roomId);
         }
     }
     
-    // Show edit order form
+   
+    private ArrayList<LaundryOrderDetail> parseOrderDetails(String[] itemIds, String[] quantities, String[] prices) {
+        ArrayList<LaundryOrderDetail> details = new ArrayList<>();
+        
+        if (itemIds != null && quantities != null && prices != null && itemIds.length > 0) {
+            for (int i = 0; i < itemIds.length; i++) {
+                if (itemIds[i] != null && !itemIds[i].isEmpty() && 
+                    quantities[i] != null && !quantities[i].isEmpty() &&
+                    prices[i] != null && !prices[i].isEmpty()) {
+                    
+                    try {
+                        int itemId = Integer.parseInt(itemIds[i]);
+                        int quantity = Integer.parseInt(quantities[i]);
+                        double price = Double.parseDouble(prices[i]);
+                        
+                        LaundryOrderDetail detail = new LaundryOrderDetail();
+                        detail.setLaundryItemId(itemId);
+                        detail.setQuantity(quantity);
+                        detail.setUnitPrice(price);
+                        detail.setSubtotal(quantity * price);
+                        
+                        details.add(detail);
+                    } catch (NumberFormatException e) {
+                        try {
+                            LaundryOrderDetail detail = new LaundryOrderDetail();
+                            detail.setLaundryItemId(itemIds[i].isEmpty() ? 0 : Integer.parseInt(itemIds[i]));
+                            detail.setQuantity(quantities[i].isEmpty() ? 0 : Integer.parseInt(quantities[i]));
+                            detail.setUnitPrice(prices[i].isEmpty() ? 0 : Double.parseDouble(prices[i]));
+                            detail.setSubtotal(detail.getQuantity() * detail.getUnitPrice());
+                            details.add(detail);
+                        } catch (NumberFormatException ex) {
+                            // Bỏ qua 
+                        }
+                    }
+                }
+            }
+        }
+        
+        return details;
+    }
+    
+ 
+    private void showAddFormWithData(HttpServletRequest request, HttpServletResponse response, LaundryOrder order, Integer roomId)
+            throws ServletException, IOException {
+        ArrayList<LaundryItem> items = itemDAO.getAllActiveItems();
+        ArrayList<Room> rooms = (ArrayList<Room>) roomDao.getAllActiveLoginRooms();
+        request.setAttribute("items", items);
+        request.setAttribute("rooms", rooms);
+        request.setAttribute("order", order);
+        request.setAttribute("roomId", roomId);
+        request.getRequestDispatcher("/WEB-INF/views/laundry/add.jsp").forward(request, response);
+    }
+    
+
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String idStr = request.getParameter("id");
@@ -261,16 +425,39 @@ public class LaundryOrderServlet extends HttpServlet {
         }
     }
     
-    // Update order
     private void updateOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        int laundryId = 0;
+        int orderId = 0;
+        String expectedPickupTimeStr = null;
+        String returnTimeStr = null;
+        String status = null;
+        String note = null;
+        String[] itemIds = null;
+        String[] quantities = null;
+        String[] prices = null;
+        
         try {
-            int laundryId = Integer.parseInt(request.getParameter("laundryId"));
-            int orderId = Integer.parseInt(request.getParameter("orderId"));
-            String expectedPickupTimeStr = request.getParameter("deliveryTime");
-            String returnTimeStr = request.getParameter("returnTime");
-            String status = request.getParameter("status");
-            String note = request.getParameter("note");
+            try {
+                laundryId = Integer.parseInt(request.getParameter("laundryId"));
+            } catch (NumberFormatException e) {
+                request.setAttribute("errorMessage", "Mã đơn giặt là không hợp lệ");
+                showEditFormWithData(request, response, null);
+                return;
+            }
+            
+            try {
+                orderId = Integer.parseInt(request.getParameter("orderId"));
+            } catch (NumberFormatException e) {
+                request.setAttribute("errorMessage", "Mã đơn dịch vụ không hợp lệ");
+                showEditFormWithData(request, response, null);
+                return;
+            }
+            
+            expectedPickupTimeStr = request.getParameter("deliveryTime");
+            returnTimeStr = request.getParameter("returnTime");
+            status = request.getParameter("status");
+            note = request.getParameter("note");
             
             LaundryOrder order = new LaundryOrder();
             order.setLaundryId(laundryId);
@@ -278,56 +465,156 @@ public class LaundryOrderServlet extends HttpServlet {
             order.setStatus(status);
             order.setNote(note);
             
+            LocalDateTime pickupTime = null;
+            LocalDateTime returnTime = null;
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+            String errorMessage = null;
             
+            // Parse và validate ngày tháng
             if (expectedPickupTimeStr != null && !expectedPickupTimeStr.isEmpty()) {
-                order.setExpectedPickupTime(LocalDateTime.parse(expectedPickupTimeStr, formatter));
+                try {
+                    pickupTime = LocalDateTime.parse(expectedPickupTimeStr, formatter);
+                    order.setExpectedPickupTime(pickupTime);
+                } catch (DateTimeParseException e) {
+                    errorMessage = "Định dạng thời gian lấy đồ không hợp lệ";
+                }
             }
+            
             if (returnTimeStr != null && !returnTimeStr.isEmpty()) {
-                order.setExpectedReturnTime(LocalDateTime.parse(returnTimeStr, formatter));
+                try {
+                    returnTime = LocalDateTime.parse(returnTimeStr, formatter);
+                    order.setExpectedReturnTime(returnTime);
+                } catch (DateTimeParseException e) {
+                    errorMessage = "Định dạng thời gian trả đồ không hợp lệ";
+                }
             }
-            
-            // Get order details
-            String[] itemIds = request.getParameterValues("itemId");
-            String[] quantities = request.getParameterValues("quantity");
-            String[] prices = request.getParameterValues("price");
-            
-            ArrayList<LaundryOrderDetail> details = new ArrayList<>();
-            
-            if (itemIds != null && quantities != null && prices != null) {
-                for (int i = 0; i < itemIds.length; i++) {
-                    if (itemIds[i] != null && !itemIds[i].isEmpty() && 
-                        quantities[i] != null && !quantities[i].isEmpty()) {
-                        
-                        LaundryOrderDetail detail = new LaundryOrderDetail();
-                        detail.setLaundryItemId(Integer.parseInt(itemIds[i]));
-                        detail.setQuantity(Integer.valueOf(quantities[i]));
-                        detail.setUnitPrice(Double.valueOf(prices[i]));
-                        detail.setSubtotal(detail.getQuantity() * detail.getUnitPrice());
-                        
-                        details.add(detail);
+
+            if (errorMessage == null) {
+                if (note != null && note.length() > 500) {
+                    errorMessage = "Ghi chú không được vượt quá 500 ký tự";
+                } 
+                else {
+                    LocalDateTime now = LocalDateTime.now();
+
+                    if (pickupTime != null && returnTime != null) {
+                        if (returnTime.isBefore(pickupTime)) {
+                            errorMessage = "Thời gian trả đồ phải sau thời gian lấy đồ";
+                        } 
+                        else if (returnTime.isBefore(now)) {
+                            errorMessage = "Thời gian trả đồ phải lớn hơn thời gian hiện tại";
+                        } 
+                        else if (pickupTime.isBefore(now)) {
+                            errorMessage = "Thời gian lấy đồ phải lớn hơn thời gian hiện tại";
+                        }
+                    } 
+                    else if (pickupTime != null) {
+                        if (pickupTime.isBefore(now)) {
+                            errorMessage = "Thời gian lấy đồ phải lớn hơn thời gian hiện tại";
+                        }
+                    } 
+                    else if (returnTime != null) {
+                        if (returnTime.isBefore(now)) {
+                            errorMessage = "Thời gian trả đồ phải lớn hơn thời gian hiện tại";
+                        }
                     }
                 }
             }
             
+            itemIds = request.getParameterValues("itemId");
+            quantities = request.getParameterValues("quantity");
+            prices = request.getParameterValues("price");
+            
+            ArrayList<LaundryOrderDetail> details = parseOrderDetails(itemIds, quantities, prices);
             order.setOrderDetails(details);
+            
+            if (errorMessage == null) {
+                if (details.isEmpty()) {
+                    errorMessage = "Vui lòng thêm ít nhất một mục vào đơn hàng";
+                } else {
+                    for (LaundryOrderDetail detail : details) {
+                        if (detail.getLaundryItemId() <= 0) {
+                            errorMessage = "Mã sản phẩm không hợp lệ";
+                            break;
+                        }
+                        if (detail.getQuantity() <= 0) {
+                            errorMessage = "Số lượng phải lớn hơn 0";
+                            break;
+                        }
+                        if (detail.getUnitPrice() < 0) {
+                            errorMessage = "Giá không được âm";
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (errorMessage != null) {
+                request.setAttribute("errorMessage", errorMessage);
+                showEditFormWithData(request, response, order);
+                return;
+            }
             
             boolean success = orderDAO.updateOrder(order);
             
             if (success) {
                 response.sendRedirect("laundry-order?action=view&id=" + laundryId + "&success=updated");
             } else {
-                request.setAttribute("errorMessage", "Failed to update order");
-                showEditForm(request, response);
+                request.setAttribute("errorMessage", "Cập nhật đơn hàng thất bại");
+                showEditFormWithData(request, response, order);
             }
             
         } catch (Exception e) {
-            request.setAttribute("errorMessage", "Error updating order: " + e.getMessage());
-            showEditForm(request, response);
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "Lỗi cập nhật đơn hàng: " + e.getMessage());
+            LaundryOrder order = new LaundryOrder();
+            order.setLaundryId(laundryId);
+            order.setOrderId(orderId);
+            order.setStatus(status);
+            order.setNote(note);
+            try {
+                if (expectedPickupTimeStr != null && !expectedPickupTimeStr.isEmpty()) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+                    order.setExpectedPickupTime(LocalDateTime.parse(expectedPickupTimeStr, formatter));
+                }
+                if (returnTimeStr != null && !returnTimeStr.isEmpty()) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+                    order.setExpectedReturnTime(LocalDateTime.parse(returnTimeStr, formatter));
+                }
+            } catch (Exception ex) {}
+            // Parse order details từ request để giữ lại dữ liệu
+            if (itemIds != null || request.getParameterValues("itemId") != null) {
+                String[] reqItemIds = itemIds != null ? itemIds : request.getParameterValues("itemId");
+                String[] reqQuantities = quantities != null ? quantities : request.getParameterValues("quantity");
+                String[] reqPrices = prices != null ? prices : request.getParameterValues("price");
+                ArrayList<LaundryOrderDetail> details = parseOrderDetails(reqItemIds, reqQuantities, reqPrices);
+                order.setOrderDetails(details);
+            }
+            showEditFormWithData(request, response, order);
         }
     }
     
-    // Delete order
+    // method hiển thị form edit với dữ liệu đã nhập
+    private void showEditFormWithData(HttpServletRequest request, HttpServletResponse response, LaundryOrder order)
+            throws ServletException, IOException {
+        ArrayList<LaundryItem> items = itemDAO.getAllActiveItems();
+        request.setAttribute("items", items);
+        
+        // Nếu order null, lấy từ database
+        if (order == null || order.getLaundryId() == 0) {
+            String idStr = request.getParameter("laundryId");
+            if (idStr != null && !idStr.isEmpty()) {
+                try {
+                    int laundryId = Integer.parseInt(idStr);
+                    order = orderDAO.getOrderById(laundryId);
+                } catch (NumberFormatException e) {}
+            }
+        }
+        
+        request.setAttribute("order", order);
+        request.getRequestDispatcher("/WEB-INF/views/laundry/edit.jsp").forward(request, response);
+    }
+    
+    
     private void deleteOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String idStr = request.getParameter("id");

@@ -16,6 +16,16 @@
 
         <div class="section-body">
             <!-- Error Message -->
+            <c:if test="${not empty errorMessage}">
+                <div class="alert alert-danger alert-dismissible show fade">
+                    <div class="alert-body">
+                        <button class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                        <i class="fas fa-exclamation-circle"></i> ${errorMessage}
+                    </div>
+                </div>
+            </c:if>
             <c:if test="${not empty error}">
                 <div class="alert alert-danger alert-dismissible show fade">
                     <div class="alert-body">
@@ -195,7 +205,7 @@
                                 <div class="alert alert-light">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0">Total:</h5>
-                                        <h4 class="mb-0 text-success" id="totalAmount">0VND</h4>
+                                        <h4 class="mb-0 text-success" id="totalAmount">0 VND</h4>
                                     </div>
                                 </div>
                             </div>
